@@ -85,7 +85,7 @@ def _emit_humanoid_rig(
     )
     p.line(set_primary_part(var, f"{var}_hrp"))
 
-    # head — sphere with a face decal placeholder
+    # head — sphere with simple cartoon face dots so it reads as a person
     p.line(
         make_part(
             f"{var}_head",
@@ -96,6 +96,31 @@ def _emit_humanoid_rig(
             color_rgb=skin_rgb,
             material_name="SmoothPlastic",
             shape="Ball",
+        )
+    )
+    # eye dots
+    for side, dx in (("L", -0.3), ("R", 0.3)):
+        p.line(
+            make_part(
+                f"{var}_eye_{side}",
+                parent=var,
+                name=f"Eye{side}",
+                size=(0.18, 0.18, 0.06),
+                cframe=cframe_pos(dx, 5.05, 0.78),
+                color_rgb=(40, 40, 48),
+                material_name="SmoothPlastic",
+            )
+        )
+    # mouth dot
+    p.line(
+        make_part(
+            f"{var}_mouth",
+            parent=var,
+            name="Mouth",
+            size=(0.4, 0.1, 0.06),
+            cframe=cframe_pos(0, 4.7, 0.78),
+            color_rgb=(140, 70, 70),
+            material_name="SmoothPlastic",
         )
     )
 
