@@ -11,12 +11,20 @@ usage:
 env:
   BUDDY_STUDIO_BACKEND=robloxstudio | rbx-studio  (default: robloxstudio)
   BUDDY_STUDIO_BIN, BUDDY_STUDIO_ARGS              (override executable)
+
+screenshot strategy:
+  the boshyxd backend captures via the studio plugin and works anywhere.
+  the rbx-studio backend's `capture_screenshot` only works on macOS/Windows
+  hosts. when running from WSL we fall back to a powershell.exe interop
+  script (capture_studio.ps1) that calls the windows PrintWindow API.
 """
 
 from __future__ import annotations
 
 import base64
 import os
+import shutil
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -182,24 +190,75 @@ _STEPS = [
 ]
 
 
+_PS1 = _HERE / "capture_studio.ps1"
+
+
+def _save_via_powershell(label: str) -> Path | None:
+    """fallback: ask windows powershell to capture studio's window via PrintWindow.
+
+    only useful from WSL pointing at a windows-hosted studio. requires the
+    capture_studio.ps1 script next to this one.
+    """
+    powershell = shutil.which("powershell.exe")
+    if not powershell:
+        return None
+    if not _PS1.exists():
+        return None
+    out_win = r"C:\Users\mathe\AppData\Local\Temp\buddy_shot_" + label + ".png"
+    out_wsl = Path("/mnt/c/Users/mathe/AppData/Local/Temp") / f"buddy_shot_{label}.png"
+    try:
+        ps1_win = subprocess.check_output(
+            ["wslpath", "-w", str(_PS1)], text=True
+        ).strip()
+    except Exception:
+        return None
+    cmd = [
+        powershell,
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        ps1_win,
+        "-OutPath",
+        out_win,
+    ]
+    try:
+        subprocess.run(cmd, check=True, capture_output=True, timeout=30)
+    except Exception:
+        return None
+    if not out_wsl.exists():
+        return None
+    final = SHOTS_DIR / f"{label}.png"
+    final.write_bytes(out_wsl.read_bytes())
+    try:
+        out_wsl.unlink()
+    except Exception:
+        pass
+    return final
+
+
 def _save_screenshot(client: StudioClient, label: str) -> Path | None:
     try:
         result = client.capture_screenshot()
     except StudioClientError as exc:
-        print(f"  ! screenshot failed: {exc}")
-        return None
+        print(f"  ! mcp screenshot errored: {exc}")
+        return _save_via_powershell(label)
     content = result.get("content")
-    if not isinstance(content, list):
-        return None
-    for item in content:
-        if not isinstance(item, dict):
-            continue
-        if item.get("type") == "image":
-            data = base64.b64decode(item.get("data", ""))
-            out = SHOTS_DIR / f"{label}.png"
-            out.write_bytes(data)
-            return out
-    return None
+    if isinstance(content, list):
+        for item in content:
+            if not isinstance(item, dict):
+                continue
+            if item.get("type") == "image":
+                data = base64.b64decode(item.get("data", ""))
+                out = SHOTS_DIR / f"{label}.png"
+                out.write_bytes(data)
+                return out
+            if item.get("type") == "text":
+                # rbx-studio-mcp returns a text "Screenshot capture is only
+                # supported on macOS and Windows" error here. trigger fallback.
+                msg = str(item.get("text", "")).lower()
+                if "only supported" in msg or "failed to capture" in msg:
+                    return _save_via_powershell(label)
+    return _save_via_powershell(label)
 
 
 def main() -> int:
