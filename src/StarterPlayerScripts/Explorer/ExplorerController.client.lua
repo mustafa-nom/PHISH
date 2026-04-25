@@ -156,7 +156,10 @@ RemoteService.OnClientEvent("NpcDescriptionShown", function(payload)
 	if not isExplorer() then return end
 	if payload.RoundId ~= activeRoundId then return end
 	if payload.Audience ~= "Explorer" then return end
-	attachTalkPrompt(payload.NpcId)
+	-- new flow: the NpcDescriptionCardController shows a 3-button action
+	-- card directly; no follow-up "Talk to them" prompt is needed.
+	-- Keep `attachTalkPrompt` available for legacy testing if explicitly wanted.
+	if false then attachTalkPrompt(payload.NpcId) end
 end)
 
 RemoteService.OnClientEvent("ConveyorItemSpawned", function(payload)

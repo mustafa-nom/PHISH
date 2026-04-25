@@ -24,6 +24,7 @@ RemoteService.Events = {
 	"StartRound",
 	"RequestInspectNpc",
 	"RequestTalkToNpc",
+	"RequestExplorerAction",  -- Approach | AskFirst | Avoid (new 3-way decision)
 	"RequestPickupItem",
 	"RequestPlaceItemInLane",
 	"RequestAnnotateNpc",
@@ -43,6 +44,8 @@ RemoteService.Events = {
 	"LevelStarted",
 	"LevelEnded",
 	"NpcDescriptionShown",
+	"NpcCueRevealed",         -- one cue revealed to Explorer after AskFirst
+	"NpcActionResolved",      -- result of an Approach/AskFirst/Avoid action
 	"NpcAnnotationUpdated",
 	"ItemAnnotationUpdated",
 	"ConveyorItemSpawned",

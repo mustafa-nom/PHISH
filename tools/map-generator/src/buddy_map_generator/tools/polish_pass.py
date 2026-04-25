@@ -13,6 +13,9 @@ from ..lua_emit import LuaProgram, lua_string
 from ..style import PALETTE
 
 
+# sfx defaults map to roblox's bundled built-in sounds (rbxasset://) so the
+# placeholders are audible out of the box. user 2 swaps these for nicer
+# uploaded sounds when ready.
 _SFX_NAMES = [
     "ConfirmPair",
     "RoundStart",
@@ -23,6 +26,17 @@ _SFX_NAMES = [
     "RiskyTalk",
     "RoundComplete",
 ]
+
+_SFX_DEFAULT_IDS = {
+    "ConfirmPair": "rbxasset://sounds/electronicpingshort.wav",
+    "RoundStart": "rbxasset://sounds/action_jump_landing.mp3",
+    "LevelComplete": "rbxasset://sounds/action_jump.mp3",
+    "WrongSort": "rbxasset://sounds/uuhhh.mp3",
+    "CorrectSort": "rbxasset://sounds/clickfast.mp3",
+    "ClueCollected": "rbxasset://sounds/snap.mp3",
+    "RiskyTalk": "rbxasset://sounds/bass.mp3",
+    "RoundComplete": "rbxasset://sounds/action_jump.mp3",
+}
 
 
 def emit_polish_pass_lua() -> str:
@@ -87,17 +101,21 @@ def emit_polish_pass_lua() -> str:
         "end"
     )
 
-    # sfx placeholders — empty Sound instances ready for User 2 to fill
+    # sfx placeholders — point at roblox's built-in sound assets so they're
+    # audible out of the box. user 2 can swap to richer uploaded sounds later
+    # without changing any gameplay code.
     for sfx in _SFX_NAMES:
+        default_id = _SFX_DEFAULT_IDS.get(sfx, "")
         p.line(
             f"do\n"
             f"  local s = SoundService:FindFirstChild({lua_string(sfx)})\n"
             f"  if not s then\n"
             f"    s = Instance.new(\"Sound\")\n"
             f"    s.Name = {lua_string(sfx)}\n"
-            f"    s.Volume = 0.5\n"
             f"    s.Parent = SoundService\n"
             f"  end\n"
+            f"  s.Volume = 0.5\n"
+            f"  if s.SoundId == \"\" then s.SoundId = {lua_string(default_id)} end\n"
             f"end"
         )
         p.created(f"SoundService/{sfx}")

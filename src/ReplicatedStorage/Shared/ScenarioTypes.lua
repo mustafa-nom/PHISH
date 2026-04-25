@@ -3,18 +3,39 @@
 
 local ScenarioTypes = {}
 
+export type StrangerDangerSilhouette = {
+	Headline: string,
+	Outline: string,
+	AccentColor: { number },
+	Stance: string,
+}
+
+export type StrangerDangerFragment = {
+	Truthful: boolean,
+	Landmark: string,
+	Text: string,
+}
+
 export type StrangerDangerNpc = {
 	Id: string,
 	SpawnPointId: string,
 	Anchor: string?,
-	Role: string,
-	Traits: { string },
-	ClueText: string?,
+	Archetype: string,             -- NPC template name (HotDogVendor, etc.)
+	Role: string,                  -- Risky | SafeWithClue | SafeNoClue
+	Silhouette: StrangerDangerSilhouette,  -- Explorer-visible glance
+	Cues: { string },              -- Guide-visible cue tags (full info)
+	Verdict: string,               -- canonical Approach/AskFirst/Avoid
+	Fragment: StrangerDangerFragment?,  -- truthful or misleading clue
+	Bark: string?,                 -- chat-bubble line
+	-- Legacy fields for backwards compatibility with existing renderers:
+	Traits: { string },            -- mirrors Cues for older callers
+	ClueText: string?,             -- mirrors Fragment.Text for older callers
 }
 
 export type StrangerDangerScenario = {
 	Type: string,
 	PuppySpawnId: string,
+	PuppyLandmark: string,         -- the truthful landmark fragments point to
 	Npcs: { StrangerDangerNpc },
 	GuideManual: {
 		RiskyTags: { string },

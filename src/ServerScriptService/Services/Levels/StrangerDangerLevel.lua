@@ -47,6 +47,19 @@ local function pickRandomTemplate(): Model?
 	return options[math.random(#options)]
 end
 
+-- prefer the archetype the scenario picked; fall back to random so demos
+-- still work if a template happens to be missing
+local function pickTemplateForArchetype(archetype: string?): Model?
+	local templates = ServerStorage:FindFirstChild("NpcTemplates")
+	if templates and archetype then
+		local match = templates:FindFirstChild(archetype)
+		if match and match:IsA("Model") then
+			return match :: Model
+		end
+	end
+	return pickRandomTemplate()
+end
+
 local function attachKnifeAccessory(npcModel: Model)
 	-- Look for a "Knife" accessory in the NpcTemplates folder, or build a
 	-- placeholder block. Kid-friendly: blocky cartoon, grey, no gore.
@@ -192,7 +205,7 @@ function StrangerDangerLevel.Begin(round, scenario)
 			warn(("StrangerDangerLevel: spawn part not found for id %s"):format(npcInfo.SpawnPointId))
 			continue
 		end
-		local template = pickRandomTemplate()
+		local template = pickTemplateForArchetype(npcInfo.Archetype)
 		if not template then
 			warn("StrangerDangerLevel: no NPC templates available in ServerStorage/NpcTemplates")
 			break
@@ -204,6 +217,12 @@ function StrangerDangerLevel.Begin(round, scenario)
 			clone:PivotTo(spawnPart.CFrame + Vector3.new(0, 3, 0))
 		end
 		setNpcAttributes(clone, npcInfo)
+		if npcInfo.Bark then
+			clone:SetAttribute("BB_Bark", npcInfo.Bark)
+		end
+		if npcInfo.Archetype then
+			clone:SetAttribute("BB_Archetype", npcInfo.Archetype)
+		end
 		buildPromptOnNpc(clone, npcInfo.Id)
 		levelState.NpcModels[npcInfo.Id] = clone
 	end

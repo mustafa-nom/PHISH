@@ -396,10 +396,23 @@ function BookView:_render()
 	self._next.TextTransparency = self._index < #self._pages and 0 or 0.5
 end
 
+local SoundService = game:GetService("SoundService")
+
+local function playPageFlip()
+	local s = SoundService:FindFirstChild("ConfirmPair")
+	if s and s:IsA("Sound") then
+		local clone = s:Clone()
+		clone.Parent = SoundService
+		clone:Play()
+		task.delay(2, function() clone:Destroy() end)
+	end
+end
+
 function BookView:Next()
 	if self._index < #self._pages then
 		self._index = self._index + 1
 		self:_render()
+		playPageFlip()
 	end
 end
 
@@ -407,6 +420,7 @@ function BookView:Prev()
 	if self._index > 1 then
 		self._index = self._index - 1
 		self:_render()
+		playPageFlip()
 	end
 end
 
@@ -419,6 +433,27 @@ function BookView:GoToTitle(title: string)
 		end
 	end
 	return false
+end
+
+function BookView:GoToIndex(idx: number)
+	if idx >= 1 and idx <= #self._pages then
+		self._index = idx
+		self:_render()
+		return true
+	end
+	return false
+end
+
+-- Rewrites a specific spread (by index) and re-renders if it's the active
+-- page. Used by GuideManualController to keep the live Clue Map page fresh.
+function BookView:SetSpreadAt(idx: number, spread)
+	if idx >= 1 and idx <= #self._pages then
+		self._pages[idx] = spread
+		if self._index == idx then
+			self:_render()
+		end
+		self._indicator.Text = string.format("%d / %d", self._index, #self._pages)
+	end
 end
 
 function BookView:SetPages(pages: { PageSpread })

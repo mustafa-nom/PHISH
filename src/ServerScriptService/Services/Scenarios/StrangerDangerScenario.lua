@@ -1,20 +1,60 @@
 --!strict
 -- Generates a randomized scenario for Stranger Danger Park.
--- Inputs: the cloned level's NPC spawn parts (with Anchor + NpcSpawnId
--- attributes) and the puppy spawn candidates.
--- Outputs: a StrangerDangerScenario per docs/TECHNICAL_DESIGN.md.
+--
+-- Each spawn point gets:
+-- - an Archetype (which NPC template to clone there) chosen via the anchor's
+--   bias toward Risky vs Safe
+-- - a Role (Risky / SafeWithClue / SafeNoClue) decided after archetype
+-- - 1-3 visible Cues drawn from the archetype's cue pool, full info for the
+--   Guide's book
+-- - a Silhouette (the one-line "what does the Explorer see at a glance")
+-- - optional Fragment: truthful (safe) or misleading (risky) puppy clue
+--
+-- The Explorer never receives Cues directly — only Silhouette. Asymmetric
+-- info is enforced server-side by ExplorerInteractionService.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Modules = ReplicatedStorage:WaitForChild("Modules")
-local NpcRegistry = require(Modules:WaitForChild("NpcRegistry"))
-local PlayAreaConfig = require(Modules:WaitForChild("PlayAreaConfig"))
 local Constants = require(Modules:WaitForChild("Constants"))
 local TagQueries = require(Modules:WaitForChild("TagQueries"))
 local LevelTypes = require(Modules:WaitForChild("LevelTypes"))
+local PlayAreaConfig = require(Modules:WaitForChild("PlayAreaConfig"))
+local StrangerDangerLogic = require(Modules:WaitForChild("StrangerDangerLogic"))
 
 local ScenarioTypes = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("ScenarioTypes"))
 
 local StrangerDangerScenario = {}
+
+-- archetype catalog grouped by base risk so we can match anchor bias to
+-- archetype options. one archetype per NPC template the map generator
+-- builds. (kept in this file rather than the Logic module because the
+-- *catalog* is server-authoritative — clients only need cue text/silhouettes.)
+local SAFE_ARCHETYPES = { "HotDogVendor", "Ranger", "ParentWithKid", "CasualParkGoer" }
+local RISKY_ARCHETYPES = { "VehicleLeaner", "HoodedAdult", "KnifeArchetype" }
+
+-- anchor → preferred archetype map. when an anchor strongly fits a specific
+-- archetype, use it directly; falls back to risk-pool random pick otherwise.
+local ANCHOR_FAVORITES = {
+	HotdogShop = { Safe = "HotDogVendor" },
+	GeneralStore = { Safe = "Ranger" },
+	WhiteVan = { Risky = "VehicleLeaner" },
+	AlleyMouth = { Risky = "KnifeArchetype" },
+	NorthSidewalk = { Safe = "ParentWithKid" },
+	SouthSidewalk = { Safe = "CasualParkGoer" },
+	EastSidewalk = { Safe = "ParentWithKid", Risky = "HoodedAdult" },
+	WestSidewalk = { Safe = "CasualParkGoer", Risky = "HoodedAdult" },
+}
+
+local ANCHOR_RISK_BIAS = {
+	HotdogShop = { Risky = 0, Safe = 5 },
+	GeneralStore = { Risky = 0, Safe = 5 },
+	WhiteVan = { Risky = 5, Safe = 0 },
+	AlleyMouth = { Risky = 5, Safe = 0 },
+	NorthSidewalk = { Risky = 1, Safe = 3 },
+	SouthSidewalk = { Risky = 1, Safe = 3 },
+	EastSidewalk = { Risky = 2, Safe = 3 },
+	WestSidewalk = { Risky = 2, Safe = 3 },
+}
 
 local function shuffle<T>(list: { T }): { T }
 	local out = table.clone(list)
@@ -25,215 +65,164 @@ local function shuffle<T>(list: { T }): { T }
 	return out
 end
 
-local function pickRandom<T>(list: { T }): T?
-	if #list == 0 then
-		return nil
-	end
+local function pickFromList<T>(list: { T }): T?
+	if #list == 0 then return nil end
 	return list[math.random(#list)]
 end
 
-local function pickRoleByAnchorBias(anchor: string?): string
-	local biases = anchor and NpcRegistry.AnchorBias[anchor] or nil
-	local riskyWeight = 1
-	local safeWeight = 1
-	if biases then
-		riskyWeight = biases.Risky or 1
-		safeWeight = biases.Safe or 1
-	end
-	local total = riskyWeight + safeWeight
-	if math.random() * total < riskyWeight then
-		return ScenarioTypes.NpcRoles.Risky
-	end
-	return ScenarioTypes.NpcRoles.SafeWithClue
-end
-
-local function drawTraitsForNpc(role: string, anchor: string?): { string }
-	local pool: { string }
-	if role == ScenarioTypes.NpcRoles.Risky then
-		pool = NpcRegistry.GetTagsByRisk(NpcRegistry.Risk.Risky)
-	else
-		pool = NpcRegistry.GetTagsByRisk(NpcRegistry.Risk.Safe)
-	end
-
-	-- Anchor-required traits first
-	local traits: { string } = {}
-	local seen: { [string]: boolean } = {}
-	if anchor and NpcRegistry.AnchorRequiredTraits[anchor] then
-		local section = NpcRegistry.AnchorRequiredTraits[anchor]
-		local roleSection = nil
-		if role == ScenarioTypes.NpcRoles.Risky then
-			roleSection = section.Risky
-		else
-			roleSection = section.Safe
-		end
-		if roleSection then
-			for _, tag in ipairs(roleSection) do
-				if NpcRegistry.Traits[tag] and not seen[tag] then
-					table.insert(traits, tag)
-					seen[tag] = true
-				end
-			end
-		end
-	end
-
-	-- Fill remaining 1–3 traits from the pool
-	local target = math.random(1, 3)
-	if #traits >= target then
-		return traits
-	end
-	local shuffled = shuffle(pool)
-	for _, tag in ipairs(shuffled) do
-		if not seen[tag] then
-			table.insert(traits, tag)
-			seen[tag] = true
-			if #traits >= target then
-				break
-			end
-		end
-	end
-	return traits
-end
-
-local function gatherSpawnPoints(levelModel: Model): { { Spawn: BasePart, Id: string, Anchor: string? } }
+local function gatherSpawnPoints(levelModel: Model)
 	local result = {}
 	for _, part in ipairs(TagQueries.GetTaggedInside(levelModel, PlayAreaConfig.Tags.BuddyNpcSpawn)) do
 		if part:IsA("BasePart") then
 			local id = part:GetAttribute(PlayAreaConfig.Attributes.NpcSpawnId)
-			if typeof(id) ~= "string" then
-				id = part:GetFullName()
-			end
+			if typeof(id) ~= "string" then id = part:GetFullName() end
 			local anchor = part:GetAttribute(PlayAreaConfig.Attributes.Anchor)
-			if typeof(anchor) ~= "string" then
-				anchor = nil
-			end
+			if typeof(anchor) ~= "string" then anchor = nil end
 			table.insert(result, { Spawn = part, Id = id, Anchor = anchor })
 		end
 	end
 	return result
 end
 
--- Decide each spawn's role:
--- 3 SafeWithClue, 2 SafeNoClue, remaining = Risky.
--- Anchor bias drives which spawns *prefer* which role.
-local function assignRoles(spawns: { { Spawn: BasePart, Id: string, Anchor: string? } }): { string }
-	local roles: { string } = table.create(#spawns, "")
-
-	local order = shuffle({ table.unpack({}) })  -- placeholder
-	-- build an ordered list of indices sorted by "risky preference" desc
-	local indexed: { { Index: number, RiskyScore: number } } = {}
+-- pick risk classification per spawn. force at least 3 SafeWithClue slots
+-- so triangulation always has 3 truthful fragments to hand out. ensure at
+-- least 1 Risky so the Guide has something to flag.
+local function assignRoles(spawns)
+	local count = #spawns
+	local indexed = {}
 	for i, spawn in ipairs(spawns) do
-		local score = 0
-		if spawn.Anchor and NpcRegistry.AnchorBias[spawn.Anchor] then
-			score = NpcRegistry.AnchorBias[spawn.Anchor].Risky or 0
-		end
-		table.insert(indexed, { Index = i, RiskyScore = score + math.random() })
+		local bias = spawn.Anchor and ANCHOR_RISK_BIAS[spawn.Anchor] or { Risky = 1, Safe = 1 }
+		local riskyScore = (bias.Risky or 0) + math.random()
+		table.insert(indexed, { Index = i, RiskyScore = riskyScore })
 	end
-	table.sort(indexed, function(a, b)
-		return a.RiskyScore > b.RiskyScore
-	end)
+	table.sort(indexed, function(a, b) return a.RiskyScore > b.RiskyScore end)
 
-	local total = #spawns
-	local safeWithClueCount = math.min(Constants.CLUES_TO_FIND, math.max(1, total - 2))
-	local riskyCount = math.max(1, math.floor(total * 0.35))
-	if total >= 7 then
-		riskyCount = math.max(2, riskyCount)
+	local target = {}
+	target.SafeWithClue = math.min(Constants.CLUES_TO_FIND, math.max(1, count - 3))
+	target.Risky = math.max(2, math.floor(count * 0.35))
+	target.SafeNoClue = math.max(0, count - target.SafeWithClue - target.Risky)
+	while target.SafeWithClue + target.SafeNoClue + target.Risky > count do
+		if target.SafeNoClue > 0 then target.SafeNoClue -= 1
+		elseif target.Risky > 1 then target.Risky -= 1
+		else target.SafeWithClue -= 1 end
 	end
-	local safeNoClueCount = math.max(0, total - safeWithClueCount - riskyCount)
-	-- Reconcile if rounding pushed us over
-	while safeWithClueCount + safeNoClueCount + riskyCount > total do
-		if safeNoClueCount > 0 then
-			safeNoClueCount -= 1
-		elseif riskyCount > 1 then
-			riskyCount -= 1
-		else
-			safeWithClueCount -= 1
-		end
-	end
-	while safeWithClueCount + safeNoClueCount + riskyCount < total do
-		safeNoClueCount += 1
+	while target.SafeWithClue + target.SafeNoClue + target.Risky < count do
+		target.SafeNoClue += 1
 	end
 
-	-- First N indices (highest RiskyScore) → Risky
-	for i = 1, riskyCount do
+	local roles = table.create(count, "")
+	for i = 1, target.Risky do
 		roles[indexed[i].Index] = ScenarioTypes.NpcRoles.Risky
 	end
-	-- Then SafeWithClue
-	for i = riskyCount + 1, riskyCount + safeWithClueCount do
+	for i = target.Risky + 1, target.Risky + target.SafeWithClue do
 		roles[indexed[i].Index] = ScenarioTypes.NpcRoles.SafeWithClue
 	end
-	-- Remaining → SafeNoClue
-	for i = riskyCount + safeWithClueCount + 1, #spawns do
+	for i = target.Risky + target.SafeWithClue + 1, count do
 		roles[indexed[i].Index] = ScenarioTypes.NpcRoles.SafeNoClue
 	end
 	return roles
 end
 
-local function pickPuppySpawnId(levelModel: Model): string?
-	local candidates = TagQueries.GetTaggedInside(levelModel, PlayAreaConfig.Tags.PuppySpawn)
-	if #candidates == 0 then
-		return nil
-	end
-	local choice = candidates[math.random(#candidates)]
-	if not choice:IsA("BasePart") then
-		return nil
-	end
-	choice:SetAttribute("BB_PuppyChosen", true)
-	return choice:GetFullName()
-end
-
-local function buildClueFragments(count: number): { string }
-	local pool = table.clone(NpcRegistry.ClueFragments)
-	local result: { string } = {}
-	for _ = 1, count do
-		if #pool == 0 then
-			break
+local function pickArchetype(role: string, anchor: string?): string
+	-- prefer the anchor's favorite for this risk side
+	local riskKey = role == ScenarioTypes.NpcRoles.Risky and "Risky" or "Safe"
+	if anchor then
+		local fav = ANCHOR_FAVORITES[anchor]
+		if fav and fav[riskKey] then
+			return fav[riskKey]
 		end
-		local idx = math.random(#pool)
-		table.insert(result, pool[idx])
-		table.remove(pool, idx)
 	end
-	return result
+	local pool = role == ScenarioTypes.NpcRoles.Risky and RISKY_ARCHETYPES or SAFE_ARCHETYPES
+	return pickFromList(pool) or pool[1]
 end
 
-function StrangerDangerScenario.Generate(levelModel: Model): ScenarioTypes.StrangerDangerScenario?
-	if not levelModel then
-		return nil
-	end
+local function pickPuppyLandmarkAndSpawn(levelModel: Model): (string, string)
+	local landmarks = StrangerDangerLogic.Landmarks
+	local landmark = landmarks[math.random(#landmarks)]
+	local candidates = TagQueries.GetTaggedInside(levelModel, PlayAreaConfig.Tags.PuppySpawn)
+	if #candidates == 0 then return landmark, "" end
+	local choice = candidates[math.random(#candidates)]
+	if not choice:IsA("BasePart") then return landmark, "" end
+	choice:SetAttribute("BB_PuppyChosen", true)
+	choice:SetAttribute("BB_PuppyLandmark", landmark)
+	return landmark, choice:GetFullName()
+end
+
+function StrangerDangerScenario.Generate(levelModel: Model): any?
+	if not levelModel then return nil end
 	local spawns = gatherSpawnPoints(levelModel)
 	if #spawns < 3 then
-		warn("StrangerDangerScenario: fewer than 3 BuddyNpcSpawn parts in level — cannot generate")
+		warn("StrangerDangerScenario: fewer than 3 BuddyNpcSpawn parts in level")
 		return nil
 	end
+
 	local roles = assignRoles(spawns)
+	local landmark, puppySpawnId = pickPuppyLandmarkAndSpawn(levelModel)
 
-	local clueTexts = buildClueFragments(Constants.CLUES_TO_FIND)
-	local clueIndex = 1
-
-	local npcs: { ScenarioTypes.StrangerDangerNpc } = {}
+	local npcs: { any } = {}
 	for i, spawn in ipairs(spawns) do
 		local role = roles[i]
-		local traits = drawTraitsForNpc(role, spawn.Anchor)
-		local clueText: string? = nil
+		local archetype = pickArchetype(role, spawn.Anchor)
+		local archetypeData = StrangerDangerLogic.Archetypes[archetype]
+		local cueCount = math.random(2, 3)
+		local cues = StrangerDangerLogic.PickCues(archetype, cueCount)
+		local verdict = StrangerDangerLogic.EvaluateVerdict(cues)
+
+		-- truthful fragments come from any safe NPC; misleading fragments
+		-- come from risky NPCs. SafeNoClue gets nothing.
+		local fragment: any? = nil
 		if role == ScenarioTypes.NpcRoles.SafeWithClue then
-			clueText = clueTexts[clueIndex]
-			clueIndex += 1
+			fragment = {
+				Truthful = true,
+				Landmark = landmark,
+				Text = StrangerDangerLogic.MakeTruthfulFragment(landmark),
+			}
+		elseif role == ScenarioTypes.NpcRoles.Risky then
+			fragment = {
+				Truthful = false,
+				Landmark = landmark,
+				Text = StrangerDangerLogic.MakeMisleadingFragment(landmark),
+			}
 		end
+
+		local silhouette = archetypeData and archetypeData.Silhouette or {
+			Headline = "Someone in the park",
+			Outline = "Person",
+			AccentColor = { 200, 200, 200 },
+			Stance = "Standing",
+		}
+
 		table.insert(npcs, {
 			Id = string.format("npc_%d", i),
 			SpawnPointId = spawn.Id,
 			Anchor = spawn.Anchor,
+			Archetype = archetype,
 			Role = role,
-			Traits = traits,
-			ClueText = clueText,
+			Silhouette = silhouette,
+			Cues = cues,
+			Verdict = verdict,
+			Fragment = fragment,
+			Bark = archetypeData and archetypeData.Bark,
+			-- legacy mirrors
+			Traits = cues,
+			ClueText = fragment and fragment.Text,
 		})
 	end
 
-	local riskyTags = NpcRegistry.GetTagsByRisk(NpcRegistry.Risk.Risky)
-	local safeTags = NpcRegistry.GetTagsByRisk(NpcRegistry.Risk.Safe)
+	-- guide manual now lists every cue tag (the book has its own structure)
+	local riskyTags, safeTags = {}, {}
+	for tag, cue in pairs(StrangerDangerLogic.Cues) do
+		if cue.Risk < 0 then
+			table.insert(riskyTags, tag)
+		else
+			table.insert(safeTags, tag)
+		end
+	end
 
-	local scenario: ScenarioTypes.StrangerDangerScenario = {
+	return {
 		Type = LevelTypes.StrangerDangerPark,
-		PuppySpawnId = pickPuppySpawnId(levelModel) or "",
+		PuppySpawnId = puppySpawnId,
+		PuppyLandmark = landmark,
 		Npcs = npcs,
 		GuideManual = {
 			RiskyTags = riskyTags,
@@ -241,7 +230,6 @@ function StrangerDangerScenario.Generate(levelModel: Model): ScenarioTypes.Stran
 		},
 		Annotations = {},
 	}
-	return scenario
 end
 
 return StrangerDangerScenario
