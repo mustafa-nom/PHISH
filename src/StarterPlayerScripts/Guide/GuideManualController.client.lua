@@ -14,6 +14,8 @@ local UIStyle = require(Modules:WaitForChild("UIStyle"))
 local Manuals = script.Parent:WaitForChild("Manuals")
 local StrangerDangerManual = require(Manuals:WaitForChild("StrangerDangerManual"))
 local BackpackCheckpointManual = require(Manuals:WaitForChild("BackpackCheckpointManual"))
+local StrangerDangerBookContent = require(Manuals:WaitForChild("StrangerDangerBookContent"))
+local BookView = require(script.Parent:WaitForChild("BookView"))
 
 local state = {
 	Role = RoleTypes.None,
@@ -25,7 +27,29 @@ local state = {
 	ManualPayload = nil :: any?,
 	-- Fallback: a screen-space backup if we can't find the SurfaceGui.
 	FallbackContainer = nil :: ScreenGui?,
+	-- Polished book overlay. Always shown for the Guide on top of the
+	-- existing SurfaceGui manual so they have a comfy reading experience.
+	Book = nil :: any?,
 }
+
+local function destroyBook()
+	if state.Book then
+		state.Book:Destroy()
+		state.Book = nil
+	end
+end
+
+local function ensureBook()
+	if state.Role ~= RoleTypes.Guide then return end
+	if state.LevelType ~= LevelTypes.StrangerDangerPark then
+		destroyBook()
+		return
+	end
+	if state.Book then return end
+	local players = game:GetService("Players")
+	local playerGui = players.LocalPlayer:WaitForChild("PlayerGui")
+	state.Book = BookView.new(playerGui, StrangerDangerBookContent)
+end
 
 local function findControlPanelSurfaceGui(): SurfaceGui?
 	if not state.SlotIndex then return nil end
@@ -126,6 +150,7 @@ RemoteService.OnClientEvent("GuideManualUpdated", function(payload)
 	state.ManualPayload = payload.Manual
 	state.LevelType = payload.LevelType
 	renderManual()
+	ensureBook()
 end)
 
 RemoteService.OnClientEvent("NpcDescriptionShown", function(payload)
@@ -150,6 +175,7 @@ RemoteService.OnClientEvent("LevelEnded", function(payload)
 		state.ActiveManual:Destroy()
 		state.ActiveManual = nil
 	end
+	destroyBook()
 end)
 
 RemoteService.OnClientEvent("RoundEnded", function(_payload)
@@ -164,4 +190,5 @@ RemoteService.OnClientEvent("RoundEnded", function(_payload)
 		state.FallbackContainer:Destroy()
 		state.FallbackContainer = nil
 	end
+	destroyBook()
 end)
