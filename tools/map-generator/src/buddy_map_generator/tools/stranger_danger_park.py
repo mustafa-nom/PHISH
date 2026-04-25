@@ -76,12 +76,14 @@ _PUPPY_SPAWNS = [
 def _emit_road_strip(p: LuaProgram, *, name: str, var: str, axis: str, base_y: float) -> None:
     """horizontal asphalt road plus its yellow center line and end caps.
 
-    axis="ns" runs along the z axis (north-south), axis="ew" along x.
+    axis="ns" runs along the z axis (north-south), axis="ew" along x. body
+    wrapped in do/end so the road + ~16 dash locals get released after.
     """
     if axis == "ns":
         sx, sz = _ROAD_WIDTH, _ROAD_LENGTH * 2
     else:
         sx, sz = _ROAD_LENGTH * 2, _ROAD_WIDTH
+    p.line("do")
     p.line(
         make_part(
             var,
@@ -120,14 +122,20 @@ def _emit_road_strip(p: LuaProgram, *, name: str, var: str, axis: str, base_y: f
                     material_name="SmoothPlastic",
                 )
             )
+    p.line("end")
 
 
 def _emit_crosswalks(p: LuaProgram, base_y: float) -> None:
-    """four sets of crosswalk stripes, one entering each side of the box."""
+    """four sets of crosswalk stripes, one entering each side of the box.
+
+    each crosswalk side wraps its 6 stripe locals in do/end so the 24 total
+    stripes don't pile up against lua's local-register cap.
+    """
     half = _ROAD_WIDTH / 2
     stripe_w = 1.4
     stripe_l = _ROAD_WIDTH - 4
     # n side stripes (running east-west along z = -half - 1)
+    p.line("do")
     for i in range(6):
         x = -half + 2 + i * 4
         p.line(
@@ -180,6 +188,7 @@ def _emit_crosswalks(p: LuaProgram, base_y: float) -> None:
                 material_name="SmoothPlastic",
             )
         )
+    p.line("end")
 
 
 def _emit_sidewalks(p: LuaProgram, base_y: float) -> None:
@@ -187,8 +196,10 @@ def _emit_sidewalks(p: LuaProgram, base_y: float) -> None:
 
     corners are quadrants that fill from the road edge out to the ground edge.
     they curl inward at the intersection so pedestrians have a corner to
-    stand on, plus curbs along the road edges.
+    stand on, plus curbs along the road edges. body wrapped in do/end so the
+    12 sidewalk + curb locals get released after.
     """
+    p.line("do")
     half = _ROAD_WIDTH / 2
     far = _GROUND_HALF
     # quadrant slabs — each (cx, cz, sx, sz)
@@ -249,13 +260,16 @@ def _emit_sidewalks(p: LuaProgram, base_y: float) -> None:
                     material_name="Concrete",
                 )
             )
+    p.line("end")
 
 
 def _emit_corner_buildings(p: LuaProgram) -> None:
     """four corner buildings — hotdog shop NE, general store NW, alley cluster SW, parked van SE."""
     p.line(make_model("buildings", parent="level", name="CornerBuildings"))
 
-    # NE — hotdog shop cottage with red roof and big sign
+    # NE — hotdog shop cottage with red roof and big sign. each corner gets
+    # its own do/end so its sign post / sign / billboard locals don't pile up
+    p.line("do")
     emit_cottage(
         p,
         var_prefix="b_hotdog",
@@ -301,8 +315,10 @@ def _emit_corner_buildings(p: LuaProgram) -> None:
             text_size=32,
         )
     )
+    p.line("end")
 
     # NW — general store / ranger station, ranger green walls
+    p.line("do")
     emit_cottage(
         p,
         var_prefix="b_store",
@@ -337,8 +353,10 @@ def _emit_corner_buildings(p: LuaProgram) -> None:
             text_size=24,
         )
     )
+    p.line("end")
 
     # SW — alley cluster: two narrow buildings with a gap that forms the alley
+    p.line("do")
     p.line(make_model("alley_cluster", parent="buildings", name="AlleyCluster"))
     p.line(
         make_part(
@@ -407,8 +425,10 @@ def _emit_corner_buildings(p: LuaProgram) -> None:
             shape="Ball",
         )
     )
+    p.line("end")
 
     # SE — parked white van and a small storefront behind it
+    p.line("do")
     p.line(make_model("vanblock", parent="buildings", name="VanBlock"))
     emit_cottage(
         p,
@@ -485,13 +505,19 @@ def _emit_corner_buildings(p: LuaProgram) -> None:
             transparency=0.3,
         )
     )
+    p.line("end")
 
 
 def _emit_npc_spawns_and_patrols(p: LuaProgram) -> None:
-    """anchor each npc spawn AND a PatrolPath folder of waypoints next to it."""
+    """anchor each npc spawn AND a PatrolPath folder of waypoints next to it.
+
+    each (spawn + waypoints) iteration is wrapped in do/end so the spawn
+    disc local + 3-4 waypoint locals get released before the next iteration.
+    """
     p.line(make_folder("patrol_root", parent="level", name="PatrolPaths"))
     for spawn_id, anchor, x, z, yaw, offsets in _NPC_SPAWNS:
         var = f"spawn_{spawn_id}"
+        p.line("do")
         p.line(
             make_disc(
                 var,
@@ -530,6 +556,7 @@ def _emit_npc_spawns_and_patrols(p: LuaProgram) -> None:
             p.line(set_attribute(wp_var, "WaypointIndex", idx))
         p.line(set_attribute(var, "PatrolPath", spawn_id))
         p.created(f"NpcSpawn/{spawn_id}")
+        p.line("end")
 
 
 def emit_stranger_danger_park_lua() -> str:
@@ -647,9 +674,11 @@ def emit_stranger_danger_park_lua() -> str:
     # npc patrol spawns
     _emit_npc_spawns_and_patrols(p)
 
-    # puppy spawn candidates (server picks one per round)
+    # puppy spawn candidates (server picks one per round). each disc in its
+    # own do/end so the per-iteration local doesn't pile up.
     for spawn_id, x, z in _PUPPY_SPAWNS:
         var = f"puppy_{spawn_id}"
+        p.line("do")
         p.line(
             make_disc(
                 var,
@@ -666,6 +695,7 @@ def emit_stranger_danger_park_lua() -> str:
         )
         p.line(add_tag(var, Tags.PUPPY_SPAWN))
         p.created(f"PuppySpawn/{spawn_id}")
+        p.line("end")
 
     # level exit zone (server activates near the chosen puppy spawn)
     p.line(
@@ -683,7 +713,9 @@ def emit_stranger_danger_park_lua() -> str:
     p.line(add_tag("level_exit", Tags.LEVEL_EXIT))
 
     # buddy portal to the next level — placed off the east sidewalk past the
-    # corner so the duo can see it from the intersection center
+    # corner so the duo can see it from the intersection center. portal block
+    # in its own do/end so its 4 part locals are released after.
+    p.line("do")
     p.line(make_model("portal", parent="level", name="BuddyPortal"))
     p.line(
         make_part(
@@ -740,6 +772,7 @@ def emit_stranger_danger_park_lua() -> str:
             text_size=22,
         )
     )
+    p.line("end")
 
     p.note("StrangerDangerPark intersection level built")
     p.created("Levels/StrangerDangerPark")

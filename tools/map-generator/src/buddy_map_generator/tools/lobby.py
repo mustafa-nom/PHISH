@@ -112,7 +112,9 @@ def emit_lobby_lua(
         f"spawn_part.Parent = lobby"
     )
 
-    # welcome sign — chunky wooden plank with billboard text
+    # welcome sign + mission subtitle — billboard guis spawn 4 sub-locals each
+    # so we scope the whole section in a do/end to keep the chunk under cap
+    p.line("do")
     p.line(
         make_part(
             "sign_post_l",
@@ -176,9 +178,13 @@ def emit_lobby_lua(
             text_size=28,
         )
     )
+    p.line("end")
 
     # central treehouse — hero feature: tall trunk with cottage perched on top
     # ringed by a cone-tree cluster so it reads as the lobby focal point.
+    # whole block scoped so its trunk + 4 canopy locals (and emit_cottage's
+    # locals) get released after the treehouse is built.
+    p.line("do")
     p.line(make_model("treehouse", parent="lobby", name="Treehouse"))
     p.line(
         make_part(
@@ -225,6 +231,7 @@ def emit_lobby_lua(
         wall_h=5,
     )
     p.created("Treehouse")
+    p.line("end")
 
     # capsule pads — four pairs in a soft arc north of spawn
     arc_radius = 30
@@ -240,6 +247,9 @@ def emit_lobby_lua(
         cz = oz + 2 + (-math.cos(ang_rad) * arc_radius)
         pair_color = _PAIR_COLORS[pair_idx % len(_PAIR_COLORS)]
 
+        # each pair builds in its own do/end so its arch + 2 pad locals are
+        # released before the next pair's locals are declared
+        p.line("do")
         # pair archway — two posts and a beam, signage stays simple
         p.line(
             make_part(
@@ -324,6 +334,7 @@ def emit_lobby_lua(
                 )
             )
             p.created(f"CapsulePad_{pair_idx + 1}{side_letter.upper()}")
+        p.line("end")
 
     # ----- decorative pass: cottages, trees, benches ringing the lobby
     p.line(make_model("decor", parent="lobby", name="Decor"))
@@ -370,9 +381,11 @@ def emit_lobby_lua(
             scale=scale,
         )
 
-    # park benches flanking the welcome path
+    # park benches flanking the welcome path. each bench in its own do/end
+    # block so the four part locals it spawns get released between iterations.
     bench_specs = [(-12, -25, 0), (12, -25, 0), (-12, 5, 0), (12, 5, 0)]
     for i, (bx, bz, _yaw) in enumerate(bench_specs):
+        p.line("do")
         p.line(
             make_part(
                 f"bench_seat_{i}",
@@ -407,8 +420,9 @@ def emit_lobby_lua(
                     material_name="Wood",
                 )
             )
+        p.line("end")
 
-    # flower bed flanking the welcome sign
+    # flower bed flanking the welcome sign — same per-side do/end scoping
     flower_colors = [
         PALETTE.capsule_a,
         PALETTE.capsule_b,
@@ -416,6 +430,7 @@ def emit_lobby_lua(
         PALETTE.capsule_d,
     ]
     for side, side_x in (("L", -10), ("R", 10)):
+        p.line("do")
         p.line(
             make_part(
                 f"flowerbed_{side}",
@@ -440,6 +455,7 @@ def emit_lobby_lua(
                     shape="Ball",
                 )
             )
+        p.line("end")
 
     p.note(f"lobby built with {pair_count} capsule pair(s)")
     return p.render()

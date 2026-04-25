@@ -196,8 +196,14 @@ def _emit_r6_rig(
     pants_id: str,
     holds_knife: bool,
 ) -> None:
-    """build a roblox-standard R6 rig with face/shirt/pants placeholders."""
+    """build a roblox-standard R6 rig with face/shirt/pants placeholders.
+
+    each rig declares ~30 locals (body parts + humanoid + 6 motor6ds + face
+    decal + clothing + trait gui sub-locals) so the body is wrapped in a
+    do/end block — without it, 7 rigs blow past lua's 200-local cap.
+    """
     var = f"npc_{npc_name.lower()}"
+    p.line("do")
     p.line(make_model(var, parent="templates_root", name=npc_name))
 
     # body parts at default R6 sizes positioned around y in [0, 5]
@@ -434,6 +440,7 @@ def _emit_r6_rig(
     )
 
     p.created(f"NpcTemplates/{npc_name}")
+    p.line("end")
 
 
 def emit_npc_templates_lua() -> str:
