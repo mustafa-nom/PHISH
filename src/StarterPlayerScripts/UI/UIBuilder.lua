@@ -8,7 +8,6 @@ local UIStyle = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("
 local UIBuilder = {}
 
 UIBuilder.UIStyle = UIStyle
-UIBuilder.ReferenceViewport = Vector2.new(1920, 1080)
 
 function UIBuilder.GetScreenGui(): ScreenGui
 	local player = Players.LocalPlayer
@@ -44,8 +43,8 @@ function UIBuilder.Toast(message: string, durationSeconds: number?, kind: string
 	if not container then
 		container = Instance.new("Frame")
 		container.Name = "ToastContainer"
-		container.Size = UDim2.new(1, 0, 0.092, 0)
-		container.Position = UDim2.new(0, 0, 0.074, 0)
+		container.Size = UDim2.new(1, 0, 0, 100)
+		container.Position = UDim2.new(0, 0, 0, 80)
 		container.BackgroundTransparency = 1
 		container.ZIndex = 50
 		container.Parent = screen
@@ -56,14 +55,14 @@ function UIBuilder.Toast(message: string, durationSeconds: number?, kind: string
 		layout.Parent = container
 	end
 	local toast = UIStyle.MakePanel({
-		Size = UDim2.new(0.188, 0, 0.041, 0),
+		Size = UDim2.new(0, 360, 0, 44),
 		BackgroundColor3 = (kind == "Error" and UIStyle.Palette.Risky)
 			or (kind == "Success" and UIStyle.Palette.Safe)
 			or UIStyle.Palette.Panel,
 	})
 	local label = UIStyle.MakeLabel({
-		Size = UDim2.new(0.956, 0, 1, 0),
-		Position = UDim2.new(0.022, 0, 0, 0),
+		Size = UDim2.new(1, -16, 1, 0),
+		Position = UDim2.new(0, 8, 0, 0),
 		Text = message,
 		TextSize = UIStyle.TextSize.Body,
 	})

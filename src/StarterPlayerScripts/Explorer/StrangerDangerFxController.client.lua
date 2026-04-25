@@ -110,7 +110,7 @@ local function celebratePuppy()
 	local label = Instance.new("TextLabel")
 	label.AnchorPoint = Vector2.new(0.5, 0.5)
 	label.Position = UDim2.new(0.5, 0, 0.4, 0)
-	label.Size = UDim2.new(0.32, 0, 0.11, 0)
+	label.Size = UDim2.new(0, 600, 0, 120)
 	label.BackgroundTransparency = 1
 	label.Text = "PUPPY FOUND!"
 	label.Font = Enum.Font.Cartoon
@@ -123,7 +123,7 @@ local function celebratePuppy()
 	local sub = Instance.new("TextLabel")
 	sub.AnchorPoint = Vector2.new(0.5, 0.5)
 	sub.Position = UDim2.new(0.5, 0, 0.5, 0)
-	sub.Size = UDim2.new(0.28, 0, 0.05, 0)
+	sub.Size = UDim2.new(0, 500, 0, 50)
 	sub.BackgroundTransparency = 1
 	sub.Text = "you talked, you trusted, you won"
 	sub.Font = Enum.Font.Cartoon

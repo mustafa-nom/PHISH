@@ -74,7 +74,7 @@ local function makeActionButton(parent: Frame, name: string, label: string, colo
 	local btn = Instance.new("TextButton")
 	btn.Name = name
 	btn.Text = label
-	btn.Size = UDim2.new(1, 0, 0.282, 0)
+	btn.Size = UDim2.new(1, 0, 0, 44)
 	btn.BackgroundColor3 = color
 	btn.BorderSizePixel = 0
 	btn.AutoButtonColor = true
@@ -88,64 +88,72 @@ local function makeActionButton(parent: Frame, name: string, label: string, colo
 	return btn
 end
 
-local function showCard(npcId: string, _archetype: string?, silhouette: any, revealedCues: { string }?)
+local function showCard(npcId: string, archetype: string?, silhouette: any, revealedCues: { string }?)
 	clearCard()
 	activeNpcId = npcId
 	local screen = UIBuilder.GetScreenGui()
 
 	card = UIStyle.MakePanel({
 		Name = "NpcActionCard",
-		Size = UDim2.new(0.188, 0, 0.426, 0),
+		Size = UDim2.new(0, 360, 0, 460),
 		AnchorPoint = Vector2.new(1, 1),
-		Position = UDim2.new(0.992, 0, 0.985, 0),
+		Position = UDim2.new(1, -16, 1, -16),
 		Parent = screen,
 	})
 	UIBuilder.PadLayout(card :: Frame, 12)
 
-	local contentLayout = Instance.new("UIListLayout")
-	contentLayout.SortOrder = Enum.SortOrder.LayoutOrder
-	contentLayout.Padding = UDim.new(0, 10)
-	contentLayout.Parent = card
-
+	-- accent strip on the left edge — colored by silhouette accent so the
+	-- explorer can match the npc visually
 	local accent = silhouette and silhouette.AccentColor
 	local accentColor = accent and Color3.fromRGB(accent[1] or 200, accent[2] or 200, accent[3] or 200)
 		or Color3.fromRGB(200, 200, 200)
 	local stripe = Instance.new("Frame")
-	stripe.LayoutOrder = 0
-	stripe.Size = UDim2.new(1, 0, 0.013, 0)
-	stripe.Position = UDim2.new(0, 0, 0.017, 0)
+	stripe.Size = UDim2.new(0, 6, 1, -16)
+	stripe.Position = UDim2.new(0, -6, 0, 8)
 	stripe.BackgroundColor3 = accentColor
 	stripe.BorderSizePixel = 0
 	stripe.Parent = card
 	UIStyle.ApplyCorner(stripe, UDim.new(0, 3))
 
 	local title = UIStyle.MakeLabel({
-		Size = UDim2.new(1, 0, 0.061, 0),
-		Text = "DECIDE CAREFULLY",
+		Size = UDim2.new(1, 0, 0, 22),
+		Text = "WHAT YOU SEE",
 		TextSize = UIStyle.TextSize.Caption,
 		Font = UIStyle.FontBold,
 		TextXAlignment = Enum.TextXAlignment.Left,
 		TextColor3 = Color3.fromRGB(120, 80, 50),
 	})
-	title.LayoutOrder = 1
 	title.Parent = card
 
-	local instruction = UIStyle.MakeLabel({
-		Size = UDim2.new(1, 0, 0.117, 0),
-		Text = "Use what the NPC is doing in front of you. If you're unsure, ask your buddy for one more clue before you commit.",
+	local headline = UIStyle.MakeLabel({
+		Size = UDim2.new(1, 0, 0, 60),
+		Position = UDim2.new(0, 0, 0, 24),
+		Text = (silhouette and silhouette.Headline) or "Someone in the park",
 		TextSize = UIStyle.TextSize.Body,
 		TextXAlignment = Enum.TextXAlignment.Left,
 		TextYAlignment = Enum.TextYAlignment.Top,
 		TextWrapped = true,
 		Font = UIStyle.Font,
 	})
-	instruction.LayoutOrder = 2
-	instruction.Parent = card
+	headline.Parent = card
 
+	local outline = UIStyle.MakeLabel({
+		Size = UDim2.new(1, 0, 0, 22),
+		Position = UDim2.new(0, 0, 0, 86),
+		Text = (silhouette and silhouette.Outline) or "",
+		TextSize = UIStyle.TextSize.Caption,
+		Font = UIStyle.FontBold,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		TextColor3 = accentColor,
+	})
+	outline.Parent = card
+
+	-- cues that the Guide has shared (via AskFirst). starts hidden until at
+	-- least one cue is revealed.
 	local cuesPanel = Instance.new("Frame")
 	cuesPanel.Name = "CuesPanel"
-	cuesPanel.LayoutOrder = 3
-	cuesPanel.Size = UDim2.new(1, 0, 0.261, 0)
+	cuesPanel.Size = UDim2.new(1, 0, 0, 110)
+	cuesPanel.Position = UDim2.new(0, 0, 0, 116)
 	cuesPanel.BackgroundColor3 = UIStyle.Palette.Panel
 	cuesPanel.BorderSizePixel = 0
 	cuesPanel.Parent = card
@@ -158,7 +166,7 @@ local function showCard(npcId: string, _archetype: string?, silhouette: any, rev
 	cuesPad.Parent = cuesPanel
 
 	local cueHeader = UIStyle.MakeLabel({
-		Size = UDim2.new(1, 0, 0.15, 0),
+		Size = UDim2.new(1, 0, 0, 18),
 		Text = "Buddy says...",
 		TextSize = UIStyle.TextSize.Caption,
 		Font = UIStyle.FontBold,
@@ -169,8 +177,8 @@ local function showCard(npcId: string, _archetype: string?, silhouette: any, rev
 	cueHeader.Parent = cuesPanel
 
 	local cueListHolder = Instance.new("Frame")
-	cueListHolder.Size = UDim2.new(1, 0, 0.817, 0)
-	cueListHolder.Position = UDim2.new(0, 0, 0.183, 0)
+	cueListHolder.Size = UDim2.new(1, 0, 1, -22)
+	cueListHolder.Position = UDim2.new(0, 0, 0, 22)
 	cueListHolder.BackgroundTransparency = 1
 	cueListHolder.Parent = cuesPanel
 
@@ -185,8 +193,8 @@ local function showCard(npcId: string, _archetype: string?, silhouette: any, rev
 		for _, tag in ipairs(revealedCues) do
 			local cue = StrangerDangerLogic.Cues[tag]
 			if cue then
-					local row = UIStyle.MakeLabel({
-						Size = UDim2.new(1, 0, 0, 0),
+				local row = UIStyle.MakeLabel({
+					Size = UDim2.new(1, 0, 0, 0),
 					Text = "• " .. cue.ExplorerText,
 					TextSize = 14,
 					TextWrapped = true,
@@ -204,8 +212,8 @@ local function showCard(npcId: string, _archetype: string?, silhouette: any, rev
 	-- action buttons stacked at the bottom
 	local actions = Instance.new("Frame")
 	actions.Name = "Actions"
-	actions.LayoutOrder = 4
-	actions.Size = UDim2.new(1, 0, 0.339, 0)
+	actions.Size = UDim2.new(1, 0, 0, 160)
+	actions.Position = UDim2.new(0, 0, 1, -160)
 	actions.BackgroundTransparency = 1
 	actions.Parent = card
 

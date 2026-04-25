@@ -152,9 +152,9 @@ local function getRenderTarget(): Instance
 		screen.ResetOnSpawn = false
 		screen.Parent = players.LocalPlayer:WaitForChild("PlayerGui")
 		local frame = Instance.new("Frame")
-		frame.Size = UDim2.new(0.167, 0, 0.444, 0)
+		frame.Size = UDim2.new(0, 320, 0, 480)
 		frame.AnchorPoint = Vector2.new(0, 0.5)
-		frame.Position = UDim2.new(0.006, 0, 0.5, 0)
+		frame.Position = UDim2.new(0, 12, 0.5, 0)
 		frame.BackgroundColor3 = UIStyle.Palette.Panel
 		frame.BorderSizePixel = 0
 		frame.Name = "ManualPanel"

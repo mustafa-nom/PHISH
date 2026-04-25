@@ -35,9 +35,9 @@ local function build()
 	if panel and panel.Parent then return end
 	panel = UIStyle.MakePanel({
 		Name = "RoundHud",
-		Size = UDim2.new(0.271, 0, 0.059, 0),
+		Size = UDim2.new(0, 520, 0, 64),
 		AnchorPoint = Vector2.new(0.5, 0),
-		Position = UDim2.new(0.5, 0, 0.011, 0),
+		Position = UDim2.new(0.5, 0, 0, 12),
 		Parent = screen,
 	})
 	UIBuilder.PadLayout(panel :: Frame, 8)
@@ -51,28 +51,28 @@ local function build()
 	layout.Parent = panel
 
 	timeLabel = UIStyle.MakeLabel({
-		Size = UDim2.new(0.18, 0, 1, 0),
+		Size = UDim2.new(0, 90, 1, 0),
 		Text = "0:00",
 		TextSize = UIStyle.TextSize.Heading,
 	})
 	timeLabel.Parent = panel
 
 	mistakesLabel = UIStyle.MakeLabel({
-		Size = UDim2.new(0.16, 0, 1, 0),
+		Size = UDim2.new(0, 80, 1, 0),
 		Text = "0 misses",
 		TextSize = UIStyle.TextSize.Body,
 	})
 	mistakesLabel.Parent = panel
 
 	trustLabel = UIStyle.MakeLabel({
-		Size = UDim2.new(0.22, 0, 1, 0),
+		Size = UDim2.new(0, 110, 1, 0),
 		Text = "0 trust",
 		TextSize = UIStyle.TextSize.Body,
 	})
 	trustLabel.Parent = panel
 
 	objectiveLabel = UIStyle.MakeLabel({
-		Size = UDim2.new(0.4, 0, 1, 0),
+		Size = UDim2.new(0, 200, 1, 0),
 		Text = "",
 		TextSize = UIStyle.TextSize.Body,
 		TextColor3 = UIStyle.Palette.Highlight,

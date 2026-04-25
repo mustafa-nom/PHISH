@@ -20,7 +20,7 @@ export type Manual = {
 local function makeRow(parent: Frame, tag: string, text: string, kind: string)
 	local row = Instance.new("Frame")
 	row.Name = "Row_" .. tag
-	row.Size = UDim2.new(1, 0, 0.058, 0)
+	row.Size = UDim2.new(1, 0, 0, 28)
 	row.BackgroundColor3 = UIStyle.Palette.Panel
 	row.BorderSizePixel = 0
 	row.LayoutOrder = #parent:GetChildren()
@@ -28,16 +28,16 @@ local function makeRow(parent: Frame, tag: string, text: string, kind: string)
 	UIStyle.ApplyCorner(row, UIStyle.SmallCorner)
 
 	local marker = Instance.new("Frame")
-	marker.Size = UDim2.new(0.018, 0, 0.786, 0)
-	marker.Position = UDim2.new(0.012, 0, 0.107, 0)
+	marker.Size = UDim2.new(0, 6, 1, -6)
+	marker.Position = UDim2.new(0, 4, 0, 3)
 	marker.BackgroundColor3 = (kind == "Risky") and UIStyle.Palette.Risky or UIStyle.Palette.Safe
 	marker.BorderSizePixel = 0
 	marker.Parent = row
 	UIStyle.ApplyCorner(marker, UDim.new(0, 3))
 
 	local label = UIStyle.MakeLabel({
-		Size = UDim2.new(0.95, 0, 1, 0),
-		Position = UDim2.new(0.05, 0, 0, 0),
+		Size = UDim2.new(1, -16, 1, 0),
+		Position = UDim2.new(0, 16, 0, 0),
 		Text = (kind == "Risky" and "🚩 " or "✅ ") .. text,
 		TextSize = UIStyle.TextSize.Body,
 		TextXAlignment = Enum.TextXAlignment.Left,
@@ -75,14 +75,14 @@ function StrangerDangerManual.Build(parent: Instance, manualPayload): Manual
 	pad.Parent = frame
 
 	local title = UIStyle.MakeLabel({
-		Size = UDim2.new(1, 0, 0.075, 0),
+		Size = UDim2.new(1, 0, 0, 36),
 		Text = "Stranger Danger Manual",
 		TextSize = UIStyle.TextSize.Heading,
 	})
 	title.Parent = frame
 
 	local riskyHeader = UIStyle.MakeLabel({
-		Size = UDim2.new(1, 0, 0.05, 0),
+		Size = UDim2.new(1, 0, 0, 24),
 		Text = "🚩 Stay away if you see:",
 		TextSize = UIStyle.TextSize.Body,
 		TextColor3 = UIStyle.Palette.Risky,
@@ -97,7 +97,7 @@ function StrangerDangerManual.Build(parent: Instance, manualPayload): Manual
 	end
 
 	local safeHeader = UIStyle.MakeLabel({
-		Size = UDim2.new(1, 0, 0.05, 0),
+		Size = UDim2.new(1, 0, 0, 24),
 		Text = "✅ Probably safe if you see:",
 		TextSize = UIStyle.TextSize.Body,
 		TextColor3 = UIStyle.Palette.Safe,
@@ -114,7 +114,7 @@ function StrangerDangerManual.Build(parent: Instance, manualPayload): Manual
 	manual.Frame = frame
 	manual.TraitRows = rows
 	manual.Highlight = function(self, traitTags: { string })
-		for _, row in pairs(self.TraitRows) do
+		for tag, row in pairs(self.TraitRows) do
 			row.BackgroundColor3 = UIStyle.Palette.Panel
 		end
 		for _, tag in ipairs(traitTags or {}) do

@@ -20,9 +20,8 @@ local LANE_ORDER = { "PackIt", "AskFirst", "LeaveIt" }
 local function makeLaneSection(parent: Frame, lane: string, items: { string }): { [string]: Frame }
 	local theme = ItemRegistry.LaneTheme[lane]
 	local section = Instance.new("Frame")
-	local sectionHeight = 0.05 + (#items * 0.05)
 	section.Name = "Lane_" .. lane
-	section.Size = UDim2.new(1, 0, sectionHeight, 0)
+	section.Size = UDim2.new(1, 0, 0, 24 + (#items * 24))
 	section.BackgroundTransparency = 1
 	section.LayoutOrder = #parent:GetChildren()
 	section.Parent = parent
@@ -39,7 +38,7 @@ local function makeLaneSection(parent: Frame, lane: string, items: { string }): 
 		prefix = "⚠️ "
 	end
 	local header = UIStyle.MakeLabel({
-		Size = UDim2.new(1, 0, 0.18, 0),
+		Size = UDim2.new(1, 0, 0, 22),
 		Text = prefix .. theme.Label,
 		TextSize = UIStyle.TextSize.Body,
 		TextColor3 = theme.Color,
@@ -52,7 +51,7 @@ local function makeLaneSection(parent: Frame, lane: string, items: { string }): 
 	for i, key in ipairs(items) do
 		local row = Instance.new("Frame")
 		row.Name = "Row_" .. key
-		row.Size = UDim2.new(1, 0, 0.16, 0)
+		row.Size = UDim2.new(1, 0, 0, 22)
 		row.BackgroundColor3 = UIStyle.Palette.Panel
 		row.BorderSizePixel = 0
 		row.LayoutOrder = i + 1
@@ -60,8 +59,8 @@ local function makeLaneSection(parent: Frame, lane: string, items: { string }): 
 		UIStyle.ApplyCorner(row, UDim.new(0, 4))
 
 		local label = UIStyle.MakeLabel({
-			Size = UDim2.new(0.978, 0, 1, 0),
-			Position = UDim2.new(0.022, 0, 0, 0),
+			Size = UDim2.new(1, -8, 1, 0),
+			Position = UDim2.new(0, 8, 0, 0),
 			Text = ScenarioRegistry.GetItemDisplay(key),
 			TextSize = UIStyle.TextSize.Caption,
 			TextXAlignment = Enum.TextXAlignment.Left,
@@ -99,7 +98,7 @@ function BackpackCheckpointManual.Build(parent: Instance, manualPayload): Manual
 	pad.Parent = frame
 
 	local title = UIStyle.MakeLabel({
-		Size = UDim2.new(1, 0, 0.067, 0),
+		Size = UDim2.new(1, 0, 0, 32),
 		Text = "Backpack Checkpoint Chart",
 		TextSize = UIStyle.TextSize.Heading,
 	})
@@ -122,7 +121,7 @@ function BackpackCheckpointManual.Build(parent: Instance, manualPayload): Manual
 	local manual = {} :: Manual
 	manual.Frame = frame
 	manual.Highlight = function(_self, itemKey: string)
-		for _, row in pairs(allRows) do
+		for k, row in pairs(allRows) do
 			row.BackgroundColor3 = UIStyle.Palette.Panel
 		end
 		local row = allRows[itemKey]

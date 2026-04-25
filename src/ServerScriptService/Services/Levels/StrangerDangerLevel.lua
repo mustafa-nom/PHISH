@@ -3,6 +3,7 @@
 -- Spawns NPCs at BuddyNpcSpawn parts, attaches accessories per trait,
 -- adds ProximityPrompts, activates puppy on completion.
 
+local CollectionService = game:GetService("CollectionService")
 local ServerStorage = game:GetService("ServerStorage")
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -11,105 +12,10 @@ local Constants = require(Modules:WaitForChild("Constants"))
 local PlayAreaConfig = require(Modules:WaitForChild("PlayAreaConfig"))
 local TagQueries = require(Modules:WaitForChild("TagQueries"))
 local LevelTypes = require(Modules:WaitForChild("LevelTypes"))
+local NpcRegistry = require(Modules:WaitForChild("NpcRegistry"))
 local RemoteService = require(ReplicatedStorage:WaitForChild("RemoteService"))
 
 local StrangerDangerLevel = {}
-local HOTDOG_MESH_ID = "rbxassetid://29896287"
-local HOTDOG_TEXTURE_ID = "rbxassetid://29896653"
-
-local function findDescendantOfClass(model: Model, className: string, names: { string }): Instance?
-	for _, name in ipairs(names) do
-		local found = model:FindFirstChild(name, true)
-		if found and found.ClassName == className then
-			return found
-		end
-	end
-	return nil
-end
-
-local function findBodyPart(model: Model, names: { string }): BasePart?
-	return findDescendantOfClass(model, "Part", names)
-		or findDescendantOfClass(model, "MeshPart", names)
-end
-
-local function findJoint(model: Model, names: { string }): Motor6D?
-	local found = findDescendantOfClass(model, "Motor6D", names)
-	if found and found:IsA("Motor6D") then
-		return found
-	end
-	return nil
-end
-
-local function resetPose(model: Model)
-	for _, descendant in ipairs(model:GetDescendants()) do
-		if descendant:IsA("Motor6D") then
-			descendant.Transform = CFrame.identity
-		end
-	end
-end
-
-local function setJointTransform(model: Model, names: { string }, transform: CFrame)
-	local joint = findJoint(model, names)
-	if joint then
-		joint.Transform = transform
-	end
-end
-
-local function attachPropToLimb(
-	npcModel: Model,
-	propName: string,
-	limbNames: { string },
-	size: Vector3,
-	offset: CFrame,
-	configure: (BasePart) -> ()
-): BasePart?
-	local existing = npcModel:FindFirstChild(propName)
-	if existing and existing:IsA("BasePart") then
-		return existing
-	end
-	local limb = findBodyPart(npcModel, limbNames)
-	if not limb then
-		return nil
-	end
-
-	local prop = Instance.new("Part")
-	prop.Name = propName
-	prop.Size = size
-	prop.Anchored = false
-	prop.CanCollide = false
-	prop.CanQuery = false
-	prop.CanTouch = false
-	prop.Massless = true
-	configure(prop)
-	prop.Parent = npcModel
-
-	local weld = Instance.new("WeldConstraint")
-	weld.Part0 = limb
-	weld.Part1 = prop
-	weld.Parent = prop
-	prop.CFrame = limb.CFrame * offset
-	return prop
-end
-
-local function attachHotDogProp(npcModel: Model)
-	attachPropToLimb(
-		npcModel,
-		"HotDogProp",
-		{ "RightHand", "Right Arm" },
-		Vector3.new(1, 1.2, 1),
-		CFrame.new(0, -0.65, -0.2) * CFrame.Angles(math.rad(12), math.rad(90), math.rad(78)),
-		function(prop)
-			prop.Color = Color3.fromRGB(235, 178, 86)
-			prop.Material = Enum.Material.SmoothPlastic
-			local mesh = Instance.new("SpecialMesh")
-			mesh.MeshType = Enum.MeshType.FileMesh
-			mesh.MeshId = HOTDOG_MESH_ID
-			mesh.TextureId = HOTDOG_TEXTURE_ID
-			mesh.Scale = Vector3.new(1.05, 1.05, 1.05)
-			mesh.Parent = prop
-		end
-	)
-end
 
 local function getLevelModel(slot: Model): Model?
 	local playArea = slot:FindFirstChild(Constants.SLOT_PLAY_AREA_FOLDER)
@@ -155,61 +61,38 @@ local function pickTemplateForArchetype(archetype: string?): Model?
 end
 
 local function attachKnifeAccessory(npcModel: Model)
-	attachPropToLimb(
-		npcModel,
-		"KnifePlaceholder",
-		{ "RightHand", "Right Arm" },
-		Vector3.new(0.4, 0.4, 1.2),
-		CFrame.new(0, -0.55, -0.45) * CFrame.Angles(0, math.rad(90), math.rad(78)),
-		function(prop)
-			prop.Color = Color3.fromRGB(180, 180, 200)
-			prop.Material = Enum.Material.SmoothPlastic
-		end
-	)
-end
-
-local function applyNpcPose(npcModel: Model, archetype: string?)
-	resetPose(npcModel)
-
-	if archetype == "HotDogVendor" then
-		setJointTransform(npcModel, { "Right Shoulder", "RightShoulder" }, CFrame.Angles(math.rad(-15), math.rad(80), math.rad(88)))
-		setJointTransform(npcModel, { "Left Shoulder", "LeftShoulder" }, CFrame.Angles(math.rad(18), math.rad(-12), math.rad(-28)))
-		setJointTransform(npcModel, { "Right Hip", "RightHip" }, CFrame.Angles(math.rad(6), 0, math.rad(4)))
-		setJointTransform(npcModel, { "Left Hip", "LeftHip" }, CFrame.Angles(math.rad(-4), 0, math.rad(-4)))
-		setJointTransform(npcModel, { "Neck" }, CFrame.Angles(math.rad(-6), math.rad(10), 0))
-		attachHotDogProp(npcModel)
-	elseif archetype == "Ranger" then
-		setJointTransform(npcModel, { "Right Shoulder", "RightShoulder" }, CFrame.Angles(math.rad(10), math.rad(18), math.rad(18)))
-		setJointTransform(npcModel, { "Left Shoulder", "LeftShoulder" }, CFrame.Angles(math.rad(-42), math.rad(-8), math.rad(-40)))
-		setJointTransform(npcModel, { "Right Hip", "RightHip" }, CFrame.Angles(math.rad(4), 0, math.rad(5)))
-		setJointTransform(npcModel, { "Left Hip", "LeftHip" }, CFrame.Angles(math.rad(-3), 0, math.rad(-5)))
-	elseif archetype == "ParentWithKid" then
-		setJointTransform(npcModel, { "Right Shoulder", "RightShoulder" }, CFrame.Angles(math.rad(8), math.rad(10), math.rad(14)))
-		setJointTransform(npcModel, { "Left Shoulder", "LeftShoulder" }, CFrame.Angles(math.rad(-6), math.rad(-12), math.rad(-22)))
-		setJointTransform(npcModel, { "Right Hip", "RightHip" }, CFrame.Angles(math.rad(10), 0, math.rad(6)))
-		setJointTransform(npcModel, { "Left Hip", "LeftHip" }, CFrame.Angles(math.rad(-12), 0, math.rad(-6)))
-	elseif archetype == "CasualParkGoer" then
-		setJointTransform(npcModel, { "RootJoint" }, CFrame.Angles(math.rad(10), 0, 0))
-		setJointTransform(npcModel, { "Right Shoulder", "RightShoulder" }, CFrame.Angles(math.rad(38), math.rad(6), math.rad(24)))
-		setJointTransform(npcModel, { "Left Shoulder", "LeftShoulder" }, CFrame.Angles(math.rad(32), math.rad(-6), math.rad(-24)))
-		setJointTransform(npcModel, { "Neck" }, CFrame.Angles(math.rad(10), 0, 0))
-	elseif archetype == "VehicleLeaner" then
-		setJointTransform(npcModel, { "RootJoint" }, CFrame.Angles(0, math.rad(18), math.rad(10)))
-		setJointTransform(npcModel, { "Right Shoulder", "RightShoulder" }, CFrame.Angles(math.rad(22), math.rad(35), math.rad(46)))
-		setJointTransform(npcModel, { "Left Shoulder", "LeftShoulder" }, CFrame.Angles(math.rad(-8), math.rad(-15), math.rad(-10)))
-		setJointTransform(npcModel, { "Right Hip", "RightHip" }, CFrame.Angles(math.rad(8), 0, math.rad(10)))
-	elseif archetype == "KnifeArchetype" then
-		setJointTransform(npcModel, { "RootJoint" }, CFrame.Angles(0, math.rad(-12), 0))
-		setJointTransform(npcModel, { "Right Shoulder", "RightShoulder" }, CFrame.Angles(math.rad(-8), math.rad(44), math.rad(82)))
-		setJointTransform(npcModel, { "Left Shoulder", "LeftShoulder" }, CFrame.Angles(math.rad(14), math.rad(-10), math.rad(-26)))
-		setJointTransform(npcModel, { "Right Hip", "RightHip" }, CFrame.Angles(math.rad(16), 0, math.rad(10)))
-		setJointTransform(npcModel, { "Left Hip", "LeftHip" }, CFrame.Angles(math.rad(-12), 0, math.rad(-8)))
-		setJointTransform(npcModel, { "Neck" }, CFrame.Angles(math.rad(8), math.rad(-10), 0))
-	elseif archetype == "HoodedAdult" then
-		setJointTransform(npcModel, { "RootJoint" }, CFrame.Angles(math.rad(6), math.rad(-8), 0))
-		setJointTransform(npcModel, { "Right Shoulder", "RightShoulder" }, CFrame.Angles(math.rad(22), 0, math.rad(10)))
-		setJointTransform(npcModel, { "Left Shoulder", "LeftShoulder" }, CFrame.Angles(math.rad(18), 0, math.rad(-10)))
-		setJointTransform(npcModel, { "Neck" }, CFrame.Angles(math.rad(10), 0, 0))
+	-- Look for a "Knife" accessory in the NpcTemplates folder, or build a
+	-- placeholder block. Kid-friendly: blocky cartoon, grey, no gore.
+	local templates = ServerStorage:FindFirstChild("NpcTemplates")
+	local knifeTemplate = templates and templates:FindFirstChild("KnifeAccessory")
+	local knife: Instance?
+	if knifeTemplate then
+		knife = knifeTemplate:Clone()
+	else
+		-- Fallback: a small grey block welded to the NPC's right hand or
+		-- HumanoidRootPart so the trait reads on screen.
+		local part = Instance.new("Part")
+		part.Name = "KnifePlaceholder"
+		part.Size = Vector3.new(0.4, 0.4, 1.2)
+		part.Color = Color3.fromRGB(180, 180, 200)
+		part.Material = Enum.Material.SmoothPlastic
+		part.Anchored = false
+		part.CanCollide = false
+		knife = part
+	end
+	if not knife then
+		return
+	end
+	local hand = npcModel:FindFirstChild("RightHand") or npcModel:FindFirstChild("Right Arm") or npcModel.PrimaryPart
+	if hand and knife:IsA("BasePart") and hand:IsA("BasePart") then
+		knife.Parent = npcModel
+		local weld = Instance.new("WeldConstraint")
+		weld.Part0 = hand
+		weld.Part1 = knife
+		weld.Parent = knife
+		knife.CFrame = hand.CFrame * CFrame.new(0, -0.5, -0.5)
+	else
+		(knife :: Instance).Parent = npcModel
 	end
 end
 
@@ -240,7 +123,6 @@ local function setNpcAttributes(npcModel: Model, npcInfo)
 			attachKnifeAccessory(npcModel)
 		end
 	end
-	applyNpcPose(npcModel, npcInfo.Archetype)
 end
 
 local function activatePuppyMarker(levelModel: Model, scenario)
@@ -258,7 +140,7 @@ local function activatePuppyMarker(levelModel: Model, scenario)
 	end
 end
 
-local function activateLevelExitForPuppy(levelModel: Model)
+local function activateLevelExitForPuppy(levelModel: Model, scenario)
 	-- The level template ships with one or more LevelExit triggers; for MVP
 	-- we just activate them all once the puppy is found.
 	for _, part in ipairs(TagQueries.GetTaggedInside(levelModel, PlayAreaConfig.Tags.LevelExit)) do
@@ -384,7 +266,7 @@ function StrangerDangerLevel.OnClueCollected(round, scenario)
 		if not levelModel then
 			return
 		end
-		activateLevelExitForPuppy(levelModel)
+		activateLevelExitForPuppy(levelModel, scenario)
 		RemoteService.FirePair(round, "PuppyRevealed", {
 			RoundId = round.RoundId,
 			PuppySpawnId = scenario.PuppySpawnId,

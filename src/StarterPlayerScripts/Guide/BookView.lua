@@ -69,11 +69,11 @@ local function makePageSide(parent: Frame, alignment: "Left" | "Right"): {
 	container.Name = alignment .. "Page"
 	container.BackgroundColor3 = PALETTE.PaperLight
 	container.BorderSizePixel = 0
-	container.Size = UDim2.new(0.49, 0, 1, 0)
+	container.Size = UDim2.new(0.5, -10, 1, 0)
 	if alignment == "Left" then
 		container.Position = UDim2.new(0, 0, 0, 0)
 	else
-		container.Position = UDim2.new(0.51, 0, 0, 0)
+		container.Position = UDim2.new(0.5, 10, 0, 0)
 	end
 	container.Parent = parent
 
@@ -103,7 +103,7 @@ local function makePageSide(parent: Frame, alignment: "Left" | "Right"): {
 	imageHolder.Name = "ImageHolder"
 	imageHolder.BackgroundColor3 = PALETTE.CardInset
 	imageHolder.BorderSizePixel = 0
-	imageHolder.Size = UDim2.new(1, 0, 0.44, 0)
+	imageHolder.Size = UDim2.new(1, 0, 0, 220)
 	imageHolder.Position = UDim2.new(0, 0, 0, 0)
 	imageHolder.Parent = container
 	UIStyle.ApplyCorner(imageHolder, UDim.new(0, 14))
@@ -111,8 +111,8 @@ local function makePageSide(parent: Frame, alignment: "Left" | "Right"): {
 	local image = Instance.new("ImageLabel")
 	image.Name = "Image"
 	image.BackgroundTransparency = 1
-	image.Size = UDim2.new(0.964, 0, 0.764, 0)
-	image.Position = UDim2.new(0.018, 0, 0.036, 0)
+	image.Size = UDim2.new(1, -16, 1, -52)
+	image.Position = UDim2.new(0, 8, 0, 8)
 	image.ScaleType = Enum.ScaleType.Fit
 	image.Image = ""
 	image.Parent = imageHolder
@@ -121,8 +121,8 @@ local function makePageSide(parent: Frame, alignment: "Left" | "Right"): {
 	local headingHolder = Instance.new("Frame")
 	headingHolder.Name = "HeadingHolder"
 	headingHolder.AnchorPoint = Vector2.new(0.5, 1)
-	headingHolder.Position = UDim2.new(0.5, 0, 0.964, 0)
-	headingHolder.Size = UDim2.new(0.964, 0, 0.164, 0)
+	headingHolder.Position = UDim2.new(0.5, 0, 1, -8)
+	headingHolder.Size = UDim2.new(1, -16, 0, 36)
 	headingHolder.BackgroundColor3 = PALETTE.PaperLight
 	headingHolder.BorderSizePixel = 0
 	headingHolder.Parent = imageHolder
@@ -132,8 +132,8 @@ local function makePageSide(parent: Frame, alignment: "Left" | "Right"): {
 	local heading = Instance.new("TextLabel")
 	heading.Name = "Heading"
 	heading.BackgroundTransparency = 1
-	heading.Size = UDim2.new(0.956, 0, 1, 0)
-	heading.Position = UDim2.new(0.022, 0, 0, 0)
+	heading.Size = UDim2.new(1, -16, 1, 0)
+	heading.Position = UDim2.new(0, 8, 0, 0)
 	heading.Font = UIStyle.FontBold
 	heading.TextSize = 22
 	heading.TextColor3 = PALETTE.Ink
@@ -146,8 +146,8 @@ local function makePageSide(parent: Frame, alignment: "Left" | "Right"): {
 	local caption = Instance.new("TextLabel")
 	caption.Name = "Caption"
 	caption.BackgroundTransparency = 1
-	caption.Size = UDim2.new(1, 0, 0.048, 0)
-	caption.Position = UDim2.new(0, 0, 0.464, 0)
+	caption.Size = UDim2.new(1, 0, 0, 24)
+	caption.Position = UDim2.new(0, 0, 0, 232)
 	caption.Font = UIStyle.Font
 	caption.TextSize = UIStyle.TextSize.Caption
 	caption.TextColor3 = PALETTE.InkSoft
@@ -162,8 +162,8 @@ local function makePageSide(parent: Frame, alignment: "Left" | "Right"): {
 	bullets.Name = "Bullets"
 	bullets.BackgroundColor3 = PALETTE.CardInset
 	bullets.BorderSizePixel = 0
-	bullets.Size = UDim2.new(1, 0, 0.46, 0)
-	bullets.Position = UDim2.new(0, 0, 0.536, 0)
+	bullets.Size = UDim2.new(1, 0, 1, -270)
+	bullets.Position = UDim2.new(0, 0, 0, 268)
 	bullets.Parent = container
 	UIStyle.ApplyCorner(bullets, UDim.new(0, 14))
 
@@ -236,9 +236,9 @@ end
 local function makeArrowButton(parent: Frame, name: string, label: string, anchor: "Left" | "Right"): TextButton
 	local btn = Instance.new("TextButton")
 	btn.Name = name
-	btn.Size = UDim2.new(0.068, 0, 0.103, 0)
+	btn.Size = UDim2.new(0, 64, 0, 64)
 	btn.AnchorPoint = Vector2.new(anchor == "Left" and 0 or 1, 1)
-	btn.Position = UDim2.new(anchor == "Left" and 0.026 or 0.974, 0, 0.961, 0)
+	btn.Position = UDim2.new(anchor == "Left" and 0 or 1, anchor == "Left" and 24 or -24, 1, -24)
 	btn.BackgroundColor3 = PALETTE.ArrowFill
 	btn.AutoButtonColor = true
 	btn.Text = label
@@ -275,8 +275,8 @@ function BookView.new(parent: Instance, pages: { PageSpread })
 	local shadow = Instance.new("ImageLabel")
 	shadow.Name = "Shadow"
 	shadow.AnchorPoint = Vector2.new(0.5, 0.5)
-	shadow.Position = UDim2.new(0.5, 0, 0.52, 0)
-	shadow.Size = UDim2.new(0.51, 0, 0.611, 0)
+	shadow.Position = UDim2.new(0.5, 0, 0.5, 22)
+	shadow.Size = UDim2.new(0, 980, 0, 660)
 	shadow.BackgroundTransparency = 1
 	shadow.Image = "rbxasset://textures/ui/Controls/DropShadow.png"
 	shadow.ImageColor3 = PALETTE.Shadow
@@ -289,7 +289,7 @@ function BookView.new(parent: Instance, pages: { PageSpread })
 	book.Name = "Book"
 	book.AnchorPoint = Vector2.new(0.5, 0.5)
 	book.Position = UDim2.new(0.5, 0, 0.5, 0)
-	book.Size = UDim2.new(0.49, 0, 0.574, 0)
+	book.Size = UDim2.new(0, 940, 0, 620)
 	book.BackgroundColor3 = PALETTE.PaperDark
 	book.BorderSizePixel = 0
 	book.Parent = screen
@@ -301,8 +301,8 @@ function BookView.new(parent: Instance, pages: { PageSpread })
 	local titleHolder = Instance.new("Frame")
 	titleHolder.Name = "TitleHolder"
 	titleHolder.AnchorPoint = Vector2.new(0.5, 0)
-	titleHolder.Position = UDim2.new(0.5, 0, -0.029, 0)
-	titleHolder.Size = UDim2.new(0.383, 0, 0.09, 0)
+	titleHolder.Position = UDim2.new(0.5, 0, 0, -18)
+	titleHolder.Size = UDim2.new(0, 360, 0, 56)
 	titleHolder.BackgroundColor3 = PALETTE.TitleBand
 	titleHolder.BorderSizePixel = 0
 	titleHolder.Parent = book
@@ -312,8 +312,8 @@ function BookView.new(parent: Instance, pages: { PageSpread })
 	local title = Instance.new("TextLabel")
 	title.Name = "Title"
 	title.BackgroundTransparency = 1
-	title.Size = UDim2.new(0.956, 0, 1, 0)
-	title.Position = UDim2.new(0.022, 0, 0, 0)
+	title.Size = UDim2.new(1, -16, 1, 0)
+	title.Position = UDim2.new(0, 8, 0, 0)
 	title.Font = UIStyle.FontBold
 	title.TextSize = 28
 	title.TextColor3 = Color3.fromRGB(255, 232, 196)
@@ -326,8 +326,8 @@ function BookView.new(parent: Instance, pages: { PageSpread })
 	local inner = Instance.new("Frame")
 	inner.Name = "Inner"
 	inner.BackgroundTransparency = 1
-	inner.Size = UDim2.new(0.966, 0, 0.806, 0)
-	inner.Position = UDim2.new(0.017, 0, 0.097, 0)
+	inner.Size = UDim2.new(1, -32, 1, -120)
+	inner.Position = UDim2.new(0, 16, 0, 60)
 	inner.Parent = book
 
 	local leftRendered = makePageSide(inner, "Left")
@@ -338,7 +338,7 @@ function BookView.new(parent: Instance, pages: { PageSpread })
 	spine.Name = "Spine"
 	spine.AnchorPoint = Vector2.new(0.5, 0.5)
 	spine.Position = UDim2.new(0.5, 0, 0.5, 0)
-	spine.Size = UDim2.new(0.015, 0, 1, 0)
+	spine.Size = UDim2.new(0, 14, 1, 0)
 	spine.BackgroundColor3 = PALETTE.Spine
 	spine.BorderSizePixel = 0
 	spine.Parent = inner
@@ -351,8 +351,8 @@ function BookView.new(parent: Instance, pages: { PageSpread })
 	local pageIndicator = Instance.new("TextLabel")
 	pageIndicator.Name = "PageIndicator"
 	pageIndicator.AnchorPoint = Vector2.new(0.5, 1)
-	pageIndicator.Position = UDim2.new(0.5, 0, 0.948, 0)
-	pageIndicator.Size = UDim2.new(0.128, 0, 0.039, 0)
+	pageIndicator.Position = UDim2.new(0.5, 0, 1, -32)
+	pageIndicator.Size = UDim2.new(0, 120, 0, 24)
 	pageIndicator.BackgroundTransparency = 1
 	pageIndicator.Font = UIStyle.FontBold
 	pageIndicator.TextSize = 18

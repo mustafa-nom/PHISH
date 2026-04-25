@@ -22,15 +22,15 @@ local function build()
 	local screen = UIBuilder.GetScreenGui()
 	panel = UIStyle.MakePanel({
 		Name = "LobbyProgression",
-		Size = UDim2.new(0.115, 0, 0.056, 0),
+		Size = UDim2.new(0, 220, 0, 60),
 		AnchorPoint = Vector2.new(0, 0),
-		Position = UDim2.new(0.006, 0, 0.011, 0),
+		Position = UDim2.new(0, 12, 0, 12),
 		Parent = screen,
 	})
 	UIBuilder.PadLayout(panel :: Frame, 8)
 
 	seedsLabel = UIStyle.MakeLabel({
-		Size = UDim2.new(1, 0, 0.4, 0),
+		Size = UDim2.new(1, 0, 0, 24),
 		Text = "🌱 0 Trust Seeds",
 		TextSize = UIStyle.TextSize.Body,
 		TextXAlignment = Enum.TextXAlignment.Left,
@@ -38,8 +38,8 @@ local function build()
 	seedsLabel.Parent = panel
 
 	treehouseLabel = UIStyle.MakeLabel({
-		Size = UDim2.new(1, 0, 0.333, 0),
-		Position = UDim2.new(0, 0, 0.4, 0),
+		Size = UDim2.new(1, 0, 0, 20),
+		Position = UDim2.new(0, 0, 0, 24),
 		Text = "Treehouse: stage 1",
 		TextSize = UIStyle.TextSize.Caption,
 		TextColor3 = UIStyle.Palette.TextMuted,

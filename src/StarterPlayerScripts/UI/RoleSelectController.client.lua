@@ -21,7 +21,7 @@ local function build()
 	end
 	panel = UIStyle.MakePanel({
 		Name = "RoleSelect",
-		Size = UDim2.new(0.25, 0, 0.259, 0),
+		Size = UDim2.new(0, 480, 0, 280),
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Position = UDim2.new(0.5, 0, 0.5, 0),
 		Parent = screen,
@@ -29,15 +29,15 @@ local function build()
 	UIBuilder.PadLayout(panel :: Frame, 16)
 
 	local title = UIStyle.MakeLabel({
-		Size = UDim2.new(1, 0, 0.129, 0),
+		Size = UDim2.new(1, 0, 0, 36),
 		Text = "Pick your role",
 		TextSize = UIStyle.TextSize.Title,
 	})
 	title.Parent = panel
 
 	local subtitle = UIStyle.MakeLabel({
-		Size = UDim2.new(1, 0, 0.1, 0),
-		Position = UDim2.new(0, 0, 0.129, 0),
+		Size = UDim2.new(1, 0, 0, 28),
+		Position = UDim2.new(0, 0, 0, 36),
 		Text = "Talk before big choices.",
 		TextSize = UIStyle.TextSize.Caption,
 		TextColor3 = UIStyle.Palette.TextMuted,
@@ -45,24 +45,24 @@ local function build()
 	subtitle.Parent = panel
 
 	local explorerBtn = UIStyle.MakeButton({
-		Size = UDim2.new(0.48, 0, 0.321, 0),
-		Position = UDim2.new(0, 0, 0.286, 0),
+		Size = UDim2.new(0.5, -8, 0, 90),
+		Position = UDim2.new(0, 0, 0, 80),
 		Text = "🚶 Explorer\n<i>The action player</i>",
 		BackgroundColor3 = UIStyle.Palette.Highlight,
 	})
 	explorerBtn.Parent = panel
 
 	local guideBtn = UIStyle.MakeButton({
-		Size = UDim2.new(0.48, 0, 0.321, 0),
-		Position = UDim2.new(0.52, 0, 0.286, 0),
+		Size = UDim2.new(0.5, -8, 0, 90),
+		Position = UDim2.new(0.5, 8, 0, 80),
 		Text = "📖 Guide\n<i>The manual reader</i>",
 		BackgroundColor3 = UIStyle.Palette.Accent,
 	})
 	guideBtn.Parent = panel
 
 	local startBtn = UIStyle.MakeButton({
-		Size = UDim2.new(1, 0, 0.214, 0),
-		Position = UDim2.new(0, 0, 0.786, 0),
+		Size = UDim2.new(1, 0, 0, 60),
+		Position = UDim2.new(0, 0, 1, -60),
 		Text = "Start Round",
 		BackgroundColor3 = UIStyle.Palette.Safe,
 	})

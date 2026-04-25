@@ -21,20 +21,20 @@ end
 
 local function makeRow(parent: Frame, label: string, value: string, layoutOrder: number)
 	local row = Instance.new("Frame")
-	row.Size = UDim2.new(1, 0, 0.127, 0)
+	row.Size = UDim2.new(1, 0, 0, 28)
 	row.BackgroundTransparency = 1
 	row.LayoutOrder = layoutOrder
 	row.Parent = parent
 	local lbl = UIStyle.MakeLabel({
-		Size = UDim2.new(0.48, 0, 1, 0),
+		Size = UDim2.new(0.5, -8, 1, 0),
 		Position = UDim2.new(0, 0, 0, 0),
 		Text = label,
 		TextXAlignment = Enum.TextXAlignment.Left,
 	})
 	lbl.Parent = row
 	local val = UIStyle.MakeLabel({
-		Size = UDim2.new(0.48, 0, 1, 0),
-		Position = UDim2.new(0.52, 0, 0, 0),
+		Size = UDim2.new(0.5, -8, 1, 0),
+		Position = UDim2.new(0.5, 8, 0, 0),
 		Text = value,
 		TextXAlignment = Enum.TextXAlignment.Right,
 	})
@@ -46,7 +46,7 @@ local function build(payload)
 	local screen = UIBuilder.GetScreenGui()
 	panel = UIStyle.MakePanel({
 		Name = "ScoreScreen",
-		Size = UDim2.new(0.24, 0, 0.426, 0),
+		Size = UDim2.new(0, 460, 0, 460),
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Position = UDim2.new(0.5, 0, 0.5, 0),
 		Parent = screen,
@@ -54,7 +54,7 @@ local function build(payload)
 	UIBuilder.PadLayout(panel :: Frame, 16)
 
 	local title = UIStyle.MakeLabel({
-		Size = UDim2.new(1, 0, 0.096, 0),
+		Size = UDim2.new(1, 0, 0, 44),
 		Text = ("%s Run"):format(payload.Rank or "Bronze"),
 		TextSize = UIStyle.TextSize.Title,
 		TextColor3 = UIStyle.Palette.Accent,
@@ -62,8 +62,8 @@ local function build(payload)
 	title.Parent = panel
 
 	local cheer = UIStyle.MakeLabel({
-		Size = UDim2.new(1, 0, 0.052, 0),
-		Position = UDim2.new(0, 0, 0.096, 0),
+		Size = UDim2.new(1, 0, 0, 24),
+		Position = UDim2.new(0, 0, 0, 44),
 		Text = "Nice run! You paused before risky strangers and asked your buddy.",
 		TextSize = UIStyle.TextSize.Caption,
 		TextColor3 = UIStyle.Palette.TextMuted,
@@ -72,8 +72,8 @@ local function build(payload)
 	cheer.Parent = panel
 
 	local rows = Instance.new("Frame")
-	rows.Size = UDim2.new(1, 0, 0.478, 0)
-	rows.Position = UDim2.new(0, 0, 0.174, 0)
+	rows.Size = UDim2.new(1, 0, 0, 220)
+	rows.Position = UDim2.new(0, 0, 0, 80)
 	rows.BackgroundTransparency = 1
 	rows.Parent = panel
 	local layout = Instance.new("UIListLayout")
@@ -91,16 +91,16 @@ local function build(payload)
 	end
 
 	local replay = UIStyle.MakeButton({
-		Size = UDim2.new(0.48, 0, 0.13, 0),
-		Position = UDim2.new(0, 0, 0.852, 0),
+		Size = UDim2.new(0.5, -8, 0, 60),
+		Position = UDim2.new(0, 0, 1, -68),
 		Text = "Replay",
 		BackgroundColor3 = UIStyle.Palette.Safe,
 	})
 	replay.Parent = panel
 
 	local back = UIStyle.MakeButton({
-		Size = UDim2.new(0.48, 0, 0.13, 0),
-		Position = UDim2.new(0.52, 0, 0.852, 0),
+		Size = UDim2.new(0.5, -8, 0, 60),
+		Position = UDim2.new(0.5, 8, 1, -68),
 		Text = "Back to Lobby",
 	})
 	back.Parent = panel
