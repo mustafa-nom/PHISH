@@ -19,6 +19,7 @@ from ..lua_emit import (
     clear_existing,
     find_or_create_path,
     make_billboard_gui,
+    make_disc,
     make_model,
     make_part,
     make_surface_gui,
@@ -209,16 +210,16 @@ def emit_booth_template_lua() -> str:
 
     # guide spawn — invisible reference inside the booth
     p.line(
-        make_part(
+        make_disc(
             "guide_spawn",
             parent="booth",
             name="GuideSpawn",
-            size=(2, 1, 2),
+            diameter=2,
+            height=1,
             cframe=cframe_pos(0, 0.6, -2),
             color_rgb=PALETTE.sparkle,
             transparency=0.6,
             can_collide=False,
-            shape="Cylinder",
         )
     )
     p.line(add_tag("guide_spawn", Tags.GUIDE_SPAWN))

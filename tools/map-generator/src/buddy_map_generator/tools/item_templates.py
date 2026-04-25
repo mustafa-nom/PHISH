@@ -16,6 +16,7 @@ from ..lua_emit import (
     clear_existing,
     find_or_create_path,
     make_billboard_gui,
+    make_disc,
     make_model,
     make_part,
     set_primary_part,
@@ -112,15 +113,15 @@ def _favorite_color(p: LuaProgram, parent: str, _name: str) -> None:
     ]
     for i, (bx, bz, color) in enumerate(blobs):
         p.line(
-            make_part(
+            make_disc(
                 f"{parent}_blob_{i}",
                 parent=parent,
                 name=f"Blob{i}",
-                size=(0.3, 0.15, 0.3),
+                diameter=0.3,
+                height=0.15,
                 cframe=cframe_pos(bx, 1.15, bz),
                 color_rgb=color,
                 material_name="SmoothPlastic",
-                shape="Cylinder",
             )
         )
 

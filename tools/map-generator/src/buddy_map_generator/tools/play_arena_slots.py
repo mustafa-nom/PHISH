@@ -19,6 +19,7 @@ from ..lua_emit import (
     add_tag,
     cframe_pos,
     clear_existing,
+    make_disc,
     make_folder,
     make_model,
     make_part,
@@ -65,15 +66,15 @@ def emit_play_arena_slots_lua(*, slot_count: int = 4) -> str:
 
         # explorer spawn — small invisible-ish hex marker on the western edge
         p.line(
-            make_part(
+            make_disc(
                 f"{slot_var}_xspawn",
                 parent=slot_var,
                 name="ExplorerSpawn",
-                size=(4, 1, 4),
+                diameter=4,
+                height=1,
                 cframe=cframe_pos(sx - 100, base_y + 0.5, 0),
                 color_rgb=PALETTE.sparkle,
                 material_name="SmoothPlastic",
-                shape="Cylinder",
                 transparency=0.3,
                 can_collide=False,
             )

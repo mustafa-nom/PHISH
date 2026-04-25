@@ -23,6 +23,7 @@ from ..lua_emit import (
     find_or_create_path,
     lua_string,
     make_billboard_gui,
+    make_disc,
     make_model,
     make_part,
     set_attribute,
@@ -139,15 +140,15 @@ def _emit_humanoid_rig(
             )
         )
         p.line(
-            make_part(
+            make_disc(
                 f"{var}_hat",
                 parent=var,
                 name="VendorHat",
-                size=(1.6, 0.6, 1.6),
+                diameter=1.6,
+                height=0.6,
                 cframe=cframe_pos(0, 6, 0),
                 color_rgb=(255, 255, 255),
                 material_name="SmoothPlastic",
-                shape="Cylinder",
             )
         )
     elif accent_kind == "uniform_badge":
@@ -163,15 +164,15 @@ def _emit_humanoid_rig(
             )
         )
         p.line(
-            make_part(
+            make_disc(
                 f"{var}_hat",
                 parent=var,
                 name="RangerHat",
-                size=(2.2, 0.5, 2.2),
+                diameter=2.2,
+                height=0.5,
                 cframe=cframe_pos(0, 6, 0),
                 color_rgb=PALETTE.ranger_green,
                 material_name="SmoothPlastic",
-                shape="Cylinder",
             )
         )
     elif accent_kind == "stroller":

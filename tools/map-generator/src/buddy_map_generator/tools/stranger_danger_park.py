@@ -23,6 +23,7 @@ from ..lua_emit import (
     clear_existing,
     find_or_create_path,
     make_billboard_gui,
+    make_disc,
     make_model,
     make_part,
     set_attribute,
@@ -107,16 +108,16 @@ def emit_stranger_danger_park_lua() -> str:
 
     # level entry — explorer spawns at the south end of the park
     p.line(
-        make_part(
+        make_disc(
             "level_entry",
             parent="level",
             name="LevelEntry",
-            size=(4, 1, 4),
+            diameter=4,
+            height=1,
             cframe=cframe_pos(0, 0.5, -50),
             color_rgb=PALETTE.sparkle,
             transparency=0.4,
             can_collide=False,
-            shape="Cylinder",
         )
     )
     p.line(add_tag("level_entry", Tags.LEVEL_ENTRY))
@@ -353,28 +354,28 @@ def emit_stranger_danger_park_lua() -> str:
     # ----- scene: fountain + bench
     p.line(make_model("fountain", parent="level", name="Fountain"))
     p.line(
-        make_part(
+        make_disc(
             "ft_base",
             parent="fountain",
             name="Base",
-            size=(8, 1, 8),
+            diameter=8,
+            height=1,
             cframe=cframe_pos(0, 0.5, 12),
             color_rgb=PALETTE.fountain_stone,
             material_name="Concrete",
-            shape="Cylinder",
         )
     )
     p.line(
-        make_part(
+        make_disc(
             "ft_water",
             parent="fountain",
             name="Water",
-            size=(6, 0.6, 6),
-            cframe=cframe_pos(0, 1, 12),
+            diameter=6,
+            height=0.6,
+            cframe=cframe_pos(0, 1.3, 12),
             color_rgb=PALETTE.fountain_water,
             material_name="SmoothPlastic",
             transparency=0.2,
-            shape="Cylinder",
         )
     )
     p.line(
@@ -444,17 +445,17 @@ def emit_stranger_danger_park_lua() -> str:
     for spawn_id, anchor, x, y, z, yaw in _NPC_SPAWNS:
         var = f"spawn_{spawn_id}"
         p.line(
-            make_part(
+            make_disc(
                 var,
                 parent="level",
                 name=spawn_id,
-                size=(3, 0.6, 3),
+                diameter=3,
+                height=0.6,
                 cframe=cframe_pos_yaw(x, y - 0.2, z, yaw),
                 color_rgb=PALETTE.sparkle,
                 material_name="SmoothPlastic",
                 transparency=0.6,
                 can_collide=False,
-                shape="Cylinder",
             )
         )
         p.line(add_tag(var, Tags.BUDDY_NPC_SPAWN))
@@ -466,17 +467,17 @@ def emit_stranger_danger_park_lua() -> str:
     for spawn_id, x, y, z in _PUPPY_SPAWNS:
         var = f"puppy_{spawn_id}"
         p.line(
-            make_part(
+            make_disc(
                 var,
                 parent="level",
                 name=spawn_id,
-                size=(2, 0.6, 2),
+                diameter=2,
+                height=0.6,
                 cframe=cframe_pos(x, y - 0.2, z),
                 color_rgb=PALETTE.capsule_a,
                 material_name="SmoothPlastic",
                 transparency=0.7,
                 can_collide=False,
-                shape="Cylinder",
             )
         )
         p.line(add_tag(var, Tags.PUPPY_SPAWN))

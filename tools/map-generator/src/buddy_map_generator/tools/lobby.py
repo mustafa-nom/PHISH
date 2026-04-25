@@ -19,6 +19,7 @@ from ..lua_emit import (
     clear_existing,
     lua_string,
     make_billboard_gui,
+    make_disc,
     make_model,
     make_part,
     set_attribute,
@@ -250,15 +251,15 @@ def emit_lobby_lua(
             offset = -3 if side_idx == 0 else 3
             pad_var = f"pad_{pair_idx}_{side_letter}"
             p.line(
-                make_part(
+                make_disc(
                     pad_var,
                     parent="lobby",
                     name=f"CapsulePad_{pair_idx + 1}{side_letter.upper()}",
-                    size=(6, 1, 6),
+                    diameter=6,
+                    height=1,
                     cframe=cframe_pos(cx + offset, oy + 0.5, cz),
                     color_rgb=pair_color,
                     material_name="SmoothPlastic",
-                    shape="Cylinder",
                 )
             )
             p.line(add_tag(pad_var, Tags.LOBBY_CAPSULE))

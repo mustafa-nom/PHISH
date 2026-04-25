@@ -148,6 +148,48 @@ def make_part(
     return "\n".join(lines)
 
 
+def make_disc(
+    var_name: str,
+    *,
+    parent: str,
+    name: str,
+    diameter: float,
+    height: float,
+    cframe: str,
+    color_rgb: tuple[int, int, int] | None = None,
+    material_name: str = DEFAULT_MATERIAL,
+    transparency: float = 0,
+    can_collide: bool = True,
+    anchored: bool = True,
+    cast_shadow: bool = True,
+) -> str:
+    """flat circular puck lying on its side (axis pointing up).
+
+    roblox `Enum.PartType.Cylinder` extends along the part's local X axis with
+    Size = (length, diameter, diameter). To make a puck (axis up) we use that
+    size order AND rotate the part 90deg around Z so X points up.
+    """
+    color = color3(color_rgb) if color_rgb is not None else color3(PALETTE.grass)
+    upright_cframe = f"({cframe}) * CFrame.Angles(0, 0, math.rad(90))"
+    lines = [
+        f"local {var_name} = Instance.new(\"Part\")",
+        f"{var_name}.Name = {lua_string(name)}",
+        f"{var_name}.Size = Vector3.new({height}, {diameter}, {diameter})",
+        f"{var_name}.CFrame = {upright_cframe}",
+        f"{var_name}.Color = {color}",
+        f"{var_name}.Material = {material(material_name)}",
+        f"{var_name}.Anchored = {str(anchored).lower()}",
+        f"{var_name}.CanCollide = {str(can_collide).lower()}",
+        f"{var_name}.Transparency = {transparency}",
+        f"{var_name}.CastShadow = {str(cast_shadow).lower()}",
+        f"{var_name}.Shape = Enum.PartType.Cylinder",
+        f"{var_name}.TopSurface = Enum.SurfaceType.Smooth",
+        f"{var_name}.BottomSurface = Enum.SurfaceType.Smooth",
+        f"{var_name}.Parent = {parent}",
+    ]
+    return "\n".join(lines)
+
+
 def make_folder(var_name: str, *, parent: str, name: str) -> str:
     return "\n".join(
         [

@@ -19,6 +19,7 @@ from ..lua_emit import (
     clear_existing,
     find_or_create_path,
     make_billboard_gui,
+    make_disc,
     make_model,
     make_part,
     make_proximity_prompt,
@@ -88,16 +89,16 @@ def emit_backpack_checkpoint_lua() -> str:
 
     # standing pad for the explorer (south of the belt)
     p.line(
-        make_part(
+        make_disc(
             "level_entry",
             parent="level",
             name="LevelEntry",
-            size=(4, 1, 4),
+            diameter=4,
+            height=1,
             cframe=cframe_pos(0, 0.7, -10),
             color_rgb=PALETTE.sparkle,
             transparency=0.4,
             can_collide=False,
-            shape="Cylinder",
         )
     )
     p.line(add_tag("level_entry", Tags.LEVEL_ENTRY))
