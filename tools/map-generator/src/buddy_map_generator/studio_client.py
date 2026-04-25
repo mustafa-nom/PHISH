@@ -1,8 +1,17 @@
-"""thin client for rbx-studio-mcp.
+"""thin client for a roblox-studio mcp backend.
 
-spawns the binary as a subprocess in --stdio mode, performs the JSON-RPC
-handshake, and exposes a small surface (run_code, capture_screenshot,
-get_studio_state, read_output) that the MCP tools layer can call.
+defaults to boshyxd's `robloxstudio-mcp` (npx-spawned, 43 tools incl
+`execute_luau` and `capture_screenshot`). can be pointed at the official
+rbx-studio-mcp via env vars for legacy use.
+
+env switches:
+- BUDDY_STUDIO_BACKEND=robloxstudio | rbx-studio  (default: robloxstudio)
+- BUDDY_STUDIO_BIN=/explicit/path                  (override executable)
+- BUDDY_STUDIO_ARGS="extra args space separated"   (override args)
+
+each backend implements two operations exposed by this module:
+- run_code(lua) -> printed output as text
+- capture_screenshot() -> raw mcp result (caller flattens content)
 """
 
 from __future__ import annotations
@@ -10,34 +19,79 @@ from __future__ import annotations
 import json
 import os
 import shutil
+import shlex
 import subprocess
 import threading
 from dataclasses import dataclass, field
 from typing import Any
 
 
-DEFAULT_BINARY_NAME = "rbx-studio-mcp"
-DEFAULT_BINARY_PATHS = [
-    os.path.expanduser("~/.local/bin/rbx-studio-mcp"),
-    "/usr/local/bin/rbx-studio-mcp",
-]
+# default backend command lines. each is a list of [executable, *args].
+_BACKENDS = {
+    "robloxstudio": ("npx", ["-y", "robloxstudio-mcp@latest"]),
+    "rbx-studio": ("rbx-studio-mcp", ["--stdio"]),
+}
+
+# rbx-studio-mcp lives here on this machine; npx is on $PATH so we don't fall
+# back for it. these paths are only consulted if the resolver fails on PATH.
+_FALLBACK_BIN_PATHS = {
+    "rbx-studio": [
+        os.path.expanduser("~/.local/bin/rbx-studio-mcp"),
+        "/usr/local/bin/rbx-studio-mcp",
+    ],
+    "robloxstudio": [],
+}
+
+# tool name mapping: each backend uses a different name for "run lua" /
+# "screenshot". every other tool that we surface routes through these two.
+_TOOL_RUN_CODE = {
+    "robloxstudio": "execute_luau",
+    "rbx-studio": "run_code",
+}
+_TOOL_RUN_CODE_ARG = {
+    "robloxstudio": "code",
+    "rbx-studio": "command",
+}
+_TOOL_SCREENSHOT = {
+    "robloxstudio": "capture_screenshot",
+    "rbx-studio": "capture_screenshot",
+}
 
 
-def _resolve_binary(explicit: str | None) -> str:
-    if explicit:
-        return explicit
-    env = os.environ.get("RBX_STUDIO_MCP_BIN")
-    if env:
-        return env
-    on_path = shutil.which(DEFAULT_BINARY_NAME)
-    if on_path:
-        return on_path
-    for candidate in DEFAULT_BINARY_PATHS:
-        if os.path.exists(candidate):
-            return candidate
-    raise FileNotFoundError(
-        "rbx-studio-mcp binary not found. set RBX_STUDIO_MCP_BIN or install it."
+def _resolve_backend() -> str:
+    backend = os.environ.get("BUDDY_STUDIO_BACKEND", "robloxstudio")
+    if backend not in _BACKENDS:
+        raise ValueError(
+            f"unknown BUDDY_STUDIO_BACKEND={backend!r}; "
+            f"valid: {sorted(_BACKENDS)}"
+        )
+    return backend
+
+
+def _resolve_command(backend: str) -> tuple[str, list[str]]:
+    explicit_bin = os.environ.get("BUDDY_STUDIO_BIN")
+    explicit_args = os.environ.get("BUDDY_STUDIO_ARGS")
+    default_bin, default_args = _BACKENDS[backend]
+    binary = explicit_bin or default_bin
+    args = (
+        shlex.split(explicit_args)
+        if explicit_args is not None
+        else list(default_args)
     )
+    if not os.path.isabs(binary):
+        on_path = shutil.which(binary)
+        if on_path:
+            binary = on_path
+        else:
+            for candidate in _FALLBACK_BIN_PATHS.get(backend, []):
+                if os.path.exists(candidate):
+                    binary = candidate
+                    break
+            else:
+                raise FileNotFoundError(
+                    f"backend {backend!r} executable {binary!r} not found"
+                )
+    return binary, args
 
 
 class StudioClientError(RuntimeError):
@@ -48,8 +102,9 @@ class StudioClientError(RuntimeError):
 class StudioClient:
     """one client per MCP-server instance. starts lazily on first call."""
 
-    binary: str | None = None
+    backend: str | None = None
     proc: subprocess.Popen[bytes] | None = field(default=None, init=False, repr=False)
+    _backend_resolved: str = field(default="", init=False, repr=False)
     _next_id: int = field(default=1, init=False)
     _lock: threading.Lock = field(default_factory=threading.Lock, init=False, repr=False)
     _stderr_thread: threading.Thread | None = field(default=None, init=False, repr=False)
@@ -57,19 +112,17 @@ class StudioClient:
     def start(self) -> None:
         if self.proc is not None:
             return
-        binary = _resolve_binary(self.binary)
+        backend = self.backend or _resolve_backend()
+        self._backend_resolved = backend
+        binary, args = _resolve_command(backend)
         self.proc = subprocess.Popen(
-            [binary, "--stdio"],
+            [binary, *args],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             bufsize=0,
         )
-        # drain stderr so the subprocess never blocks on a full pipe.
-        # we don't surface stderr lines unless something goes wrong upstream.
-        self._stderr_thread = threading.Thread(
-            target=self._drain_stderr, daemon=True
-        )
+        self._stderr_thread = threading.Thread(target=self._drain_stderr, daemon=True)
         self._stderr_thread.start()
         self._handshake()
 
@@ -87,6 +140,7 @@ class StudioClient:
         self.proc = None
 
     def _drain_stderr(self) -> None:
+        # drain stderr so the subprocess never blocks on a full pipe
         assert self.proc is not None and self.proc.stderr is not None
         try:
             for _ in iter(self.proc.stderr.readline, b""):
@@ -104,11 +158,11 @@ class StudioClient:
         assert self.proc is not None and self.proc.stdout is not None
         line = self.proc.stdout.readline()
         if not line:
-            raise StudioClientError("rbx-studio-mcp closed stdout unexpectedly")
+            raise StudioClientError("backend closed stdout unexpectedly")
         try:
             return json.loads(line.decode("utf-8"))
         except json.JSONDecodeError as exc:
-            raise StudioClientError(f"non-json from rbx-studio-mcp: {line!r}") from exc
+            raise StudioClientError(f"non-json from backend: {line!r}") from exc
 
     def _handshake(self) -> None:
         self._send(
@@ -140,9 +194,6 @@ class StudioClient:
                     "params": {"name": name, "arguments": arguments},
                 }
             )
-            # rbx-studio-mcp is currently single-threaded over stdio — the very
-            # next message will be our response. if the server later starts
-            # interleaving notifications, this loop drops them.
             while True:
                 msg = self._recv()
                 if msg.get("id") == request_id:
@@ -156,28 +207,23 @@ class StudioClient:
     # convenience wrappers ----------------------------------------------------
 
     def run_code(self, lua: str) -> str:
-        """run lua in the studio plugin context. returns the printed output."""
-        result = self.call_tool("run_code", {"command": lua})
+        """run lua in studio. returns the printed output as text."""
+        self.start()
+        backend = self._backend_resolved
+        tool = _TOOL_RUN_CODE[backend]
+        arg_key = _TOOL_RUN_CODE_ARG[backend]
+        result = self.call_tool(tool, {arg_key: lua})
         return _flatten_text_content(result)
 
     def capture_screenshot(self) -> dict[str, Any]:
         """returns the raw mcp result so callers can pass image content along."""
-        return self.call_tool("capture_screenshot", {})
-
-    def get_studio_state(self) -> str:
-        result = self.call_tool("get_studio_state", {})
-        return _flatten_text_content(result)
-
-    def read_output(self, *, max_lines: int = 200, level: str = "all") -> str:
-        result = self.call_tool(
-            "read_output",
-            {"max_lines": max_lines, "filter": level, "clear_after_read": True},
-        )
-        return _flatten_text_content(result)
+        self.start()
+        backend = self._backend_resolved
+        return self.call_tool(_TOOL_SCREENSHOT[backend], {})
 
 
 def _flatten_text_content(result: dict[str, Any]) -> str:
-    """rbx-studio-mcp returns CallToolResult-shaped objects with content[]."""
+    """flatten mcp CallToolResult content[] into a single text blob."""
     content = result.get("content")
     if not isinstance(content, list):
         return json.dumps(result)
