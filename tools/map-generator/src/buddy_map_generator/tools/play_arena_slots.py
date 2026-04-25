@@ -19,6 +19,7 @@ from ..lua_emit import (
     add_tag,
     cframe_pos,
     clear_existing,
+    make_billboard_gui,
     make_disc,
     make_folder,
     make_model,
@@ -100,6 +101,56 @@ def emit_play_arena_slots_lua(*, slot_count: int = 4) -> str:
         # empty container folders for runtime cloning
         p.line(make_folder(f"{slot_var}_play", parent=slot_var, name="PlayArea"))
         p.line(make_folder(f"{slot_var}_booth", parent=slot_var, name="Booth"))
+
+        # slot-number sign — pole + label so an unfilled slot is visibly
+        # identifiable when debugging multiple duos in studio.
+        p.line(
+            make_part(
+                f"{slot_var}_sign_pole",
+                parent=slot_var,
+                name="SlotSignPole",
+                size=(0.6, 8, 0.6),
+                cframe=cframe_pos(sx - 100, base_y + 4, -42),
+                color_rgb=PALETTE.booth_trim,
+                material_name="Wood",
+            )
+        )
+        p.line(
+            make_part(
+                f"{slot_var}_sign_face",
+                parent=slot_var,
+                name="SlotSignFace",
+                size=(8, 3, 0.4),
+                cframe=cframe_pos(sx - 100, base_y + 8.5, -42),
+                color_rgb=PALETTE.sign_face,
+                material_name="SmoothPlastic",
+            )
+        )
+        p.line(
+            make_billboard_gui(
+                f"{slot_var}_sign_label",
+                adornee=f"{slot_var}_sign_face",
+                text=f"Slot {idx + 1}",
+                studs_offset_y=2,
+                text_size=32,
+            )
+        )
+
+        # play area drop marker — outline of where levels will clone in. uses
+        # transparent capsule_b so it reads as a soft highlight, not a wall.
+        p.line(
+            make_part(
+                f"{slot_var}_drop_marker",
+                parent=slot_var,
+                name="LevelDropMarker",
+                size=(150, 0.2, 150),
+                cframe=cframe_pos(sx, base_y + 0.05, 0),
+                color_rgb=PALETTE.capsule_b,
+                material_name="SmoothPlastic",
+                transparency=0.85,
+                can_collide=False,
+            )
+        )
 
         p.created(f"PlayArenaSlots/{slot_name}")
 
