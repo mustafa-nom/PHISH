@@ -122,7 +122,8 @@ function LevelService.PublicScenarioPayload(scenario)
 	elseif scenario.Type == LevelTypes.BackpackCheckpoint then
 		return {
 			Type = scenario.Type,
-			Total = #scenario.ItemSequence,
+			Total = scenario.TotalItems,
+			WaveCount = scenario.Waves and #scenario.Waves or 0,
 		}
 	end
 	return nil

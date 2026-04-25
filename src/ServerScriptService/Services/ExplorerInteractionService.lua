@@ -103,17 +103,15 @@ local function handlePickupItem(player: Player, itemId: string)
 	if not okLevel then return end
 	local okRate = RemoteValidation.RequireRateLimit(player, "RequestPickupItem", Constants.RATE_LIMIT_PICKUP)
 	if not okRate then return end
+	if itemId ~= round.ActiveItemId then return end
 
-	if itemId ~= round.ActiveItemId then
-		return
-	end
 	local model = BackpackCheckpointLevel.GetActiveItemModel(round)
 	if not model then return end
 	local root = model.PrimaryPart or model:FindFirstChildWhichIsA("BasePart")
 	if not root or not root:IsA("BasePart") then return end
 	local okProx = RemoteValidation.RequireProximity(player, root, Constants.ITEM_PICKUP_RADIUS_STUDS)
 	if not okProx then return end
-	round.LevelState[LevelTypes.BackpackCheckpoint].HeldByPlayer = player
+	BackpackCheckpointLevel.MarkHeld(round, player)
 end
 
 local function findBackpackLevelModel(round): Model?
@@ -149,16 +147,11 @@ local function handlePlaceItemInLane(player: Player, itemId: string, laneId: str
 	local okBin = RemoteValidation.RequireProximity(player, bin, Constants.BIN_RADIUS_STUDS)
 	if not okBin then return end
 
-	local accepted, correct = BackpackCheckpointLevel.HandleSort(round, itemId, laneId)
-	if not accepted then return end
-	if correct then
+	local accepted, correct, reason = BackpackCheckpointLevel.HandleSort(round, itemId, laneId)
+	if accepted and correct then
 		round.ItemsSorted += 1
 		ScoringService.AddTrustPoints(round, Constants.TRUST_POINTS_PER_CORRECT_SORT, "Sort")
-		if not BackpackCheckpointLevel.AdvanceToNextItem(round) then
-			local LevelService = require(Services:WaitForChild("LevelService"))
-			LevelService.CompleteLevel(round, LevelTypes.BackpackCheckpoint)
-		end
-	else
+	elseif reason == "WrongLane" then
 		ScoringService.AddMistake(round, "WrongLane")
 	end
 end

@@ -35,8 +35,17 @@ Constants.STRANGER_DANGER_RISKY_COUNT = 3
 Constants.STRANGER_DANGER_ATTEMPTS = 3
 Constants.BOOTH_SUBMIT_RADIUS_STUDS = 10
 
--- Backpack Checkpoint
-Constants.BACKPACK_ITEM_COUNT = 6
+-- Backpack Checkpoint — wave structure
+-- 3 escalating waves per BACKPACK_CHECKPOINT_PRD_V1_POLISHED.md.
+Constants.BACKPACK_WAVE_COUNT = 3
+Constants.BACKPACK_ITEMS_PER_WAVE = { 6, 8, 10 }
+Constants.BACKPACK_BELT_SPEED_PER_WAVE = { 6, 8, 10 }   -- studs/sec; A5 placeholder
+Constants.BACKPACK_SCANS_PER_WAVE = { 9, 12, 15 }       -- addendum default: ceil(items*1.5)
+Constants.BACKPACK_FALLOFF_SECONDS = 12                 -- on-belt time before fall-off
+Constants.BACKPACK_BOUNCE_BACK_FRACTION = 0.25          -- bounce teleports item back by this fraction
+Constants.BACKPACK_PIXEL_POST_INTRO_SECONDS = 5         -- P0 non-gating intro slide
+-- Legacy: kept so old call-sites don't crash if referenced during refactor.
+Constants.BACKPACK_ITEM_COUNT = 6 + 8 + 10
 Constants.BIN_RADIUS_STUDS = 10
 Constants.ITEM_PICKUP_RADIUS_STUDS = 10
 Constants.CONVEYOR_ITEM_TIMEOUT_SECONDS = 45
@@ -50,6 +59,10 @@ Constants.RATE_LIMIT_BOOTH_SUBMIT = 1.0
 Constants.RATE_LIMIT_PICKUP = 0.5
 Constants.RATE_LIMIT_PLACE = 0.5
 Constants.RATE_LIMIT_INVITE = 1.0
+Constants.RATE_LIMIT_SCAN = 0.5
+Constants.RATE_LIMIT_HIGHLIGHT = 0.25
+Constants.RATE_LIMIT_UNLOCK_LANE = 0.25
+Constants.RATE_LIMIT_DISMISS_INTRO = 0.5
 
 -- Score
 Constants.LEVEL_COMPLETION_BONUS = 500

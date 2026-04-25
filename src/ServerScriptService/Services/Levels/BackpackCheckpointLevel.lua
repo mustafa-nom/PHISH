@@ -1,16 +1,22 @@
 --!strict
--- Backpack Checkpoint: conveyor item lifecycle + sort validation.
-
-local ServerStorage = game:GetService("ServerStorage")
+-- Backpack Checkpoint level entry point.
+--
+-- Thin wrapper around the BackpackCheckpoint/ submodules. Keeps the same
+-- Begin / HandleSort / GetActiveItemInfo / GetActiveItemModel / Cleanup
+-- surface that LevelService and ExplorerInteractionService already call.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Modules = ReplicatedStorage:WaitForChild("Modules")
 local Constants = require(Modules:WaitForChild("Constants"))
+local LevelTypes = require(Modules:WaitForChild("LevelTypes"))
 local PlayAreaConfig = require(Modules:WaitForChild("PlayAreaConfig"))
 local TagQueries = require(Modules:WaitForChild("TagQueries"))
-local LevelTypes = require(Modules:WaitForChild("LevelTypes"))
 local ItemRegistry = require(Modules:WaitForChild("ItemRegistry"))
 local RemoteService = require(ReplicatedStorage:WaitForChild("RemoteService"))
+
+local BackpackCheckpoint = script.Parent:WaitForChild("BackpackCheckpoint")
+local BeltController = require(BackpackCheckpoint:WaitForChild("BeltController"))
+local WaveDirector = require(BackpackCheckpoint:WaitForChild("WaveDirector"))
 
 local BackpackCheckpointLevel = {}
 
@@ -31,129 +37,21 @@ local function getLevelModel(round): Model?
 	return nil
 end
 
-local function findItemTemplate(itemKey: string): Model?
-	local templates = ServerStorage:FindFirstChild("ItemTemplates")
-	if not templates then
-		return nil
-	end
-	local template = templates:FindFirstChild(itemKey)
-	if template and template:IsA("Model") then
-		return template
-	end
-	return nil
-end
+-- Re-export query helpers so existing callers don't need the submodule path.
+BackpackCheckpointLevel.GetActiveItemInfo = BeltController.GetActiveItemInfo
+BackpackCheckpointLevel.GetActiveItemModel = BeltController.GetActiveItemModel
+BackpackCheckpointLevel.GetLaneLocks = BeltController.GetLaneLocks
+BackpackCheckpointLevel.SetLaneLock = BeltController.SetLaneLock
+BackpackCheckpointLevel.SetHighlight = BeltController.SetHighlight
+BackpackCheckpointLevel.MarkHeld = BeltController.MarkHeld
+BackpackCheckpointLevel.GetHeldByPlayer = BeltController.GetHeldByPlayer
 
-local function makeItemPlaceholder(itemKey: string, parent: Instance): Model
-	-- Fallback when no template exists: a small block with a BillboardGui
-	-- showing the item label. Keeps the demo running even if User 1 hasn't
-	-- shipped the item models yet.
-	local model = Instance.new("Model")
-	model.Name = itemKey
-	local part = Instance.new("Part")
-	part.Name = "Body"
-	part.Size = Vector3.new(2, 2, 2)
-	part.Color = Color3.fromRGB(245, 200, 90)
-	part.Material = Enum.Material.SmoothPlastic
-	part.Anchored = false
-	part.CanCollide = false
-	part.Parent = model
-	model.PrimaryPart = part
-	local billboard = Instance.new("BillboardGui")
-	billboard.Size = UDim2.new(0, 160, 0, 40)
-	billboard.AlwaysOnTop = true
-	billboard.StudsOffset = Vector3.new(0, 2.5, 0)
-	billboard.Parent = part
-	local label = Instance.new("TextLabel")
-	label.Size = UDim2.new(1, 0, 1, 0)
-	label.BackgroundTransparency = 0.2
-	label.BackgroundColor3 = Color3.fromRGB(255, 248, 232)
-	label.TextColor3 = Color3.fromRGB(60, 40, 20)
-	label.Font = Enum.Font.Cartoon
-	label.TextSize = 18
-	label.Text = itemKey
-	label.Parent = billboard
-	model.Parent = parent
-	return model
-end
-
-local function spawnItem(round, scenario, itemInfo)
-	local levelModel = getLevelModel(round)
-	if not levelModel then
-		return nil
-	end
-	local beltStart = TagQueries.FirstTaggedInside(levelModel, PlayAreaConfig.Tags.BeltStart)
-	if not beltStart or not beltStart:IsA("BasePart") then
-		warn("BackpackCheckpointLevel: BeltStart part missing")
-		return nil
-	end
-	local template = findItemTemplate(itemInfo.ItemKey)
-	local model: Model
-	if template then
-		model = template:Clone() :: Model
-	else
-		model = makeItemPlaceholder(itemInfo.ItemKey, levelModel)
-	end
-	model.Name = itemInfo.Id
-	model.Parent = levelModel
-	if model.PrimaryPart then
-		model:PivotTo(beltStart.CFrame + Vector3.new(0, 2, 0))
-	end
-	model:SetAttribute("BB_ItemId", itemInfo.Id)
-	model:SetAttribute("BB_ItemKey", itemInfo.ItemKey)
-
-	round.ActiveItemId = itemInfo.Id
-	round.LevelState[LevelTypes.BackpackCheckpoint] = round.LevelState[LevelTypes.BackpackCheckpoint] or {}
-	round.LevelState[LevelTypes.BackpackCheckpoint].ActiveItemModel = model
-
-	RemoteService.FirePair(round, "ConveyorItemSpawned", {
-		RoundId = round.RoundId,
-		ItemId = itemInfo.Id,
-		ItemKey = itemInfo.ItemKey,
-		DisplayLabel = itemInfo.DisplayLabel,
-		Index = scenario.CurrentItemIndex,
-		Total = #scenario.ItemSequence,
-	})
-	return model
-end
-
-function BackpackCheckpointLevel.GetActiveItemInfo(round)
-	local scenario = round.ActiveScenario
-	if not scenario or scenario.Type ~= LevelTypes.BackpackCheckpoint then
-		return nil
-	end
-	local idx = scenario.CurrentItemIndex
-	if idx < 1 or idx > #scenario.ItemSequence then
-		return nil
-	end
-	return scenario.ItemSequence[idx]
-end
-
-function BackpackCheckpointLevel.GetActiveItemModel(round): Model?
-	local levelState = round.LevelState[LevelTypes.BackpackCheckpoint]
-	if not levelState then
-		return nil
-	end
-	return levelState.ActiveItemModel
-end
-
-function BackpackCheckpointLevel.AdvanceToNextItem(round)
-	local scenario = round.ActiveScenario
-	if not scenario or scenario.Type ~= LevelTypes.BackpackCheckpoint then
-		return false
-	end
-	scenario.CurrentItemIndex += 1
-	if scenario.CurrentItemIndex > #scenario.ItemSequence then
-		round.ActiveItemId = nil
-		return false  -- level complete
-	end
-	local nextItem = scenario.ItemSequence[scenario.CurrentItemIndex]
-	-- Destroy old model
-	local levelState = round.LevelState[LevelTypes.BackpackCheckpoint]
-	if levelState and levelState.ActiveItemModel and levelState.ActiveItemModel.Parent then
-		levelState.ActiveItemModel:Destroy()
-	end
-	spawnItem(round, scenario, nextItem)
-	return true
+function BackpackCheckpointLevel.HandleSort(round, itemId: string, laneId: string): (boolean, boolean, string?)
+	-- Returns (acceptedByServer, wasCorrect, reason).
+	-- WaveDirector.OnItemResolved is fired by BeltController via the
+	-- per-spawn callback whenever the active item leaves the belt
+	-- (correct sort or fall-off). Wrong sort bounces back and stays active.
+	return BeltController.HandleSort(round, itemId, laneId)
 end
 
 function BackpackCheckpointLevel.Begin(round, scenario)
@@ -162,69 +60,57 @@ function BackpackCheckpointLevel.Begin(round, scenario)
 		warn("BackpackCheckpointLevel: level model not in slot")
 		return false
 	end
-	round.LevelState[LevelTypes.BackpackCheckpoint] = round.LevelState[LevelTypes.BackpackCheckpoint] or {}
-	scenario.CurrentItemIndex = 1
 
-	-- Wire bin proximity prompts (drop here)
+	-- Wire bin proximity prompts (drop here).
 	for _, bin in ipairs(TagQueries.GetTaggedInside(levelModel, PlayAreaConfig.Tags.BuddyBin)) do
 		if bin:IsA("BasePart") then
 			local existingPrompt = bin:FindFirstChildOfClass("ProximityPrompt")
 			if not existingPrompt then
 				local prompt = Instance.new("ProximityPrompt")
 				prompt.ActionText = "Drop here"
-				prompt.ObjectText = ItemRegistry.LaneTheme[bin:GetAttribute(PlayAreaConfig.Attributes.LaneId)] and ItemRegistry.LaneTheme[bin:GetAttribute(PlayAreaConfig.Attributes.LaneId)].Label or "Bin"
+				local laneId = bin:GetAttribute(PlayAreaConfig.Attributes.LaneId)
+				local theme = ItemRegistry.LaneTheme[laneId]
+				prompt.ObjectText = theme and theme.Label or "Bin"
 				prompt.HoldDuration = 0
 				prompt.MaxActivationDistance = Constants.BIN_RADIUS_STUDS
 				prompt.RequiresLineOfSight = false
 				prompt.Parent = bin
-				prompt:SetAttribute("BB_LaneId", bin:GetAttribute(PlayAreaConfig.Attributes.LaneId))
+				prompt:SetAttribute("BB_LaneId", laneId)
 			end
 		end
 	end
 
-	spawnItem(round, scenario, scenario.ItemSequence[1])
+	-- Pixel Post intro (P0 non-gating: 5s overlay, both clients).
+	RemoteService.FirePair(round, "PixelPostIntro", {
+		RoundId = round.RoundId,
+		Title = "Pixel Post: Outbound Sorting",
+		Body = "First shift! Bags coming in. Sort outgoing mail and incoming surprises — talk to your buddy.",
+		DurationSeconds = Constants.BACKPACK_PIXEL_POST_INTRO_SECONDS,
+	})
 
+	-- Push the manual to the Guide before the first wave so the Field Manual
+	-- chart is on screen the moment Wave 1 spawns.
 	RemoteService.FireClient(round.Guide, "GuideManualUpdated", {
 		RoundId = round.RoundId,
 		LevelType = LevelTypes.BackpackCheckpoint,
 		Manual = scenario.GuideManual,
 	})
 
+	-- LevelService handles the round.ActiveScenario assignment and itemsSorted
+	-- reset; we just kick off the wave runner.
+	local Services = script.Parent.Parent
+	local LevelService
+	local function onLevelComplete()
+		LevelService = LevelService or require(Services:WaitForChild("LevelService"))
+		LevelService.CompleteLevel(round, LevelTypes.BackpackCheckpoint)
+	end
+
+	WaveDirector.Begin(round, scenario, onLevelComplete)
 	return true
 end
 
-function BackpackCheckpointLevel.HandleSort(round, itemId: string, laneId: string): (boolean, boolean)
-	-- Returns (acceptedByServer, wasCorrect). Only valid on the active item.
-	local scenario = round.ActiveScenario
-	if not scenario or scenario.Type ~= LevelTypes.BackpackCheckpoint then
-		return false, false
-	end
-	if itemId ~= round.ActiveItemId then
-		return false, false
-	end
-	local activeItem = BackpackCheckpointLevel.GetActiveItemInfo(round)
-	if not activeItem then
-		return false, false
-	end
-	local correct = activeItem.CorrectLane == laneId
-	RemoteService.FirePair(round, "ItemSortResult", {
-		RoundId = round.RoundId,
-		ItemId = itemId,
-		LaneId = laneId,
-		Correct = correct,
-	})
-	return true, correct
-end
-
 function BackpackCheckpointLevel.Cleanup(round)
-	local levelState = round.LevelState[LevelTypes.BackpackCheckpoint]
-	if levelState then
-		if levelState.ActiveItemModel and levelState.ActiveItemModel.Parent then
-			levelState.ActiveItemModel:Destroy()
-		end
-		levelState.ActiveItemModel = nil
-	end
-	round.ActiveItemId = nil
+	BeltController.Cleanup(round)
 end
 
 return BackpackCheckpointLevel

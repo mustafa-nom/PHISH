@@ -51,11 +51,21 @@ export type BackpackItem = {
 	ItemKey: string,
 	DisplayLabel: string,
 	CorrectLane: string,
+	Category: string?,
+	DifficultyTier: number?,
+	ScanTags: { string }?,
+}
+
+export type BackpackWave = {
+	WaveIndex: number,
+	Items: { BackpackItem },
+	BeltSpeed: number,
+	ScansAllowed: number,
 }
 
 export type BackpackCheckpointScenario = {
 	Type: string,
-	ItemSequence: { BackpackItem },
+	Waves: { BackpackWave },
 	GuideManual: {
 		Lanes: {
 			PackIt: { string },
@@ -63,8 +73,9 @@ export type BackpackCheckpointScenario = {
 			LeaveIt: { string },
 		},
 	},
-	Annotations: { [string]: string },
+	CurrentWaveIndex: number,
 	CurrentItemIndex: number,
+	TotalItems: number,
 }
 
 ScenarioTypes.NpcRoles = {
