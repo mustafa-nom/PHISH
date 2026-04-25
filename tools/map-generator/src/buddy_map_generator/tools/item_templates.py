@@ -295,6 +295,29 @@ def _big_achievement(p: LuaProgram, parent: str, _name: str) -> None:
             material_name="SmoothPlastic",
         )
     )
+    # cup handles — short bars on each side
+    for side, dx in (("L", -0.85), ("R", 0.85)):
+        p.line(
+            make_part(
+                f"{parent}_handle_{side}",
+                parent=parent,
+                name=f"Handle{side}",
+                size=(0.3, 0.6, 0.2),
+                cframe=cframe_pos(dx, 2.5, 0),
+                color_rgb=(252, 208, 88),
+                material_name="SmoothPlastic",
+            )
+        )
+    # tiny "1ST" label so the trophy reads as a big achievement
+    p.line(
+        make_billboard_gui(
+            f"{parent}_cup_label",
+            adornee=f"{parent}_cup",
+            text="1ST",
+            studs_offset_y=0,
+            text_size=18,
+        )
+    )
 
 
 def _home_address(p: LuaProgram, parent: str, _name: str) -> None:
@@ -404,6 +427,16 @@ def _password(p: LuaProgram, parent: str, _name: str) -> None:
             material_name="SmoothPlastic",
         )
     )
+    # asterisks on the card so it reads as "password hidden"
+    p.line(
+        make_billboard_gui(
+            f"{parent}_card_label",
+            adornee=f"{parent}_card",
+            text="* * * *",
+            studs_offset_y=-0.5,
+            text_size=18,
+        )
+    )
 
 
 def _phone_number(p: LuaProgram, parent: str, _name: str) -> None:
@@ -461,6 +494,30 @@ def _private_secret(p: LuaProgram, parent: str, _name: str) -> None:
             size=(0.3, 0.3, 0.45),
             cframe=cframe_pos(0.65, 1.1, 0),
             color_rgb=(252, 208, 88),
+            material_name="SmoothPlastic",
+        )
+    )
+    # gold strap stretching across the cover, locked at the clasp
+    p.line(
+        make_part(
+            f"{parent}_strap",
+            parent=parent,
+            name="Strap",
+            size=(1.4, 0.18, 0.45),
+            cframe=cframe_pos(0, 1.1, 0),
+            color_rgb=(252, 208, 88),
+            material_name="SmoothPlastic",
+        )
+    )
+    # tiny heart on the cover so it reads as a personal diary
+    p.line(
+        make_part(
+            f"{parent}_heart",
+            parent=parent,
+            name="CoverHeart",
+            size=(0.4, 0.4, 0.05),
+            cframe=cframe_pos(0, 1.5, 0.21),
+            color_rgb=(255, 220, 220),
             material_name="SmoothPlastic",
         )
     )
