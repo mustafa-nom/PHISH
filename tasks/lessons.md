@@ -26,6 +26,17 @@ This file tracks corrections and patterns to avoid repeating.
 
 After a follow-up with the judges, we reframed from "hide the learning" to "lean into the educational angle, target Roblox's Learn and Explore sort". Cut from 3 rooms to 2 polished levels. Renamed the runner role to Explorer. New levels: Stranger Danger Park and Backpack Checkpoint.
 
+### 2026-04-25: doc drift between user1_map_prompt and TECHNICAL_DESIGN.md
+
+While implementing M4 (Stranger Danger Park) we found the following items in `prompts/user1_map_prompt.md` that aren't yet documented in `docs/TECHNICAL_DESIGN.md` "Map Object Conventions". Treat User 1's prompt as authoritative for map data shape and update TECHNICAL_DESIGN.md when convenient:
+
+- **`Anchor` attribute on `BuddyNpcSpawn`** — the scenario service biases NPC role assignment by anchor (`WhiteVan` → risky, `HotdogStand` → safe, etc.). See `Modules/NpcRegistry.lua` `AnchorBias` and `AnchorRequiredTraits`.
+- **`PuppySpawn` tag** — used by `StrangerDangerScenario` to pick the puppy location.
+- **`BeltStart` / `BeltEnd` tags** (not just attributes) — read by `BackpackCheckpointLevel`.
+- **Knife accessory** — risky NPCs at the alley anchor get a kid-friendly cartoon knife server-attached at clone time; the rig itself stays unarmed. See `Levels/StrangerDangerLevel.lua` `attachKnifeAccessory`.
+
+Apply: when building a new level template in Studio, use the tag names listed in `Modules/PlayAreaConfig.Tags` and the attribute names in `Modules/PlayAreaConfig.Attributes` — those are the single source of truth for the script side.
+
 ### 2026-04-24: judge specifics nailed down (Jenine + Andrew)
 
 Two more judge conversations confirmed validation and tightened framing:
