@@ -20,10 +20,29 @@ judgment-call work: visual polish, decoration, tone.
 ## prerequisites
 
 - roblox studio open with the place file
-- `rbx-studio-mcp` studio plugin installed and running
-- `rbx-studio-mcp` cli installed (defaults to `~/.local/bin/rbx-studio-mcp`,
-  override with `RBX_STUDIO_MCP_BIN`)
+- the boshyxd `robloxstudio-mcp` studio plugin installed and **active**
+  (download `MCPPlugin.rbxmx` from
+  https://github.com/boshyxd/robloxstudio-mcp/releases and drop it in your
+  studio plugins folder)
+- "allow http requests" enabled in studio's experience settings → security
+- node + npx on `$PATH` (the npm package `robloxstudio-mcp@latest` is fetched
+  on demand)
 - python 3.11+
+
+### backend choice
+
+`buddy-map-generator` can drive either backend:
+
+- **boshyxd `robloxstudio-mcp` (default)** — npx-spawned, 43 tools, cleaner
+  api. uses the `MCPPlugin.rbxmx` studio plugin.
+- **official `rbx-studio-mcp`** — stdio binary at `~/.local/bin/rbx-studio-mcp`
+  with its own `MCPStudioPlugin.rbxm`. switch with
+  `BUDDY_STUDIO_BACKEND=rbx-studio`.
+
+> **note:** because `buddy-map-generator` spawns its own studio backend, do
+> not also load the standalone `robloxstudio` mcp at the same time — they
+> race for the same studio plugin connection. choose one. for ad-hoc studio
+> work pick the standalone; for building the map pick `buddy-map-generator`.
 
 ## install
 
@@ -64,6 +83,17 @@ inspection without studio open.
 ```bash
 BUDDY_MAP_DRY_RUN=1 python3 -m buddy_map_generator.server
 ```
+
+### tests
+
+```bash
+cd tools/map-generator
+python3 -m unittest discover tests
+```
+
+52 contract tests covering: emitter output is non-empty; canonical tags +
+attributes appear in the right emitters; all 13 item keys + 6 park scene
+anchors + 3 lane ids appear; no forbidden materials; only `Cartoon` font.
 
 ## design notes
 
