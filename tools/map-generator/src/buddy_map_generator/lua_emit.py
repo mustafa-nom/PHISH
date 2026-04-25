@@ -102,6 +102,31 @@ class LuaProgram:
         ]
         return "\n".join(self._header + self.body + footer)
 
+    def block(self) -> "_LuaBlock":
+        """context manager wrapping subsequent emissions in `do ... end`.
+
+        usage:
+            with p.block():
+                p.line(make_part(...))
+                p.line(make_part(...))
+
+        each `do` block scopes its locals so lua's 200-local-per-function cap
+        doesn't burn out on big lobbies.
+        """
+        return _LuaBlock(self)
+
+
+@dataclass
+class _LuaBlock:
+    program: "LuaProgram"
+
+    def __enter__(self) -> "_LuaBlock":
+        self.program.line("do")
+        return self
+
+    def __exit__(self, exc_type, exc, tb) -> None:
+        self.program.line("end")
+
 
 # ---------------------------------------------------------------------------
 # instance creation helpers

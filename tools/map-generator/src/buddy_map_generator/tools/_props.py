@@ -30,8 +30,14 @@ def emit_cone_tree(
     base_y: float = 0,
     scale: float = 1.0,
 ) -> None:
-    """tall thin trunk + three stacked green layers."""
+    """tall thin trunk + three stacked green layers.
+
+    body wrapped in `do ... end` so the four part-local variables get freed
+    after the tree finishes — lua's 200-local-per-function cap eats lobbies
+    fast otherwise.
+    """
     trunk_h = 8 * scale
+    p.line("do")
     p.line(
         make_part(
             f"{var_prefix}_trunk",
@@ -61,6 +67,7 @@ def emit_cone_tree(
                 shape="Ball",
             )
         )
+    p.line("end")
 
 
 def emit_cottage(
@@ -78,10 +85,15 @@ def emit_cottage(
     wall_color: tuple[int, int, int] | None = None,
     roof_color: tuple[int, int, int] | None = None,
 ) -> None:
-    """cartoon cottage hut: walls, foundation, pitched red roof, door, window."""
+    """cartoon cottage hut: walls, foundation, pitched red roof, door, window.
+
+    wrapped in `do ... end` so its ~7 part locals get freed after the cottage
+    is built, keeping the chunk under lua's 200-local cap.
+    """
     wall_rgb = wall_color if wall_color is not None else PALETTE.cottage_wall
     roof_rgb = roof_color if roof_color is not None else PALETTE.roof_red
     cy = base_y + wall_h / 2
+    p.line("do")
     p.line(
         make_part(
             f"{var_prefix}_walls",
@@ -169,6 +181,7 @@ def emit_cottage(
             transparency=0.2,
         )
     )
+    p.line("end")
 
 
 def emit_polygonal_path(
@@ -188,6 +201,9 @@ def emit_polygonal_path(
         dz = nxt[1] - pz
         yaw = math.degrees(math.atan2(dx, dz))
         sx, sy, sz = sizes[idx % len(sizes)]
+        # each stone in its own do/end so the per-stone local goes out of
+        # scope before the next stone declares its own.
+        p.line("do")
         p.line(
             make_wedge(
                 f"{var_prefix}_{idx}",
@@ -199,6 +215,7 @@ def emit_polygonal_path(
                 material_name="Concrete",
             )
         )
+        p.line("end")
 
 
 __all__ = ["emit_cone_tree", "emit_cottage", "emit_polygonal_path"]
