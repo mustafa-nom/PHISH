@@ -226,6 +226,30 @@ def emit_stranger_danger_park_lua() -> str:
             material_name="Wood",
         )
     )
+    # actual swings hanging from the frame
+    for i, sz in enumerate((-16.5, -19.5)):
+        p.line(
+            make_part(
+                f"pg_swing_chain_{i}",
+                parent="playground",
+                name=f"SwingChain{i}",
+                size=(0.15, 3.4, 0.15),
+                cframe=cframe_pos(32, 4.1, sz),
+                color_rgb=PALETTE.wood_dark,
+                material_name="SmoothPlastic",
+            )
+        )
+        p.line(
+            make_part(
+                f"pg_swing_seat_{i}",
+                parent="playground",
+                name=f"SwingSeat{i}",
+                size=(1.6, 0.3, 0.6),
+                cframe=cframe_pos(32, 2.4, sz),
+                color_rgb=PALETTE.bin_pack_it,
+                material_name="SmoothPlastic",
+            )
+        )
 
     # ----- scene: white van (risky)
     p.line(make_model("whitevan", parent="level", name="WhiteVan"))
@@ -278,6 +302,44 @@ def emit_stranger_danger_park_lua() -> str:
             material_name="SmoothPlastic",
         )
     )
+    # windshield (front of the van)
+    p.line(
+        make_part(
+            "wv_windshield",
+            parent="whitevan",
+            name="Windshield",
+            size=(0.3, 2.4, 3.6),
+            cframe=cframe_pos(42, 5, 22),
+            color_rgb=PALETTE.fountain_water,
+            material_name="SmoothPlastic",
+            transparency=0.3,
+        )
+    )
+    # brake lights — small red squares at the rear
+    for i, wz in enumerate((20.5, 23.5)):
+        p.line(
+            make_part(
+                f"wv_brake_{i}",
+                parent="whitevan",
+                name=f"BrakeLight{i}",
+                size=(0.2, 0.6, 0.6),
+                cframe=cframe_pos(34.1, 1.6, wz),
+                color_rgb=PALETTE.bin_leave_it,
+                material_name="SmoothPlastic",
+            )
+        )
+    # license plate
+    p.line(
+        make_part(
+            "wv_plate",
+            parent="whitevan",
+            name="LicensePlate",
+            size=(0.2, 0.7, 1.6),
+            cframe=cframe_pos(34.05, 1.2, 22),
+            color_rgb=PALETTE.sign_face,
+            material_name="SmoothPlastic",
+        )
+    )
 
     # ----- scene: alley behind shop
     p.line(make_model("alley", parent="level", name="Alley"))
@@ -313,6 +375,89 @@ def emit_stranger_danger_park_lua() -> str:
             size=(2.5, 2, 3),
             cframe=cframe_pos(-39, 1, 26),
             color_rgb=PALETTE.bin_pack_it,
+            material_name="SmoothPlastic",
+        )
+    )
+    # service door at the back of the shop — exit cue for an alley scene
+    p.line(
+        make_part(
+            "al_door_frame",
+            parent="alley",
+            name="DoorFrame",
+            size=(0.3, 4.4, 2.4),
+            cframe=cframe_pos(-31.7, 2.2, 18),
+            color_rgb=PALETTE.wood_dark,
+            material_name="Wood",
+        )
+    )
+    p.line(
+        make_part(
+            "al_door",
+            parent="alley",
+            name="ServiceDoor",
+            size=(0.2, 3.8, 1.8),
+            cframe=cframe_pos(-31.6, 2, 18),
+            color_rgb=PALETTE.wood_warm,
+            material_name="Wood",
+        )
+    )
+    # streetlamp — long stem with a glowing top, anchors "lurking spot lit
+    # from above". the light part is sparkle-yellow but kept as
+    # SmoothPlastic because Neon is forbidden by the visual style bible.
+    p.line(
+        make_part(
+            "al_lamp_post",
+            parent="alley",
+            name="StreetLampPost",
+            size=(0.6, 7, 0.6),
+            cframe=cframe_pos(-36, 3.5, 22),
+            color_rgb=PALETTE.wood_dark,
+            material_name="SmoothPlastic",
+        )
+    )
+    p.line(
+        make_part(
+            "al_lamp_arm",
+            parent="alley",
+            name="StreetLampArm",
+            size=(2, 0.4, 0.4),
+            cframe=cframe_pos(-37, 7, 22),
+            color_rgb=PALETTE.wood_dark,
+            material_name="SmoothPlastic",
+        )
+    )
+    p.line(
+        make_part(
+            "al_lamp_bulb",
+            parent="alley",
+            name="StreetLampBulb",
+            size=(1, 1, 1),
+            cframe=cframe_pos(-38, 6.7, 22),
+            color_rgb=PALETTE.sparkle,
+            material_name="SmoothPlastic",
+            shape="Ball",
+        )
+    )
+    # cardboard boxes — stacked alley clutter, gives the scene texture
+    p.line(
+        make_part(
+            "al_box_a",
+            parent="alley",
+            name="CardboardBoxA",
+            size=(2, 1.6, 1.6),
+            cframe=cframe_pos(-37.5, 0.8, 19),
+            color_rgb=PALETTE.wood_warm,
+            material_name="SmoothPlastic",
+        )
+    )
+    p.line(
+        make_part(
+            "al_box_b",
+            parent="alley",
+            name="CardboardBoxB",
+            size=(1.4, 1.2, 1.2),
+            cframe=cframe_pos(-36.5, 2.2, 19),
+            color_rgb=PALETTE.wood_warm,
             material_name="SmoothPlastic",
         )
     )
