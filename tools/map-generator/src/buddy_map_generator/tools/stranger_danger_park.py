@@ -155,6 +155,63 @@ def emit_stranger_danger_park_lua() -> str:
             text_size=32,
         )
     )
+    # roof support poles flanking the counter
+    for side, dx in (("L", -5.5), ("R", 5.5)):
+        p.line(
+            make_part(
+                f"hd_post_{side}",
+                parent="hotdog",
+                name=f"RoofPost{side}",
+                size=(0.4, 5.6, 0.4),
+                cframe=cframe_pos(-30 + dx, 2.8, -10),
+                color_rgb=PALETTE.wood_dark,
+                material_name="Wood",
+            )
+        )
+    # cartoon hot dog on the counter — bun + sausage
+    p.line(
+        make_part(
+            "hd_bun",
+            parent="hotdog",
+            name="DisplayBun",
+            size=(2.4, 0.6, 0.8),
+            cframe=cframe_pos(-30, 4.4, -8.2),
+            color_rgb=(232, 196, 132),
+            material_name="SmoothPlastic",
+        )
+    )
+    p.line(
+        make_part(
+            "hd_sausage",
+            parent="hotdog",
+            name="DisplaySausage",
+            size=(2.6, 0.4, 0.5),
+            cframe=cframe_pos(-30, 4.8, -8.2),
+            color_rgb=(196, 96, 70),
+            material_name="SmoothPlastic",
+        )
+    )
+    # menu board on the counter face
+    p.line(
+        make_part(
+            "hd_menu",
+            parent="hotdog",
+            name="MenuBoard",
+            size=(3.4, 2, 0.2),
+            cframe=cframe_pos(-32, 3, -8.05),
+            color_rgb=PALETTE.sign_face,
+            material_name="SmoothPlastic",
+        )
+    )
+    p.line(
+        make_billboard_gui(
+            "hd_menu_label",
+            adornee="hd_menu",
+            text="$2 — open!",
+            studs_offset_y=0,
+            text_size=22,
+        )
+    )
 
     # ----- scene: playground
     p.line(make_model("playground", parent="level", name="Playground"))
@@ -534,6 +591,64 @@ def emit_stranger_danger_park_lua() -> str:
             material_name="Concrete",
         )
     )
+    # tiered top bowl (saucer) for a more "centerpiece" fountain
+    p.line(
+        make_disc(
+            "ft_top_bowl",
+            parent="fountain",
+            name="TopBowl",
+            diameter=3,
+            height=0.6,
+            cframe=cframe_pos(0, 3.4, 12),
+            color_rgb=PALETTE.fountain_stone,
+            material_name="Concrete",
+        )
+    )
+    p.line(
+        make_disc(
+            "ft_top_water",
+            parent="fountain",
+            name="TopWater",
+            diameter=2.4,
+            height=0.3,
+            cframe=cframe_pos(0, 3.8, 12),
+            color_rgb=PALETTE.fountain_water,
+            material_name="SmoothPlastic",
+            transparency=0.25,
+        )
+    )
+    # cartoon water spout — small upward jet
+    p.line(
+        make_part(
+            "ft_spout",
+            parent="fountain",
+            name="WaterSpout",
+            size=(0.6, 1.2, 0.6),
+            cframe=cframe_pos(0, 4.4, 12),
+            color_rgb=PALETTE.fountain_water,
+            material_name="SmoothPlastic",
+            transparency=0.3,
+        )
+    )
+    # decorative pebbles along the rim
+    for i, ang in enumerate(range(0, 360, 60)):
+        import math
+
+        ang_rad = math.radians(ang)
+        px = math.cos(ang_rad) * 4.2
+        pz = 12 + math.sin(ang_rad) * 4.2
+        p.line(
+            make_part(
+                f"ft_pebble_{i}",
+                parent="fountain",
+                name=f"Pebble{i}",
+                size=(0.6, 0.4, 0.6),
+                cframe=cframe_pos(px, 1.2, pz),
+                color_rgb=PALETTE.fountain_stone,
+                material_name="SmoothPlastic",
+                shape="Ball",
+            )
+        )
     # public bench
     p.line(
         make_part(
