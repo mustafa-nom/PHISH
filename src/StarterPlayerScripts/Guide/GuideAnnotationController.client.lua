@@ -1,7 +1,8 @@
 --!strict
--- Annotation buttons (✅/🚩/⚠️/Clear). Targets:
---   * Stranger Danger Park: most-recently-shown NPC (by NpcDescriptionShown).
---   * Backpack Checkpoint: most-recently-spawned belt item.
+-- Annotation buttons for Stranger Danger Park only.
+-- The Backpack Checkpoint branch was removed — BPC now uses the Active
+-- Scanner Guide tools (Scan / Highlight / Lane Lock) wired in
+-- ScannerGuideHud.client.lua and ScannerService.lua.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RemoteService = require(ReplicatedStorage:WaitForChild("RemoteService"))
@@ -17,7 +18,6 @@ local state = {
 	RoundId = nil :: string?,
 	LevelType = nil :: string?,
 	NpcId = nil :: string?,
-	ItemId = nil :: string?,
 }
 
 local panel: Frame? = nil
@@ -37,9 +37,9 @@ local function buildButtons()
 	local screen = UIBuilder.GetScreenGui()
 	panel = UIStyle.MakePanel({
 		Name = "GuideAnnotation",
-		Size = UDim2.new(0.188, 0, 0.074, 0),
+		Size = UDim2.new(0, 360, 0, 80),
 		AnchorPoint = Vector2.new(0.5, 1),
-		Position = UDim2.new(0.5, 0, 0.985, 0),
+		Position = UDim2.new(0.5, 0, 1, -16),
 		Parent = screen,
 	})
 	UIBuilder.PadLayout(panel :: Frame, 8)
@@ -53,7 +53,7 @@ local function buildButtons()
 
 	local function makeBtn(label: string, color: Color3, onClick: () -> ())
 		local btn = UIStyle.MakeButton({
-			Size = UDim2.new(0.194, 0, 1, 0),
+			Size = UDim2.new(0, 70, 1, 0),
 			Text = label,
 			BackgroundColor3 = color,
 			TextSize = UIStyle.TextSize.Body,
@@ -76,20 +76,9 @@ local function buildButtons()
 		makeBtn("Clear", UIStyle.Palette.PanelStroke, function()
 			if state.NpcId then RemoteService.FireServer("RequestAnnotateNpc", state.NpcId, "Clear") end
 		end)
-	elseif state.LevelType == LevelTypes.BackpackCheckpoint then
-		makeBtn("✅ Pack", UIStyle.Palette.Safe, function()
-			if state.ItemId then RemoteService.FireServer("RequestAnnotateItem", state.ItemId, "PackIt") end
-		end)
-		makeBtn("⚠️ Ask", UIStyle.Palette.AskFirst, function()
-			if state.ItemId then RemoteService.FireServer("RequestAnnotateItem", state.ItemId, "AskFirst") end
-		end)
-		makeBtn("⛔ Leave", UIStyle.Palette.Risky, function()
-			if state.ItemId then RemoteService.FireServer("RequestAnnotateItem", state.ItemId, "LeaveIt") end
-		end)
-		makeBtn("Clear", UIStyle.Palette.PanelStroke, function()
-			if state.ItemId then RemoteService.FireServer("RequestAnnotateItem", state.ItemId, "Clear") end
-		end)
 	end
+	-- Backpack Checkpoint intentionally has no annotation panel — its Guide
+	-- tools live in ScannerGuideHud.client.lua.
 end
 
 RemoteService.OnClientEvent("RoleAssigned", function(payload)
@@ -105,7 +94,6 @@ RemoteService.OnClientEvent("LevelStarted", function(payload)
 	if payload.RoundId ~= state.RoundId then return end
 	state.LevelType = payload.LevelType
 	state.NpcId = nil
-	state.ItemId = nil
 	buildButtons()
 end)
 
@@ -113,11 +101,6 @@ RemoteService.OnClientEvent("NpcDescriptionShown", function(payload)
 	if state.Role ~= RoleTypes.Guide then return end
 	if payload.Audience ~= "Guide" then return end
 	state.NpcId = payload.NpcId
-end)
-
-RemoteService.OnClientEvent("ConveyorItemSpawned", function(payload)
-	if state.Role ~= RoleTypes.Guide then return end
-	state.ItemId = payload.ItemId
 end)
 
 RemoteService.OnClientEvent("LevelEnded", function(_payload)
@@ -130,6 +113,5 @@ RemoteService.OnClientEvent("RoundEnded", function(_payload)
 	state.RoundId = nil
 	state.LevelType = nil
 	state.NpcId = nil
-	state.ItemId = nil
 	teardown()
 end)
