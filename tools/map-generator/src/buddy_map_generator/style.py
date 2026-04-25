@@ -58,6 +58,24 @@ class Palette:
     # explorer marker / sparkle accents (used sparingly)
     sparkle: tuple[int, int, int] = (255, 240, 168)
 
+    # neutral utility tones — used sparingly across many emitters; centralized
+    # here so a future repaint touches one file.
+    skin_warm: tuple[int, int, int] = (255, 220, 184)
+    skin_neutral: tuple[int, int, int] = (240, 210, 178)
+    near_black: tuple[int, int, int] = (60, 60, 64)
+    soft_steel: tuple[int, int, int] = (180, 180, 192)
+    pale_steel: tuple[int, int, int] = (220, 220, 230)
+    paper_white: tuple[int, int, int] = (252, 252, 248)
+    ink_dot: tuple[int, int, int] = (40, 40, 48)
+    blush: tuple[int, int, int] = (140, 70, 70)
+
+    # food / prop colors used by the hot dog scene
+    bun: tuple[int, int, int] = (232, 196, 132)
+    sausage: tuple[int, int, int] = (196, 96, 70)
+
+    # warm gold for trophies, padlocks, brass accents
+    gold: tuple[int, int, int] = (252, 208, 88)
+
 
 PALETTE = Palette()
 
