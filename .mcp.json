@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "roblox-studio": {
+      "command": "/home/matheus/.local/bin/rbx-studio-mcp",
+      "args": ["--stdio"],
+      "description": "official roblox studio mcp — stdio transport, paired with the rbx-studio-mcp studio plugin"
+    },
+    "buddy-map-generator": {
+      "command": "python3",
+      "args": [
+        "-m",
+        "buddy_map_generator.server"
+      ],
+      "env": {
+        "PYTHONPATH": "tools/map-generator/src"
+      },
+      "description": "high-level mcp that scaffolds the buddy bridge studio map by emitting lua and shipping it through roblox-studio's run_code"
+    }
+  }
+}

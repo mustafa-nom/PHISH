@@ -25,3 +25,16 @@ Packages/
 ServerPackages/
 DevPackages/
 sourcemap.json
+
+# Python (tools/map-generator)
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.venv*/
+.eggs/
+build/
+dist/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
