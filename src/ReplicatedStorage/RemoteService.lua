@@ -27,8 +27,11 @@ RemoteService.Events = {
 	"RequestExplorerAction",  -- Approach | AskFirst | Avoid (new 3-way decision)
 	"RequestPickupItem",
 	"RequestPlaceItemInLane",
-	"RequestAnnotateNpc",
-	"RequestAnnotateItem",
+	"RequestAnnotateNpc",     -- Stranger Danger only; SD redesign owns its removal
+	"RequestScanItem",        -- Backpack Checkpoint Active Scanner Guide
+	"RequestHighlightItem",   -- Backpack Checkpoint Active Scanner Guide
+	"RequestUnlockLane",      -- Backpack Checkpoint Active Scanner Guide
+	"RequestDismissIntro",    -- Pixel Post intro slide dismiss
 	"ReturnToLobby",
 
 	-- Server → Client
@@ -46,11 +49,11 @@ RemoteService.Events = {
 	"NpcDescriptionShown",
 	"NpcCueRevealed",         -- one cue revealed to Explorer after AskFirst
 	"NpcActionResolved",      -- result of an Approach/AskFirst/Avoid action
-	"NpcAnnotationUpdated",
-	"ItemAnnotationUpdated",
+	"NpcAnnotationUpdated",   -- Stranger Danger only; SD redesign owns its removal
 	"ConveyorItemSpawned",
 	"ConveyorItemRemoved",
 	"ItemSortResult",
+	"ItemFalloff",            -- item fell off belt edge — counts as a mistake
 	"ClueCollected",
 	"PuppyRevealed",
 	"GuideManualUpdated",
@@ -61,6 +64,14 @@ RemoteService.Events = {
 	"ProgressionUpdated",
 	"Notify",
 	"SetHudMode",
+	-- Backpack Checkpoint Active Scanner Guide
+	"BeltStateUpdated",       -- multi-item belt snapshot to Guide HUD
+	"ScannerOverlayUpdated",  -- Scan reveal payload (tags) to Guide HUD
+	"HighlightUpdated",       -- ring color update visible to both players
+	"LaneLockUpdated",        -- per-item lane lock state for Explorer
+	"WaveStarted",
+	"WaveEnded",
+	"PixelPostIntro",         -- intro slide payload (title, body)
 }
 
 RemoteService.Functions = {
