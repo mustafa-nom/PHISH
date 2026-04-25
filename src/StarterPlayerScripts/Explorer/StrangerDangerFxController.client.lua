@@ -99,6 +99,46 @@ local function celebratePuppy()
 	}):Play()
 	task.delay(2, function() cc:Destroy() end)
 	playSfx("RoundComplete")
+
+	-- big text overlay
+	local screen = Instance.new("ScreenGui")
+	screen.Name = "BB_PuppyFound"
+	screen.ResetOnSpawn = false
+	screen.IgnoreGuiInset = true
+	screen.DisplayOrder = 10
+	screen.Parent = localPlayer:WaitForChild("PlayerGui")
+	local label = Instance.new("TextLabel")
+	label.AnchorPoint = Vector2.new(0.5, 0.5)
+	label.Position = UDim2.new(0.5, 0, 0.4, 0)
+	label.Size = UDim2.new(0, 600, 0, 120)
+	label.BackgroundTransparency = 1
+	label.Text = "PUPPY FOUND!"
+	label.Font = Enum.Font.Cartoon
+	label.TextSize = 96
+	label.TextColor3 = Color3.fromRGB(255, 232, 196)
+	label.TextStrokeTransparency = 0
+	label.TextStrokeColor3 = Color3.fromRGB(132, 44, 40)
+	label.TextScaled = true
+	label.Parent = screen
+	local sub = Instance.new("TextLabel")
+	sub.AnchorPoint = Vector2.new(0.5, 0.5)
+	sub.Position = UDim2.new(0.5, 0, 0.5, 0)
+	sub.Size = UDim2.new(0, 500, 0, 50)
+	sub.BackgroundTransparency = 1
+	sub.Text = "you talked, you trusted, you won"
+	sub.Font = Enum.Font.Cartoon
+	sub.TextSize = 32
+	sub.TextColor3 = Color3.fromRGB(255, 232, 196)
+	sub.TextStrokeTransparency = 0.4
+	sub.TextStrokeColor3 = Color3.fromRGB(60, 40, 20)
+	sub.Parent = screen
+	-- fade out
+	task.delay(2.5, function()
+		for _, l in ipairs({ label, sub }) do
+			TweenService:Create(l, TweenInfo.new(1.0), { TextTransparency = 1 }):Play()
+		end
+		task.delay(1.5, function() screen:Destroy() end)
+	end)
 end
 
 RemoteService.OnClientEvent("NpcActionResolved", function(payload)
