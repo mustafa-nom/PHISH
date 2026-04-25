@@ -176,7 +176,7 @@ def emit_stranger_danger_park_lua() -> str:
             name="DisplayBun",
             size=(2.4, 0.6, 0.8),
             cframe=cframe_pos(-30, 4.4, -8.2),
-            color_rgb=(232, 196, 132),
+            color_rgb=PALETTE.bun,
             material_name="SmoothPlastic",
         )
     )
@@ -187,7 +187,7 @@ def emit_stranger_danger_park_lua() -> str:
             name="DisplaySausage",
             size=(2.6, 0.4, 0.5),
             cframe=cframe_pos(-30, 4.8, -8.2),
-            color_rgb=(196, 96, 70),
+            color_rgb=PALETTE.sausage,
             material_name="SmoothPlastic",
         )
     )

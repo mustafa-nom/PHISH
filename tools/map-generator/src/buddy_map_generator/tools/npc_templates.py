@@ -35,13 +35,13 @@ from ..style import PALETTE
 # (name, body_color, accent_color, accent_kind, holds_knife)
 # accent_kind ∈ apron | uniform_badge | stroller | sunglasses | hood | car_lean
 _NPCS = [
-    ("HotDogVendor", (255, 218, 168), PALETTE.hot_dog_red, "apron", False),
-    ("Ranger", (255, 220, 184), PALETTE.ranger_green, "uniform_badge", False),
-    ("ParentWithKid", (255, 224, 196), PALETTE.capsule_b, "stroller", False),
-    ("CasualParkGoer", (255, 218, 178), PALETTE.capsule_d, "sunglasses", False),
-    ("HoodedAdult", (220, 192, 168), (60, 60, 64), "hood", False),
-    ("VehicleLeaner", (240, 210, 178), (200, 80, 80), "car_lean", False),
-    ("KnifeArchetype", (220, 192, 168), (80, 80, 88), "hood", True),
+    ("HotDogVendor", PALETTE.skin_warm, PALETTE.hot_dog_red, "apron", False),
+    ("Ranger", PALETTE.skin_warm, PALETTE.ranger_green, "uniform_badge", False),
+    ("ParentWithKid", PALETTE.skin_warm, PALETTE.capsule_b, "stroller", False),
+    ("CasualParkGoer", PALETTE.skin_warm, PALETTE.capsule_d, "sunglasses", False),
+    ("HoodedAdult", PALETTE.skin_neutral, PALETTE.near_black, "hood", False),
+    ("VehicleLeaner", PALETTE.skin_neutral, PALETTE.bin_leave_it, "car_lean", False),
+    ("KnifeArchetype", PALETTE.skin_neutral, PALETTE.near_black, "hood", True),
 ]
 
 
@@ -107,7 +107,7 @@ def _emit_humanoid_rig(
                 name=f"Eye{side}",
                 size=(0.18, 0.18, 0.06),
                 cframe=cframe_pos(dx, 5.05, 0.78),
-                color_rgb=(40, 40, 48),
+                color_rgb=PALETTE.ink_dot,
                 material_name="SmoothPlastic",
             )
         )
@@ -119,7 +119,7 @@ def _emit_humanoid_rig(
             name="Mouth",
             size=(0.4, 0.1, 0.06),
             cframe=cframe_pos(0, 4.7, 0.78),
-            color_rgb=(140, 70, 70),
+            color_rgb=PALETTE.blush,
             material_name="SmoothPlastic",
         )
     )
@@ -245,7 +245,7 @@ def _emit_humanoid_rig(
                 name="Sunglasses",
                 size=(1.6, 0.3, 0.1),
                 cframe=cframe_pos(0, 5.1, 0.85),
-                color_rgb=(40, 40, 40),
+                color_rgb=PALETTE.ink_dot,
                 material_name="SmoothPlastic",
             )
         )
@@ -257,7 +257,7 @@ def _emit_humanoid_rig(
                 name="Hood",
                 size=(2, 1.6, 2),
                 cframe=cframe_pos(0, 5, -0.3),
-                color_rgb=(60, 60, 64),
+                color_rgb=PALETTE.near_black,
                 material_name="SmoothPlastic",
             )
         )
@@ -268,7 +268,7 @@ def _emit_humanoid_rig(
                 name="HoodDrape",
                 size=(2.6, 0.8, 1.5),
                 cframe=cframe_pos(0, 4.2, -0.6),
-                color_rgb=(60, 60, 64),
+                color_rgb=PALETTE.near_black,
                 material_name="SmoothPlastic",
             )
         )
@@ -280,7 +280,7 @@ def _emit_humanoid_rig(
                 name="Sunglasses",
                 size=(1.6, 0.3, 0.1),
                 cframe=cframe_pos(0, 5.1, 0.85),
-                color_rgb=(40, 40, 40),
+                color_rgb=PALETTE.ink_dot,
                 material_name="SmoothPlastic",
             )
         )
@@ -331,7 +331,7 @@ def _emit_humanoid_rig(
                 name="Blade",
                 size=(0.15, 1.2, 0.5),
                 cframe=cframe_pos(1.6, 3.5, 0.6),
-                color_rgb=(220, 220, 230),
+                color_rgb=PALETTE.pale_steel,
                 material_name="SmoothPlastic",
             )
         )

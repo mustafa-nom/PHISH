@@ -84,7 +84,7 @@ def _favorite_game(p: LuaProgram, parent: str, _name: str) -> None:
                 name=f"Stick{side}",
                 size=(0.3, 0.3, 0.3),
                 cframe=cframe_pos(dx, 1.4, 0),
-                color_rgb=(60, 60, 64),
+                color_rgb=PALETTE.near_black,
                 material_name="SmoothPlastic",
                 shape="Ball",
             )
@@ -208,7 +208,7 @@ def _personal_photo(p: LuaProgram, parent: str, _name: str) -> None:
             name="Polaroid",
             size=(1.4, 1.6, 0.08),
             cframe=cframe_pos(0, 1, 0),
-            color_rgb=(252, 252, 248),
+            color_rgb=PALETTE.paper_white,
             material_name="SmoothPlastic",
         )
     )
@@ -280,7 +280,7 @@ def _big_achievement(p: LuaProgram, parent: str, _name: str) -> None:
             name="Stem",
             size=(0.4, 1.2, 0.4),
             cframe=cframe_pos(0, 1.4, 0),
-            color_rgb=(252, 208, 88),
+            color_rgb=PALETTE.gold,
             material_name="SmoothPlastic",
         )
     )
@@ -291,7 +291,7 @@ def _big_achievement(p: LuaProgram, parent: str, _name: str) -> None:
             name="Cup",
             size=(1.2, 0.8, 1.2),
             cframe=cframe_pos(0, 2.4, 0),
-            color_rgb=(252, 208, 88),
+            color_rgb=PALETTE.gold,
             material_name="SmoothPlastic",
         )
     )
@@ -304,7 +304,7 @@ def _big_achievement(p: LuaProgram, parent: str, _name: str) -> None:
                 name=f"Handle{side}",
                 size=(0.3, 0.6, 0.2),
                 cframe=cframe_pos(dx, 2.5, 0),
-                color_rgb=(252, 208, 88),
+                color_rgb=PALETTE.gold,
                 material_name="SmoothPlastic",
             )
         )
@@ -401,7 +401,7 @@ def _password(p: LuaProgram, parent: str, _name: str) -> None:
             name="Card",
             size=(1.4, 1.8, 0.1),
             cframe=cframe_pos(0, 1.2, 0),
-            color_rgb=(60, 60, 64),
+            color_rgb=PALETTE.near_black,
             material_name="SmoothPlastic",
         )
     )
@@ -412,7 +412,7 @@ def _password(p: LuaProgram, parent: str, _name: str) -> None:
             name="LockBody",
             size=(0.8, 0.8, 0.15),
             cframe=cframe_pos(0, 1, 0.05),
-            color_rgb=(252, 208, 88),
+            color_rgb=PALETTE.gold,
             material_name="SmoothPlastic",
         )
     )
@@ -423,7 +423,7 @@ def _password(p: LuaProgram, parent: str, _name: str) -> None:
             name="Shackle",
             size=(0.5, 0.5, 0.15),
             cframe=cframe_pos(0, 1.55, 0.05),
-            color_rgb=(180, 180, 192),
+            color_rgb=PALETTE.soft_steel,
             material_name="SmoothPlastic",
         )
     )
@@ -447,7 +447,7 @@ def _phone_number(p: LuaProgram, parent: str, _name: str) -> None:
             name="PhoneBody",
             size=(0.8, 1.6, 0.15),
             cframe=cframe_pos(0, 1, 0),
-            color_rgb=(60, 60, 64),
+            color_rgb=PALETTE.near_black,
             material_name="SmoothPlastic",
         )
     )
@@ -493,7 +493,7 @@ def _private_secret(p: LuaProgram, parent: str, _name: str) -> None:
             name="Clasp",
             size=(0.3, 0.3, 0.45),
             cframe=cframe_pos(0.65, 1.1, 0),
-            color_rgb=(252, 208, 88),
+            color_rgb=PALETTE.gold,
             material_name="SmoothPlastic",
         )
     )
@@ -505,7 +505,7 @@ def _private_secret(p: LuaProgram, parent: str, _name: str) -> None:
             name="Strap",
             size=(1.4, 0.18, 0.45),
             cframe=cframe_pos(0, 1.1, 0),
-            color_rgb=(252, 208, 88),
+            color_rgb=PALETTE.gold,
             material_name="SmoothPlastic",
         )
     )
