@@ -218,6 +218,20 @@ function DataService.Init()
 		DataService.Save(player)
 	end)
 
+	-- Dev wipe: client presses [ to reset their profile and rejoin clean.
+	-- Replaces in-memory profile with newProfile(), force-saves it to the
+	-- DataStore (so the wipe persists across rejoin), then kicks. Rejoin
+	-- loads the freshly-saved blank profile.
+	RemoteService.OnServerEvent("RequestResetProfile", function(player)
+		print(string.format("[PHISH][DataService] %s requested profile reset.", player.Name))
+		profiles[player] = newProfile()
+		saveProfile(player, profiles[player])
+		for _, cb in ipairs(saveCallbacks) do
+			pcall(cb, player, profiles[player])
+		end
+		player:Kick("Your save has been reset. Rejoin to start fresh.")
+	end)
+
 	Players.PlayerAdded:Connect(function(player)
 		local profile, fromStore = loadProfile(player)
 		profiles[player] = profile
