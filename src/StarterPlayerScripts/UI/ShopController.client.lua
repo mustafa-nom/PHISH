@@ -14,6 +14,7 @@ local Modules = ReplicatedStorage:WaitForChild("Modules")
 local PhishConstants = require(Modules:WaitForChild("PhishConstants"))
 local RodCatalog = require(Modules:WaitForChild("RodCatalog"))
 local UIStyle = require(Modules:WaitForChild("UIStyle"))
+local IconFactory = require(Modules:WaitForChild("IconFactory"))
 local RemoteService = require(ReplicatedStorage:WaitForChild("RemoteService"))
 
 local UIBuilder = require(script.Parent:WaitForChild("UIBuilder"))
@@ -22,7 +23,7 @@ local player = Players.LocalPlayer
 
 local localState = { coins = 0, rodTier = 1 }
 
-local cardRefs: { [string]: { panel: Frame, buyBtn: TextButton, priceLabel: TextLabel } } = {}
+local cardRefs: { [string]: { panel: Frame, buyBtn: TextButton, priceFrame: Frame, priceLabel: TextLabel } } = {}
 local activeShopGui: ScreenGui? = nil
 
 local function findRodTemplate(rodId: string): Model?
@@ -89,12 +90,13 @@ local function refreshCard(rod: RodCatalog.Rod)
 		refs.buyBtn.Text = "OWNED"
 		refs.buyBtn.BackgroundColor3 = UIStyle.Palette.TextMuted
 		refs.buyBtn.AutoButtonColor = false
-		refs.priceLabel.Text = ""
+		refs.priceFrame.Visible = false
 	else
 		refs.buyBtn.Text = "BUY"
 		refs.buyBtn.BackgroundColor3 = affordable and UIStyle.Palette.Safe or UIStyle.Palette.TextMuted
 		refs.buyBtn.AutoButtonColor = affordable
-		refs.priceLabel.Text = string.format("🪙 %d", rod.price)
+		refs.priceFrame.Visible = true
+		refs.priceLabel.Text = tostring(rod.price)
 	end
 end
 
@@ -144,14 +146,16 @@ local function buildRodCard(parent: Instance, rod: RodCatalog.Rod): Frame
 		Parent = card,
 	})
 
-	local priceLabel = UIStyle.MakeLabel({
-		Size = UDim2.new(1, -16, 0, 22),
-		Position = UDim2.new(0, 8, 1, -64),
-		Text = "",
-		Font = UIStyle.FontBold,
-		TextSize = UIStyle.TextSize.Body,
-		Parent = card,
-	})
+	-- Price row: coin icon + numeric price. Hidden when the rod is owned.
+	-- (We avoid emoji glyphs because Roblox's Cartoon font renders them as tofu.)
+	local priceFrame = Instance.new("Frame")
+	priceFrame.Name = "PriceRow"
+	priceFrame.Size = UDim2.new(1, -16, 0, 22)
+	priceFrame.Position = UDim2.new(0, 8, 1, -64)
+	priceFrame.BackgroundTransparency = 1
+	priceFrame.Parent = card
+	local _, priceLabel = IconFactory.Pill(priceFrame, IconFactory.Coin(20),
+		"", UIStyle.Palette.TextPrimary, UIStyle.TextSize.Body)
 
 	local buyBtn = UIStyle.MakeButton({
 		Size = UDim2.new(1, -16, 0, 38),
@@ -167,7 +171,7 @@ local function buildRodCard(parent: Instance, rod: RodCatalog.Rod): Frame
 		RemoteService.FireServer("RequestPurchaseRod", { rodId = rod.id })
 	end)
 
-	cardRefs[rod.id] = { panel = card, buyBtn = buyBtn, priceLabel = priceLabel }
+	cardRefs[rod.id] = { panel = card, buyBtn = buyBtn, priceFrame = priceFrame, priceLabel = priceLabel }
 	refreshCard(rod)
 	return card
 end
