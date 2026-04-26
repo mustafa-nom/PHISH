@@ -20,6 +20,14 @@ hud.Position = UDim2.fromScale(0, 0)
 hud.BackgroundTransparency = 1
 hud.Parent = screen
 
+local function setPillVisible(label: TextLabel, visible: boolean)
+	local row = label.Parent
+	local chip = row and row.Parent
+	if chip and chip:IsA("GuiObject") then
+		chip.Visible = visible
+	end
+end
+
 -- Build a dark pill chip with optional left-side icon.
 local function makePill(name: string, anchor: Vector2, pos: UDim2, size: Vector2, icon: GuiObject?): TextLabel
 	local chip = Instance.new("Frame")
@@ -82,7 +90,7 @@ local coinsLabel = makePill("CoinsChip",
 coinsLabel.TextColor3 = UIStyle.Palette.TitleGold
 coinsLabel.Font = UIStyle.FontDisplay
 coinsLabel.TextSize = UIStyle.TextSize.Heading
-coinsLabel.Visible = false
+setPillVisible(coinsLabel, false)
 
 local levelLabel = makePill("LevelChip",
 	Vector2.new(1, 0), UDim2.new(1, -16, 0, 60),
@@ -90,7 +98,7 @@ local levelLabel = makePill("LevelChip",
 	nil)
 levelLabel.TextColor3 = UIStyle.Palette.TextPrimary
 levelLabel.Font = UIStyle.FontBold
-levelLabel.Visible = false
+setPillVisible(levelLabel, false)
 
 -- TOP-LEFT: accuracy chip (kept for parity with previous HUD).
 local accuracyLabel = makePill("AccuracyChip",
@@ -103,8 +111,8 @@ accuracyLabel.Font = UIStyle.FontBold
 local function render(snapshot: any)
 	if not snapshot then return end
 	local tutorialComplete = snapshot.tutorialComplete == true
-	coinsLabel.Visible = tutorialComplete
-	levelLabel.Visible = tutorialComplete
+	setPillVisible(coinsLabel, tutorialComplete)
+	setPillVisible(levelLabel, tutorialComplete)
 
 	coinsLabel.Text = string.format("%d C$", snapshot.coins or 0)
 
