@@ -10,6 +10,7 @@ local UIStyle = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("
 local UIBuilder = require(script.Parent:WaitForChild("UIBuilder"))
 
 local screen = UIBuilder.GetScreenGui()
+local fishTemplates = ReplicatedStorage:WaitForChild("PhishFishTemplates")
 
 local function clearOld()
 	local old = screen:FindFirstChild("PhishDex")
@@ -22,6 +23,42 @@ local function rarityColor(rarity: string?): Color3
 	if rarity == "Epic" then return Color3.fromRGB(220, 130, 250) end
 	if rarity == "Legendary" then return Color3.fromRGB(255, 200, 80) end
 	return UIStyle.Palette.AskFirst
+end
+
+local function buildFishPreview(speciesId: string, found: boolean, parent: Instance): ViewportFrame
+	local vf = Instance.new("ViewportFrame")
+	vf.Name = "FishPreview"
+	vf.AnchorPoint = Vector2.new(0.5, 0)
+	vf.Position = UDim2.new(0.5, 0, 0, 8)
+	vf.Size = UDim2.fromOffset(96, 56)
+	vf.BackgroundTransparency = 1
+	vf.Ambient = Color3.fromRGB(190, 180, 160)
+	vf.LightColor = Color3.fromRGB(255, 245, 220)
+	vf.LightDirection = Vector3.new(-0.4, -1, -0.25)
+	vf.Parent = parent
+
+	local template = fishTemplates:FindFirstChild(speciesId)
+	if template and template:IsA("Model") then
+		local clone = template:Clone()
+		for _, part in ipairs(clone:GetDescendants()) do
+			if part:IsA("BasePart") then
+				part.Anchored = true
+				part.Color = found and part.Color or Color3.fromRGB(70, 70, 70)
+				part.Transparency = found and part.Transparency or 0.25
+			elseif not found and part:IsA("PointLight") then
+				part.Enabled = false
+			end
+		end
+		clone:PivotTo(CFrame.new(0, 0, 0) * CFrame.Angles(0, math.rad(-20), 0))
+		clone.Parent = vf
+	end
+
+	local cam = Instance.new("Camera")
+	cam.FieldOfView = 32
+	cam.CFrame = CFrame.new(Vector3.new(0, 0.4, 8), Vector3.new(0, 0.1, 0))
+	cam.Parent = vf
+	vf.CurrentCamera = cam
+	return vf
 end
 
 local open: () -> ()
@@ -113,29 +150,21 @@ open = function()
 		})
 		tile.Parent = gridFrame
 
-		local badge = Instance.new("Frame")
-		badge.Name = "Badge"
-		badge.AnchorPoint = Vector2.new(0.5, 0)
-		badge.Position = UDim2.new(0.5, 0, 0, 10)
-		badge.Size = UDim2.fromOffset(62, 46)
-		badge.BackgroundColor3 = found and rarityColor(e.rarity) or UIStyle.Palette.TextMuted
-		badge.BackgroundTransparency = found and 0 or 0.35
-		badge.BorderSizePixel = 0
-		badge.Parent = tile
-		UIStyle.ApplyCorner(badge, UDim.new(0, 12))
-
-		UIStyle.MakeLabel({
-			Size = UDim2.fromScale(1, 1),
-			Text = found and string.sub(tostring(e.displayName or "?"), 1, 1) or "?",
-			Font = UIStyle.FontBold,
-			TextSize = UIStyle.TextSize.Title,
-			TextColor3 = found and UIStyle.Palette.TextPrimary or UIStyle.Palette.Background,
-			Parent = badge,
-		})
+		local previewBack = Instance.new("Frame")
+		previewBack.Name = "PreviewBack"
+		previewBack.AnchorPoint = Vector2.new(0.5, 0)
+		previewBack.Position = UDim2.new(0.5, 0, 0, 8)
+		previewBack.Size = UDim2.fromOffset(106, 62)
+		previewBack.BackgroundColor3 = found and rarityColor(e.rarity) or UIStyle.Palette.TextMuted
+		previewBack.BackgroundTransparency = found and 0.15 or 0.35
+		previewBack.BorderSizePixel = 0
+		previewBack.Parent = tile
+		UIStyle.ApplyCorner(previewBack, UDim.new(0, 12))
+		buildFishPreview(tostring(e.id or ""), found, tile)
 
 		UIStyle.MakeLabel({
 			Size = UDim2.new(1, -16, 0, 38),
-			Position = UDim2.fromOffset(8, 62),
+			Position = UDim2.fromOffset(8, 72),
 			Text = found and e.displayName or "Unknown fish",
 			Font = UIStyle.FontBold,
 			TextSize = UIStyle.TextSize.Body,
@@ -147,7 +176,7 @@ open = function()
 		local status = mastered and "Mastered" or (found and "Found" or "Not found")
 		UIStyle.MakeLabel({
 			Size = UDim2.new(1, -16, 0, 18),
-			Position = UDim2.fromOffset(8, 104),
+			Position = UDim2.fromOffset(8, 112),
 			Text = string.format("%s | %s", e.rarity or "Common", status),
 			TextSize = UIStyle.TextSize.Caption,
 			TextColor3 = UIStyle.Palette.TextMuted,
@@ -158,7 +187,7 @@ open = function()
 
 		UIStyle.MakeLabel({
 			Size = UDim2.new(1, -16, 0, 18),
-			Position = UDim2.fromOffset(8, 126),
+			Position = UDim2.fromOffset(8, 130),
 			Text = string.format("%d / %d", e.count or 0, e.catchesToUnlock or 3),
 			TextSize = UIStyle.TextSize.Caption,
 			TextColor3 = mastered and UIStyle.Palette.Safe or UIStyle.Palette.TextPrimary,

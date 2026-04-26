@@ -1,10 +1,12 @@
 -- build_phish_templates.luau
--- Builds ServerStorage.PhishFishTemplates (8 = 6 phish species + 2 legit), .PhishBobbers (4),
+-- Builds ReplicatedStorage.PhishFishTemplates (8 = 6 phish species + 2 legit),
+-- ServerStorage.PhishBobbers (4),
 -- and .PhishLures (1). Aligned to docs/PHISH_PRD.md and docs/PHISH_PHISH_DEX.md.
 -- Idempotent: re-running wipes the three folders and rebuilds.
 -- Run via: Studio Command Bar (View > Command Bar > paste > Enter), or MCP execute_luau.
 
 local ServerStorage = game:GetService("ServerStorage")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local CollectionService = game:GetService("CollectionService")
 
 local C3 = Color3.fromRGB
@@ -28,8 +30,8 @@ local function weldTo(primary, others)
 		end
 	end
 end
-local function purge(name)
-	local existing = ServerStorage:FindFirstChild(name); if existing then existing:Destroy() end
+local function purge(parent, name)
+	local existing = parent:FindFirstChild(name); if existing then existing:Destroy() end
 end
 
 -- 6 phish species + 2 legit. Visual cues per docs/PHISH_PHISH_DEX.md "Visual cue" lines.
@@ -144,12 +146,13 @@ local function buildBobber(parent, name, color, isNeon, withLight)
 	model.PrimaryPart = body
 end
 
-purge("PhishFishTemplates")
-purge("PhishBobbers")
-purge("PhishLures")
+purge(ReplicatedStorage, "PhishFishTemplates")
+purge(ServerStorage, "PhishFishTemplates")
+purge(ServerStorage, "PhishBobbers")
+purge(ServerStorage, "PhishLures")
 
 local fishFolder = Instance.new("Folder")
-fishFolder.Name = "PhishFishTemplates"; fishFolder.Parent = ServerStorage
+fishFolder.Name = "PhishFishTemplates"; fishFolder.Parent = ReplicatedStorage
 for _, spec in ipairs(SPECIES) do buildFishModel(fishFolder, spec) end
 
 local bobbers = Instance.new("Folder")

@@ -33,21 +33,22 @@ function ScoringService.Init()
 end
 
 -- Called by DecisionService after every catch resolution.
--- `wasCorrect` tracks accuracy. `card` provides reward base; difficulty bumps it.
-function ScoringService.GrantCatchReward(player: Player, wasCorrect: boolean, card: any): { coinsDelta: number, xpDelta: number }
+-- Correct catches grant XP immediately, but pearls are now the fish's sell
+-- value. The player only receives those pearls when they sell the fish tool.
+function ScoringService.GrantCatchReward(player: Player, wasCorrect: boolean, card: any): { coinsDelta: number, xpDelta: number, fishSellValue: number }
 	local profile = DataService.Get(player)
 	profile.totalCatches += 1
 
 	local coinsDelta = 0
 	local xpDelta = 0
+	local fishSellValue = 0
 	if wasCorrect then
 		profile.correctCatches += 1
 		local baseCoins = (card.reward and card.reward.coins) or PhishConstants.REWARD_CORRECT_COINS
 		local baseXp = (card.reward and card.reward.xp) or PhishConstants.REWARD_CORRECT_XP
 		local diffBonus = math.max(0, (card.difficulty or 1) - 1) * PhishConstants.REWARD_DIFFICULTY_BONUS
-		coinsDelta = baseCoins + diffBonus
+		fishSellValue = baseCoins + diffBonus
 		xpDelta = baseXp + diffBonus
-		profile.coins += coinsDelta
 		profile.xp += xpDelta
 	else
 		-- Soft penalty: tiny coin loss only if they have coins; never negative.
@@ -56,7 +57,7 @@ function ScoringService.GrantCatchReward(player: Player, wasCorrect: boolean, ca
 	end
 
 	pushHud(player)
-	return { coinsDelta = coinsDelta, xpDelta = xpDelta }
+	return { coinsDelta = coinsDelta, xpDelta = xpDelta, fishSellValue = fishSellValue }
 end
 
 function ScoringService.PushHud(player: Player)

@@ -13,6 +13,7 @@ local DataService = require(Services:WaitForChild("DataService"))
 local FishingService = require(Services:WaitForChild("FishingService"))
 local ScoringService = require(Services:WaitForChild("ScoringService"))
 local PhishDexService = require(Services:WaitForChild("PhishDexService"))
+local FishModelService = require(Services:WaitForChild("FishModelService"))
 local Helpers = Services:WaitForChild("Helpers")
 local RemoteValidation = require(Helpers:WaitForChild("RemoteValidation"))
 
@@ -103,8 +104,10 @@ local function onSubmitDecision(player: Player, payload: any)
 
 	PhishDexService.RecordFound(player, card.species)
 	local rewardDelta = ScoringService.GrantCatchReward(player, wasCorrect, card)
+	local fishAdded = false
 	if wasCorrect then
 		PhishDexService.RecordCatch(player, card.species)
+		fishAdded = FishModelService.GiveCaughtFish(player, card.species, rewardDelta.fishSellValue or 0)
 	end
 
 	-- Apply flag scoring on top of the base reward. Mutates profile.coins/xp
@@ -141,6 +144,8 @@ local function onSubmitDecision(player: Player, payload: any)
 		redFlags = card.redFlags or {},
 		coinsDelta = rewardDelta.coinsDelta + flagScore.coinsDelta,
 		xpDelta = rewardDelta.xpDelta + flagScore.xpDelta,
+		fishSellValue = rewardDelta.fishSellValue or 0,
+		fishAddedToInventory = fishAdded,
 		flagsCorrect = flagScore.correct,
 		flagsFalse = flagScore.falsePositive,
 		flagBonusCoins = flagScore.coinsDelta,
