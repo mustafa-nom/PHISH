@@ -74,6 +74,7 @@ local function render(payload: any)
 		ZIndex = 41,
 	})
 	panel.Parent = dismissLayer
+	UIStyle.ApplyScale(panel, 0.7)
 
 	local header = UIStyle.MakePanel({
 		Size = UDim2.new(1, 0, 0, 64),

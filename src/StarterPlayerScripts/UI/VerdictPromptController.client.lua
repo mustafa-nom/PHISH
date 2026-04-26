@@ -62,6 +62,7 @@ local function build(payload)
 		Position = UDim2.new(0.5, 0, 0.5, 0),
 		Parent = screen,
 	})
+	UIStyle.ApplyScale(frame, 0.7)
 	activeFrame = frame
 
 	local header = Instance.new("Frame")

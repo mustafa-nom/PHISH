@@ -354,6 +354,21 @@ function UIStyle.SetSelected(slot: GuiObject, selected: boolean)
 	end
 end
 
+-- Apply a UIScale to a GuiObject. Scales the object + descendants
+-- uniformly without touching individual offsets. Used on main modal
+-- panels to downscale the whole UI without rewriting layout.
+function UIStyle.ApplyScale(target: GuiObject, scale: number): UIScale
+	local existing = target:FindFirstChildOfClass("UIScale")
+	if existing then
+		existing.Scale = scale
+		return existing
+	end
+	local s = Instance.new("UIScale")
+	s.Scale = scale
+	s.Parent = target
+	return s
+end
+
 -- Hover binding: subtle scale up on enter. Restraint over flair.
 function UIStyle.BindHover(button: GuiButton, scale: number?)
 	local TweenService = game:GetService("TweenService")

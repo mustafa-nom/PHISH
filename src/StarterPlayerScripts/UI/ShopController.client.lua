@@ -794,6 +794,7 @@ local function openShop()
 		BackgroundColor3 = UIStyle.Palette.Panel,
 		Parent = shopGui,
 	})
+	UIStyle.ApplyScale(panel, 0.7)
 
 	-- Banner title — rectangular cream/orange, overhangs the top edge.
 	UIStyle.BannerTitle({

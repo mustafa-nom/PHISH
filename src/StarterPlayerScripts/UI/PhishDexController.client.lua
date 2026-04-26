@@ -106,6 +106,7 @@ open = function()
 		BackgroundColor3 = UIStyle.Palette.Panel,
 	})
 	panel.Parent = screen
+	UIStyle.ApplyScale(panel, 0.7)
 
 	-- Banner title
 	UIStyle.BannerTitle({
