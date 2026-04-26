@@ -109,6 +109,9 @@ local function onSubmitDecision(player: Player, payload: any)
 	local rewardDelta = ScoringService.GrantCatchReward(player, wasCorrect, card)
 	local fishAdded = false
 	if wasCorrect then
+		local boostedValue = ((rewardDelta.fishSellValue or 0) + FishingService.GetCurrentSellBonus(player))
+			* FishingService.GetCurrentSellMultiplier(player)
+		rewardDelta.fishSellValue = math.max(1, math.floor(boostedValue + 0.5))
 		PhishDexService.RecordCatch(player, card.species)
 		fishAdded = FishModelService.GiveCaughtFish(player, card.species, rewardDelta.fishSellValue or 0)
 	end

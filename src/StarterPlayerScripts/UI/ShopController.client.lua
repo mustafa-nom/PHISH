@@ -11,6 +11,8 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
 local Modules = ReplicatedStorage:WaitForChild("Modules")
+local CatcherCatalog = require(Modules:WaitForChild("CatcherCatalog"))
+local GearCatalog = require(Modules:WaitForChild("GearCatalog"))
 local PhishConstants = require(Modules:WaitForChild("PhishConstants"))
 local RodCatalog = require(Modules:WaitForChild("RodCatalog"))
 local UIStyle = require(Modules:WaitForChild("UIStyle"))
@@ -20,8 +22,15 @@ local RemoteService = require(ReplicatedStorage:WaitForChild("RemoteService"))
 local UIBuilder = require(script.Parent:WaitForChild("UIBuilder"))
 
 local player = Players.LocalPlayer
+local mouse = player:GetMouse()
 
-local localState = { coins = 0, rodTier = 1 }
+local localState = {
+	coins = 0,
+	rodTier = 1,
+	ownedCatchers = {},
+	deployedCatchers = {},
+	ownedGear = {},
+}
 
 type CardRefs = {
 	panel: Frame,
@@ -35,6 +44,9 @@ type CardRefs = {
 
 local cardRefs: { [string]: CardRefs } = {}
 local activeShopGui: ScreenGui? = nil
+local activeRender: (() -> ())? = nil
+local pendingDeploy: { kind: string, id: string }? = nil
+local closeShop: () -> ()
 
 local function findRodTemplate(rodId: string): Model?
 	local folder = ReplicatedStorage:FindFirstChild("PhishRods")
@@ -124,6 +136,7 @@ end
 
 local function refreshAll()
 	for _, r in ipairs(RodCatalog.Rods) do refreshCard(r) end
+	if activeRender then activeRender() end
 end
 
 -- Build a standard slot (used for tier 1-3 rods).
@@ -301,9 +314,193 @@ local function buildHeroCard(parent: Instance, rod: RodCatalog.Rod): Frame
 	return card
 end
 
-local function closeShop()
+local function deployedCatcherCount(catcherId: string): number
+	local count = 0
+	for _, deployment in pairs(localState.deployedCatchers :: any) do
+		if type(deployment) == "table" and deployment.catcherId == catcherId then
+			count += 1
+		end
+	end
+	return count
+end
+
+local function makeSimplePreview(parent: Instance, color: Color3, labelText: string)
+	local preview = Instance.new("Frame")
+	preview.Size = UDim2.fromScale(1, 0.36)
+	preview.BackgroundColor3 = color
+	preview.BorderSizePixel = 0
+	preview.Parent = parent
+	UIStyle.ApplyCorner(preview, UDim.new(0, 12))
+
+	UIStyle.MakeLabel({
+		Size = UDim2.fromScale(1, 1),
+		Text = labelText,
+		Font = UIStyle.FontBold,
+		TextSize = UIStyle.TextSize.Title,
+		TextColor3 = Color3.new(1, 1, 1),
+		Parent = preview,
+	})
+end
+
+local function buildCatcherCard(parent: Instance, catcher: CatcherCatalog.Catcher): Frame
+	local card = UIStyle.MakePanel({
+		Name = catcher.id,
+		Size = UDim2.fromScale(1, 1),
+		BackgroundColor3 = UIStyle.Palette.Panel,
+		Parent = parent,
+	})
+	makeSimplePreview(card, Color3.fromRGB(80, 140, 180), "CATCHER")
+
+	local owned = (localState.ownedCatchers :: any)[catcher.id] or 0
+	local deployed = deployedCatcherCount(catcher.id)
+	local available = math.max(0, owned - deployed)
+
+	UIStyle.MakeLabel({
+		Size = UDim2.new(1, -16, 0, 22),
+		Position = UDim2.new(0, 8, 0.38, 4),
+		Text = catcher.name,
+		Font = UIStyle.FontBold,
+		TextSize = UIStyle.TextSize.Body,
+		Parent = card,
+	})
+	UIStyle.MakeLabel({
+		Size = UDim2.new(1, -16, 0, 52),
+		Position = UDim2.new(0, 8, 0.38, 30),
+		Text = catcher.description,
+		TextWrapped = true,
+		TextSize = UIStyle.TextSize.Caption,
+		TextYAlignment = Enum.TextYAlignment.Top,
+		Parent = card,
+	})
+	UIStyle.MakeLabel({
+		Size = UDim2.new(1, -16, 0, 18),
+		Position = UDim2.new(0, 8, 1, -88),
+		Text = string.format("Owned %d | Ready %d | Cap %d", owned, available, catcher.capacity),
+		TextSize = UIStyle.TextSize.Caption,
+		TextColor3 = UIStyle.Palette.TextMuted,
+		Parent = card,
+	})
+
+	local priceFrame = Instance.new("Frame")
+	priceFrame.Size = UDim2.new(0.48, -10, 0, 26)
+	priceFrame.Position = UDim2.new(0, 8, 1, -62)
+	priceFrame.BackgroundTransparency = 1
+	priceFrame.Parent = card
+	IconFactory.Pill(priceFrame, IconFactory.Coin(18), tostring(catcher.price), UIStyle.Palette.TextPrimary, UIStyle.TextSize.Body)
+
+	local buyBtn = UIStyle.MakeButton({
+		Size = UDim2.new(0.48, -8, 0, 30),
+		Position = UDim2.new(0, 8, 1, -34),
+		Text = "BUY",
+		TextSize = UIStyle.TextSize.Body,
+		BackgroundColor3 = (localState.coins >= catcher.price) and UIStyle.Palette.Safe or UIStyle.Palette.TextMuted,
+		Parent = card,
+	})
+	buyBtn.AutoButtonColor = localState.coins >= catcher.price
+	buyBtn.MouseButton1Click:Connect(function()
+		if not buyBtn.AutoButtonColor then return end
+		buyBtn.Text = "..."
+		RemoteService.FireServer("RequestPurchaseCatcher", { catcherId = catcher.id })
+	end)
+
+	local deployBtn = UIStyle.MakeButton({
+		Size = UDim2.new(0.48, -8, 0, 30),
+		Position = UDim2.new(0.52, 0, 1, -34),
+		Text = "DEPLOY",
+		TextSize = UIStyle.TextSize.Body,
+		BackgroundColor3 = available > 0 and UIStyle.Palette.Highlight or UIStyle.Palette.TextMuted,
+		Parent = card,
+	})
+	deployBtn.AutoButtonColor = available > 0
+	deployBtn.MouseButton1Click:Connect(function()
+		if not deployBtn.AutoButtonColor then return end
+		pendingDeploy = { kind = "Catcher", id = catcher.id }
+		closeShop()
+		UIBuilder.Toast("Click a water tile to deploy " .. catcher.name .. ".", 4, "Success")
+	end)
+	return card
+end
+
+local function buildGearCard(parent: Instance, gear: GearCatalog.Gear): Frame
+	local card = UIStyle.MakePanel({
+		Name = gear.id,
+		Size = UDim2.fromScale(1, 1),
+		BackgroundColor3 = UIStyle.Palette.Panel,
+		Parent = parent,
+	})
+	makeSimplePreview(card, Color3.fromRGB(240, 178, 80), "GEAR")
+
+	local owned = (localState.ownedGear :: any)[gear.id] or 0
+	UIStyle.MakeLabel({
+		Size = UDim2.new(1, -16, 0, 22),
+		Position = UDim2.new(0, 8, 0.38, 4),
+		Text = gear.name,
+		Font = UIStyle.FontBold,
+		TextSize = UIStyle.TextSize.Body,
+		Parent = card,
+	})
+	UIStyle.MakeLabel({
+		Size = UDim2.new(1, -16, 0, 52),
+		Position = UDim2.new(0, 8, 0.38, 30),
+		Text = gear.description,
+		TextWrapped = true,
+		TextSize = UIStyle.TextSize.Caption,
+		TextYAlignment = Enum.TextYAlignment.Top,
+		Parent = card,
+	})
+	UIStyle.MakeLabel({
+		Size = UDim2.new(1, -16, 0, 18),
+		Position = UDim2.new(0, 8, 1, -88),
+		Text = string.format("Owned %d | Radius %d | %ds", owned, gear.radius, gear.durationSeconds),
+		TextSize = UIStyle.TextSize.Caption,
+		TextColor3 = UIStyle.Palette.TextMuted,
+		Parent = card,
+	})
+
+	local priceFrame = Instance.new("Frame")
+	priceFrame.Size = UDim2.new(0.48, -10, 0, 26)
+	priceFrame.Position = UDim2.new(0, 8, 1, -62)
+	priceFrame.BackgroundTransparency = 1
+	priceFrame.Parent = card
+	IconFactory.Pill(priceFrame, IconFactory.Coin(18), tostring(gear.price), UIStyle.Palette.TextPrimary, UIStyle.TextSize.Body)
+
+	local buyBtn = UIStyle.MakeButton({
+		Size = UDim2.new(0.48, -8, 0, 30),
+		Position = UDim2.new(0, 8, 1, -34),
+		Text = "BUY",
+		TextSize = UIStyle.TextSize.Body,
+		BackgroundColor3 = (localState.coins >= gear.price) and UIStyle.Palette.Safe or UIStyle.Palette.TextMuted,
+		Parent = card,
+	})
+	buyBtn.AutoButtonColor = localState.coins >= gear.price
+	buyBtn.MouseButton1Click:Connect(function()
+		if not buyBtn.AutoButtonColor then return end
+		buyBtn.Text = "..."
+		RemoteService.FireServer("RequestPurchaseGear", { gearId = gear.id })
+	end)
+
+	local deployBtn = UIStyle.MakeButton({
+		Size = UDim2.new(0.48, -8, 0, 30),
+		Position = UDim2.new(0.52, 0, 1, -34),
+		Text = "DEPLOY",
+		TextSize = UIStyle.TextSize.Body,
+		BackgroundColor3 = owned > 0 and UIStyle.Palette.Highlight or UIStyle.Palette.TextMuted,
+		Parent = card,
+	})
+	deployBtn.AutoButtonColor = owned > 0
+	deployBtn.MouseButton1Click:Connect(function()
+		if not deployBtn.AutoButtonColor then return end
+		pendingDeploy = { kind = "Gear", id = gear.id }
+		closeShop()
+		UIBuilder.Toast("Click a water tile to deploy " .. gear.name .. ".", 4, "Success")
+	end)
+	return card
+end
+
+closeShop = function()
 	if activeShopGui then activeShopGui:Destroy(); activeShopGui = nil end
 	cardRefs = {}
+	activeRender = nil
 end
 
 local function openShop()
@@ -370,12 +567,26 @@ local function openShop()
 	UIStyle.ApplyStroke(closeBtn, Color3.fromRGB(140, 50, 50), 2)
 	closeBtn.MouseButton1Click:Connect(closeShop)
 
-	-- Content area: left grid (3 cards) + right hero column.
+	local currentTab = "Rods"
+	local tabRow = Instance.new("Frame")
+	tabRow.Name = "Tabs"
+	tabRow.Size = UDim2.new(1, -120, 0, 34)
+	tabRow.Position = UDim2.fromOffset(16, 62)
+	tabRow.BackgroundTransparency = 1
+	tabRow.Parent = panel
+	local tabLayout = Instance.new("UIListLayout")
+	tabLayout.FillDirection = Enum.FillDirection.Horizontal
+	tabLayout.Padding = UDim.new(0, 8)
+	tabLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	tabLayout.Parent = tabRow
+
+	-- Content area. Rods use the polished hero layout; catchers and gear use
+	-- a scrollable grid inside this frame.
 	local content = Instance.new("Frame")
 	content.Name = "Content"
 	content.BackgroundTransparency = 1
-	content.Position = UDim2.new(0, 16, 0, 56)
-	content.Size = UDim2.new(1, -32, 1, -76)
+	content.Position = UDim2.new(0, 16, 0, 104)
+	content.Size = UDim2.new(1, -32, 1, -124)
 	content.Parent = panel
 
 	-- Sort: lower tiers go to grid, top tier becomes hero.
@@ -383,45 +594,132 @@ local function openShop()
 	for _, r in ipairs(RodCatalog.Rods) do table.insert(rods, r) end
 	table.sort(rods, function(a, b) return a.tier < b.tier end)
 
-	local heroRod = rods[#rods]
-	local gridRods = {}
-	for i = 1, #rods - 1 do table.insert(gridRods, rods[i]) end
-
-	-- Hero column on the right
-	local heroCol = Instance.new("Frame")
-	heroCol.Name = "HeroCol"
-	heroCol.AnchorPoint = Vector2.new(1, 0)
-	heroCol.Position = UDim2.new(1, 0, 0, 0)
-	heroCol.Size = UDim2.new(0, 260, 1, 0)
-	heroCol.BackgroundTransparency = 1
-	heroCol.Parent = content
-	buildHeroCard(heroCol, heroRod)
-
-	-- Left grid
-	local gridCol = Instance.new("Frame")
-	gridCol.Name = "GridCol"
-	gridCol.Size = UDim2.new(1, -276, 1, 0)
-	gridCol.BackgroundTransparency = 1
-	gridCol.Parent = content
-
-	local listLayout = Instance.new("UIListLayout")
-	listLayout.FillDirection = Enum.FillDirection.Horizontal
-	listLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
-	listLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-	listLayout.Padding = UDim.new(0, 12)
-	listLayout.SortOrder = Enum.SortOrder.LayoutOrder
-	listLayout.Parent = gridCol
-
-	for i, rod in ipairs(gridRods) do
-		local card = buildRodCard(gridCol, rod)
-		card.LayoutOrder = i
+	local tabButtons: { [string]: TextButton } = {}
+	local function clearContent()
+		cardRefs = {}
+		for _, child in ipairs(content:GetChildren()) do
+			child:Destroy()
+		end
 	end
+
+	local function renderRods()
+		local heroRod = rods[#rods]
+		local gridRods = {}
+		for i = 1, #rods - 1 do table.insert(gridRods, rods[i]) end
+
+		local heroCol = Instance.new("Frame")
+		heroCol.Name = "HeroCol"
+		heroCol.AnchorPoint = Vector2.new(1, 0)
+		heroCol.Position = UDim2.new(1, 0, 0, 0)
+		heroCol.Size = UDim2.new(0, 260, 1, 0)
+		heroCol.BackgroundTransparency = 1
+		heroCol.Parent = content
+		buildHeroCard(heroCol, heroRod)
+
+		local gridCol = Instance.new("Frame")
+		gridCol.Name = "GridCol"
+		gridCol.Size = UDim2.new(1, -276, 1, 0)
+		gridCol.BackgroundTransparency = 1
+		gridCol.Parent = content
+
+		local listLayout = Instance.new("UIListLayout")
+		listLayout.FillDirection = Enum.FillDirection.Horizontal
+		listLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+		listLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+		listLayout.Padding = UDim.new(0, 12)
+		listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+		listLayout.Parent = gridCol
+
+		for i, rod in ipairs(gridRods) do
+			local card = buildRodCard(gridCol, rod)
+			card.LayoutOrder = i
+		end
+	end
+
+	local function renderGrid()
+		local row = Instance.new("ScrollingFrame")
+		row.Name = "Cards"
+		row.Size = UDim2.fromScale(1, 1)
+		row.BackgroundTransparency = 1
+		row.BorderSizePixel = 0
+		row.ScrollBarThickness = 6
+		row.ScrollBarImageColor3 = UIStyle.Palette.PanelStroke
+		row.ScrollingDirection = Enum.ScrollingDirection.Y
+		row.AutomaticCanvasSize = Enum.AutomaticSize.Y
+		row.CanvasSize = UDim2.new(0, 0, 0, 0)
+		row.Parent = content
+
+		local grid = Instance.new("UIGridLayout")
+		grid.CellSize = UDim2.fromOffset(200, 280)
+		grid.CellPadding = UDim2.fromOffset(12, 12)
+		grid.HorizontalAlignment = Enum.HorizontalAlignment.Center
+		grid.VerticalAlignment = Enum.VerticalAlignment.Top
+		grid.SortOrder = Enum.SortOrder.LayoutOrder
+		grid.Parent = row
+
+		if currentTab == "Catchers" then
+			for i, catcher in ipairs(CatcherCatalog.Catchers) do
+				local card = buildCatcherCard(row, catcher)
+				card.LayoutOrder = i
+			end
+		else
+			for i, gear in ipairs(GearCatalog.Gear) do
+				local card = buildGearCard(row, gear)
+				card.LayoutOrder = i
+			end
+		end
+	end
+
+	local function renderTab()
+		clearContent()
+		for name, button in pairs(tabButtons) do
+			button.BackgroundColor3 = (name == currentTab) and UIStyle.Palette.AskFirst or UIStyle.Palette.Panel
+		end
+		if currentTab == "Rods" then
+			renderRods()
+		else
+			renderGrid()
+		end
+	end
+
+	for i, name in ipairs({ "Rods", "Catchers", "Gear" }) do
+		local tab = UIStyle.MakeButton({
+			Name = name .. "Tab",
+			Size = UDim2.fromOffset(112, 30),
+			Text = name,
+			TextSize = UIStyle.TextSize.Body,
+			BackgroundColor3 = (name == currentTab) and UIStyle.Palette.AskFirst or UIStyle.Palette.Panel,
+			Parent = tabRow,
+		})
+		tab.LayoutOrder = i
+		tabButtons[name] = tab
+		tab.MouseButton1Click:Connect(function()
+			currentTab = name
+			renderTab()
+		end)
+	end
+	activeRender = renderTab
+	renderTab()
 end
 
 -- Esc closes the shop too.
 UserInputService.InputBegan:Connect(function(input, gpe)
 	if gpe then return end
+	if pendingDeploy and input.UserInputType == Enum.UserInputType.MouseButton1 then
+		local target = mouse.Hit.Position
+		if pendingDeploy.kind == "Catcher" then
+			RemoteService.FireServer("RequestDeployCatcher", { catcherId = pendingDeploy.id, target = target })
+		else
+			RemoteService.FireServer("RequestDeployGear", { gearId = pendingDeploy.id, target = target })
+		end
+		pendingDeploy = nil
+		return
+	end
 	if input.KeyCode == Enum.KeyCode.Escape and activeShopGui then closeShop() end
+	if input.KeyCode == Enum.KeyCode.Escape and pendingDeploy then
+		pendingDeploy = nil
+		UIBuilder.Toast("Deployment cancelled.", 2, "Error")
+	end
 end)
 
 -- Bind ProximityPrompt.Triggered on every shop trigger tagged Powerup.
@@ -446,6 +744,9 @@ local function applySnapshot(snap: any)
 	if type(snap) ~= "table" then return end
 	if snap.coins ~= nil then localState.coins = snap.coins end
 	if snap.rodTier ~= nil then localState.rodTier = snap.rodTier end
+	if snap.ownedCatchers ~= nil then localState.ownedCatchers = snap.ownedCatchers end
+	if snap.deployedCatchers ~= nil then localState.deployedCatchers = snap.deployedCatchers end
+	if snap.ownedGear ~= nil then localState.ownedGear = snap.ownedGear end
 	if activeShopGui then refreshAll() end
 end
 RemoteService.OnClientEvent("HudUpdated", applySnapshot)
@@ -461,4 +762,17 @@ RemoteService.OnClientEvent("PurchaseResult", function(payload)
 	if payload.newRodTier ~= nil then localState.rodTier = payload.newRodTier end
 	if activeShopGui then refreshAll() end
 	UIBuilder.Toast(payload.message or "", 3, payload.ok and "Success" or "Error")
+end)
+
+RemoteService.OnClientEvent("CatcherUpdated", function(payload)
+	if type(payload) ~= "table" then return end
+	if payload.ownedCatchers ~= nil then localState.ownedCatchers = payload.ownedCatchers end
+	if payload.deployedCatchers ~= nil then localState.deployedCatchers = payload.deployedCatchers end
+	if activeShopGui then refreshAll() end
+end)
+
+RemoteService.OnClientEvent("GearUpdated", function(payload)
+	if type(payload) ~= "table" then return end
+	if payload.ownedGear ~= nil then localState.ownedGear = payload.ownedGear end
+	if activeShopGui then refreshAll() end
 end)
