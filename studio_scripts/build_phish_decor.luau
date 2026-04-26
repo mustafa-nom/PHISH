@@ -23,6 +23,9 @@ local function mkPart(name, parent, props)
 	p.Name = name; p.Anchored = true
 	p.TopSurface = Enum.SurfaceType.Smooth; p.BottomSurface = Enum.SurfaceType.Smooth
 	p.Material = Enum.Material.SmoothPlastic
+	-- Default flora to non-collidable so boats / players drift through kelp,
+	-- buoys, etc. Islet bases set CanCollide back to true via props.
+	p.CanCollide = false
 	for k, v in pairs(props or {}) do p[k] = v end
 	p.Parent = parent; return p
 end
@@ -199,7 +202,8 @@ end
 local function sandBase(model, pos, radius, color)
 	mkPart("SandBase", model, { Size = V3(radius * 2, 1.2, radius * 2),
 		Color = color or C3(240, 220, 180), Material = Enum.Material.Sand, Shape = Enum.PartType.Cylinder,
-		CFrame = CF(pos.X, 1.0, pos.Z) * CFrame.Angles(0, 0, math.rad(90)) })
+		CFrame = CF(pos.X, 1.0, pos.Z) * CFrame.Angles(0, 0, math.rad(90)),
+		CanCollide = true })
 end
 
 islet("PalmIslet", V3(-180, 0, -120), function(m, pos)
@@ -222,7 +226,8 @@ end)
 islet("SpikyRockIslet", V3(-280, 0, 80), function(m, pos)
 	mkPart("RockBase", m, { Size = V3(14, 2, 14), Color = C3(70, 70, 85),
 		Material = Enum.Material.Slate, Shape = Enum.PartType.Cylinder,
-		CFrame = CF(pos.X, 1.2, pos.Z) * CFrame.Angles(0, 0, math.rad(90)) })
+		CFrame = CF(pos.X, 1.2, pos.Z) * CFrame.Angles(0, 0, math.rad(90)),
+		CanCollide = true })
 	for i = 1, 5 do
 		local h = 4 + math.random() * 4
 		mkPart("Spire", m, { Size = V3(1.2, h, 1.2), Color = C3(60, 60, 75),
@@ -234,7 +239,8 @@ end)
 islet("LighthouseStub", V3(320, 0, 250), function(m, pos)
 	mkPart("Foundation", m, { Size = V3(10, 1.5, 10), Color = C3(70, 70, 80),
 		Material = Enum.Material.Slate, Shape = Enum.PartType.Cylinder,
-		CFrame = CF(pos.X, 1.0, pos.Z) * CFrame.Angles(0, 0, math.rad(90)) })
+		CFrame = CF(pos.X, 1.0, pos.Z) * CFrame.Angles(0, 0, math.rad(90)),
+		CanCollide = true })
 	mkPart("Tower", m, { Size = V3(3.2, 8, 3.2), Color = C3(220, 220, 220),
 		Material = Enum.Material.Concrete, Shape = Enum.PartType.Cylinder,
 		CFrame = CF(pos.X, 5.5, pos.Z) })
@@ -248,7 +254,8 @@ end)
 islet("MarshIslet", V3(-100, 0, 220), function(m, pos)
 	mkPart("MossyBase", m, { Size = V3(11, 1.4, 11), Color = C3(95, 130, 80),
 		Material = Enum.Material.Grass, Shape = Enum.PartType.Cylinder,
-		CFrame = CF(pos.X, 1.1, pos.Z) * CFrame.Angles(0, 0, math.rad(90)) })
+		CFrame = CF(pos.X, 1.1, pos.Z) * CFrame.Angles(0, 0, math.rad(90)),
+		CanCollide = true })
 	for i = 1, 8 do
 		local h = 3 + math.random() * 2
 		mkPart("Reed", m, { Size = V3(0.18, h, 0.18), Color = C3(220, 200, 110),
@@ -270,7 +277,7 @@ islet("CampfireIslet", V3(280, 0, -50), function(m, pos)
 end)
 islet("BirdRock", V3(-220, 0, -280), function(m, pos)
 	mkPart("RockBase", m, { Size = V3(8, 4, 8), Color = C3(180, 180, 175),
-		Material = Enum.Material.Slate,
+		Material = Enum.Material.Slate, CanCollide = true,
 		CFrame = CF(pos.X, 2.5, pos.Z) * CFrame.Angles(math.rad(math.random(-6, 6)), math.rad(math.random(0, 360)), math.rad(math.random(-6, 6))) })
 	mkPart("GuanoCap", m, { Size = V3(8.2, 0.4, 8.2), Color = C3(245, 245, 240),
 		Material = Enum.Material.Plaster, CFrame = CF(pos.X, 4.7, pos.Z) })
@@ -282,7 +289,8 @@ islet("BirdRock", V3(-220, 0, -280), function(m, pos)
 end)
 islet("AbyssMonolith", V3(180, 0, 320), function(m, pos)
 	mkPart("Pedestal", m, { Size = V3(6, 1.5, 6), Color = C3(40, 30, 50),
-		Material = Enum.Material.Slate, CFrame = CF(pos.X, 1.2, pos.Z) })
+		Material = Enum.Material.Slate, CFrame = CF(pos.X, 1.2, pos.Z),
+		CanCollide = true })
 	mkPart("Monolith", m, { Size = V3(2, 12, 2), Color = C3(30, 20, 40),
 		Material = Enum.Material.Slate, CFrame = CF(pos.X, 8.0, pos.Z) * CFrame.Angles(0, math.rad(15), 0) })
 	local glow = mkPart("MonolithRune", m, { Size = V3(2.05, 1.5, 2.05), Color = C3(220, 80, 220),
