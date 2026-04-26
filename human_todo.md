@@ -29,10 +29,10 @@ Claude should not mark related features complete until the human confirms these 
 
 #### StrangerDangerPark
 - [ ] Park / town plaza geometry (fountain, hot dog stand, parked car, alley behind shop, playground)
-- [ ] `PrimaryPart` set
-- [ ] `LevelEntry` part where Explorer spawns
-- [ ] 6–8 `BuddyNpcSpawn` parts each with unique `NpcSpawnId`
-- [ ] No puppy/clue exit wiring required; the Guide booth submit pad completes or fails this level
+- [x] `PrimaryPart` set (LevelOrigin)
+- [x] `LevelEntry` part where Explorer spawns
+- [x] 8 `BuddyNpcSpawn` parts with unique `NpcSpawnId` and matching `Anchor` attributes (HotdogShop, GeneralStore, WhiteVan, AlleyMouth, NorthSidewalk, SouthSidewalk, EastSidewalk, WestSidewalk)
+- [x] No puppy/clue exit wiring required; the Guide booth submit pad completes or fails this level (legacy `puppy_spawn_*` parts still present but unused by current scenario)
 - [ ] Themed but kid-friendly aesthetic (no horror)
 
 #### BackpackCheckpoint
@@ -55,12 +55,12 @@ Claude should not mark related features complete until the human confirms these 
 
 ### Booth Template (in `ServerStorage/GuideBooths`)
 
-- [ ] `DefaultBooth` Model with `PrimaryPart`, `GuideSpawn`, `ControlPanel` (with SurfaceGui anchor), and a `Window` (transparent part) facing the play area
-- [ ] Add `GuideCameraAnchor` part in `DefaultBooth`; camera should sit slightly above/behind Guide and look at slot pedestals/manual/submit pad without wall/avatar clipping
-- [ ] 3 slot pedestal BaseParts tagged `BB_BoothSlot`, each with numeric attribute `BB_SlotIndex` = `1`, `2`, or `3`
-- [ ] 1 submit pad BasePart tagged `BB_BoothSubmit`
-- [ ] Visible world labels: `Slot 1`, `Slot 2`, `Slot 3`, and `Submit Accusation`
-- [ ] Make booth larger/cleaner so Guide avatar and walls do not occlude the camera
+- [x] `DefaultBooth` Model with `PrimaryPart` (BoothOrigin), `GuideSpawn`, `ControlPanel` (with SurfaceGui anchor), and a `Window` (transparent part) facing the play area
+- [x] Added `GuideCameraAnchor` part in `DefaultBooth`; sits at (0, 5.5, -4.8) looking toward the pedestals
+- [x] 3 slot pedestal BaseParts tagged `BB_BoothSlot` (BoothSlot1/2/3), each with numeric attribute `BB_SlotIndex` = `1`, `2`, or `3`
+- [x] 1 submit pad BasePart tagged `BB_BoothSubmit` (BoothSubmit)
+- [x] Visible world labels: `Slot 1`, `Slot 2`, `Slot 3`, and `Submit Accusation` (BillboardGuis on each part)
+- [ ] Make booth larger/cleaner so Guide avatar and walls do not occlude the camera (verify in playtest)
 - [ ] No door — Guide cannot leave by walking
 
 ### Tags & Attributes Sanity Pass
@@ -79,7 +79,7 @@ Claude should not mark related features complete until the human confirms these 
 
 ## MCP Blocker
 
-- [ ] Roblox MCP execution must be enabled before automated Studio edits can be applied. Current checks: Rojo is running; `robloxstudio` MCP timed out; `rbx-studio`/Studio execution reported `loadstring() is not available` or timed out. Enable Studio/plugin Luau execution/loadstring, then rerun the booth/map/NPC asset pass.
+- [x] Roblox MCP execution restored. `roblox-studio` and `robloxstudio` MCP servers reconnected after the plugin came back online; `execute_luau` confirmed via ping. Booth pedestals/submit pad/camera anchor were applied this session.
 
 ## Scripting (User 2 — see `prompts/user2_scripting_prompt.md`)
 
