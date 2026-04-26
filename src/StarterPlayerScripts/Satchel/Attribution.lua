@@ -23,3 +23,9 @@ local RunService = game:GetService("RunService")
 if not RunService:IsStudio() then
 	print("💼 Running Satchel v1.4.1 by @WinnersTakesAll")
 end
+
+-- Satchel's main module does `require(script.Attribution)` so this file
+-- must be a ModuleScript that returns a value. Original ships as
+-- Attribution.client.luau (LocalScript) which crashes that require
+-- under Rojo. Renamed to .lua and added a return so the parent loads.
+return {}
