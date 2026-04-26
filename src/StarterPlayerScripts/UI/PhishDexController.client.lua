@@ -28,13 +28,14 @@ end
 local function buildFishPreview(speciesId: string, found: boolean, parent: Instance): ViewportFrame
 	local vf = Instance.new("ViewportFrame")
 	vf.Name = "FishPreview"
-	vf.AnchorPoint = Vector2.new(0.5, 0)
-	vf.Position = UDim2.new(0.5, 0, 0, 14)
-	vf.Size = UDim2.fromOffset(110, 64)
+	vf.AnchorPoint = Vector2.new(0.5, 0.5)
+	vf.Position = UDim2.new(0.5, 0, 0, 50)
+	vf.Size = UDim2.fromOffset(94, 60)
 	vf.BackgroundTransparency = 1
 	vf.Ambient = Color3.fromRGB(150, 140, 130)
 	vf.LightColor = Color3.fromRGB(255, 240, 210)
 	vf.LightDirection = Vector3.new(-0.4, -1, -0.25)
+	vf.ZIndex = 5
 	vf.Parent = parent
 
 	local template = fishTemplates:FindFirstChild(speciesId)
@@ -161,22 +162,13 @@ open = function()
 		})
 		tile.Parent = gridFrame
 
-		-- Top accent stripe colored by rarity.
-		local stripe = Instance.new("Frame")
-		stripe.Name = "RarityStripe"
-		stripe.Size = UDim2.new(1, -8, 0, 4)
-		stripe.Position = UDim2.fromOffset(4, 4)
-		stripe.BackgroundColor3 = rar
-		stripe.BorderSizePixel = 0
-		stripe.BackgroundTransparency = found and 0 or 0.6
-		stripe.Parent = tile
-		UIStyle.ApplyCorner(stripe, UDim.new(0, 2))
-
+		-- Fish viewport sits directly on the dark slot — no colored
+		-- backdrop. The rarity color is conveyed via the rarity label.
 		buildFishPreview(tostring(e.id or ""), found, tile)
 
 		UIStyle.MakeLabel({
-			Size = UDim2.new(1, -16, 0, 22),
-			Position = UDim2.fromOffset(8, 88),
+			Size = UDim2.new(1, -12, 0, 20),
+			Position = UDim2.fromOffset(6, 100),
 			Text = found and (e.displayName or "?") or "???",
 			Font = UIStyle.FontBold,
 			TextSize = UIStyle.TextSize.Body,
@@ -187,9 +179,9 @@ open = function()
 		})
 
 		UIStyle.MakeLabel({
-			Size = UDim2.new(1, -16, 0, 16),
-			Position = UDim2.fromOffset(8, 112),
-			Text = e.rarity or "Common",
+			Size = UDim2.new(1, -12, 0, 14),
+			Position = UDim2.fromOffset(6, 122),
+			Text = string.upper(e.rarity or "Common"),
 			Font = UIStyle.FontBold,
 			TextSize = UIStyle.TextSize.Caption,
 			TextColor3 = rar,
@@ -198,32 +190,22 @@ open = function()
 		})
 
 		UIStyle.MakeLabel({
-			Size = UDim2.new(1, -16, 0, 16),
-			Position = UDim2.fromOffset(8, 130),
-			Text = string.format("%d / %d", e.count or 0, e.catchesToUnlock or 3),
+			Size = UDim2.new(1, -12, 0, 14),
+			Position = UDim2.fromOffset(6, 138),
+			Text = mastered
+				and string.format("%d / %d · MASTERED", e.count or 0, e.catchesToUnlock or 3)
+				or (found
+					and string.format("%d / %d", e.count or 0, e.catchesToUnlock or 3)
+					or "NOT FOUND"),
+			Font = UIStyle.FontBold,
 			TextSize = UIStyle.TextSize.Caption,
 			TextColor3 = mastered and UIStyle.Palette.Safe or UIStyle.Palette.TextMuted,
 			TextXAlignment = Enum.TextXAlignment.Center,
 			Parent = tile,
 		})
 
-		UIStyle.MakeLabel({
-			Size = UDim2.new(1, -16, 0, 14),
-			Position = UDim2.fromOffset(8, 148),
-			Text = mastered and "MASTERED" or (found and "FOUND" or "—"),
-			Font = UIStyle.FontBold,
-			TextSize = 10,
-			TextColor3 = mastered and UIStyle.Palette.Safe or UIStyle.Palette.TextMuted,
-			TextXAlignment = Enum.TextXAlignment.Center,
-			Parent = tile,
-		})
-
 		if mastered then
-			local stroke = tile:FindFirstChildOfClass("UIStroke")
-			if stroke then
-				stroke.Color = UIStyle.Palette.Safe
-				stroke.Thickness = 2
-			end
+			UIStyle.SetSelected(tile, true)
 		end
 	end
 end
@@ -241,6 +223,12 @@ local indexBtn = UIStyle.MakeButton({
 	Parent = screen,
 })
 UIStyle.ApplyStroke(indexBtn, Color3.fromRGB(120, 80, 20), 2)
+UIStyle.ApplyGradient(indexBtn, {
+	top = Color3.fromRGB(255, 220, 120),
+	bottom = Color3.fromRGB(220, 160, 60),
+	rotation = 90,
+})
+UIStyle.BindHover(indexBtn, 1.06)
 indexBtn.MouseButton1Click:Connect(toggle)
 
 UserInputService.InputBegan:Connect(function(input, gpe)

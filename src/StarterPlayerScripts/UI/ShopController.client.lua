@@ -2,7 +2,8 @@
 -- Fisherman shop UI. Listens for ProximityPrompt.Triggered on parts tagged
 -- PhishShopTrigger with attribute ShopType="Powerup". Renders a row of
 -- CardSlot tiles for tier 1-3 rods + a tall HeroSlot on the right for the
--- top-tier rod. BUY fires RequestPurchaseRod; PurchaseResult updates state.
+-- top-tier rod. The hero gets a colored radial glow behind its preview;
+-- standard cards do not (matching the reference daily-reward UI).
 
 local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
@@ -29,12 +30,19 @@ type CardRefs = {
 	buyBtn: TextButton,
 	priceFrame: Frame,
 	priceLabel: TextLabel,
-	tierLabel: TextLabel,
-	statusLabel: TextLabel?,
 }
 
 local cardRefs: { [string]: CardRefs } = {}
 local activeShopGui: ScreenGui? = nil
+
+-- Hero glow color per tier (used on the featured rod only).
+local function tierGlowColor(tier: number): Color3
+	if tier == 1 then return Color3.fromRGB(200, 140, 70) end
+	if tier == 2 then return Color3.fromRGB(140, 220, 110) end
+	if tier == 3 then return Color3.fromRGB(120, 180, 240) end
+	if tier == 4 then return Color3.fromRGB(220, 80, 200) end
+	return UIStyle.Palette.Legendary
+end
 
 local function findRodTemplate(rodId: string): Model?
 	local folder = ReplicatedStorage:FindFirstChild("PhishRods")
@@ -44,26 +52,21 @@ local function findRodTemplate(rodId: string): Model?
 	return nil
 end
 
--- Build a 3D preview of the rod inside a ViewportFrame.
-local function buildRodPreview(rodId: string, parent: Instance, size: UDim2): ViewportFrame
+-- Transparent ViewportFrame containing the rotating rod model. The
+-- viewport is transparent so the dark card slot reads behind it.
+local function buildRodPreview(rodId: string, parent: Instance, size: UDim2, position: UDim2): ViewportFrame
 	local vf = Instance.new("ViewportFrame")
 	vf.Name = "RodPreview"
 	vf.Size = size
-	vf.AnchorPoint = Vector2.new(0.5, 0)
-	vf.Position = UDim2.new(0.5, 0, 0, 8)
-	vf.BackgroundColor3 = Color3.fromRGB(18, 14, 22)
+	vf.AnchorPoint = Vector2.new(0.5, 0.5)
+	vf.Position = position
+	vf.BackgroundTransparency = 1
 	vf.BorderSizePixel = 0
 	vf.LightDirection = Vector3.new(-0.5, -1, -0.3)
-	vf.Ambient = Color3.fromRGB(150, 130, 110)
-	vf.LightColor = Color3.fromRGB(255, 230, 180)
+	vf.Ambient = Color3.fromRGB(170, 150, 130)
+	vf.LightColor = Color3.fromRGB(255, 240, 200)
+	vf.ZIndex = 5
 	vf.Parent = parent
-	UIStyle.ApplyCorner(vf, UDim.new(0, 10))
-	UIStyle.ApplyStroke(vf, UIStyle.Palette.SlotStroke, 1)
-	UIStyle.ApplyGradient(vf,
-		Color3.fromRGB(40, 32, 50),
-		Color3.fromRGB(14, 10, 18),
-		90
-	)
 
 	local template = findRodTemplate(rodId)
 	if not template then return vf end
@@ -100,25 +103,21 @@ local function refreshCard(rod: RodCatalog.Rod)
 	local affordable = localState.coins >= rod.price
 	if owned then
 		refs.buyBtn.Text = "OWNED"
-		refs.buyBtn.BackgroundColor3 = Color3.fromRGB(80, 110, 80)
+		refs.buyBtn.BackgroundColor3 = Color3.fromRGB(50, 80, 54)
 		refs.buyBtn.TextColor3 = Color3.fromRGB(220, 245, 220)
 		refs.buyBtn.AutoButtonColor = false
 		refs.priceFrame.Visible = false
-		refs.stroke.Color = UIStyle.Palette.Safe
-		refs.stroke.Thickness = 2
-		refs.stroke.Transparency = 0.15
+		UIStyle.SetSelected(refs.panel, true)
 	else
 		refs.buyBtn.Text = "BUY"
 		refs.buyBtn.BackgroundColor3 = affordable and UIStyle.Palette.Safe
-			or Color3.fromRGB(70, 60, 70)
+			or Color3.fromRGB(50, 42, 50)
 		refs.buyBtn.TextColor3 = affordable and Color3.fromRGB(20, 30, 20)
 			or UIStyle.Palette.TextMuted
 		refs.buyBtn.AutoButtonColor = affordable
 		refs.priceFrame.Visible = true
 		refs.priceLabel.Text = tostring(rod.price)
-		refs.stroke.Color = UIStyle.Palette.SlotStroke
-		refs.stroke.Thickness = 1
-		refs.stroke.Transparency = 0
+		UIStyle.SetSelected(refs.panel, false)
 	end
 end
 
@@ -126,7 +125,7 @@ local function refreshAll()
 	for _, r in ipairs(RodCatalog.Rods) do refreshCard(r) end
 end
 
--- Build a standard slot (used for tier 1-3 rods).
+-- Build a standard slot (tier 1-3 rods).
 local function buildRodCard(parent: Instance, rod: RodCatalog.Rod): Frame
 	local card = UIStyle.CardSlot({
 		Name = rod.id,
@@ -135,11 +134,11 @@ local function buildRodCard(parent: Instance, rod: RodCatalog.Rod): Frame
 	card.Parent = parent
 	local stroke = card:FindFirstChildOfClass("UIStroke") :: UIStroke
 
-	-- Tier header in gold ("[Tier 1]" style)
-	local tierLabel = UIStyle.MakeLabel({
+	-- Tier header in gold ("[Tier 1]"), top of card.
+	UIStyle.MakeLabel({
 		Name = "TierLabel",
-		Size = UDim2.new(1, -16, 0, 22),
-		Position = UDim2.fromOffset(8, 8),
+		Size = UDim2.new(1, -16, 0, 28),
+		Position = UDim2.fromOffset(8, 12),
 		Text = string.format("[Tier %d]", rod.tier),
 		Font = UIStyle.FontDisplay,
 		TextSize = UIStyle.TextSize.Heading,
@@ -148,16 +147,15 @@ local function buildRodCard(parent: Instance, rod: RodCatalog.Rod): Frame
 		Parent = card,
 	})
 
-	-- Rod 3D preview (centered upper portion).
-	buildRodPreview(rod.id, card, UDim2.new(1, -24, 0.45, 0))
-	-- Move preview down below tier label.
-	local preview = card:FindFirstChild("RodPreview") :: ViewportFrame
-	preview.Position = UDim2.new(0.5, 0, 0, 36)
+	-- Rod 3D preview, large, centered, sitting directly on the dark slot.
+	buildRodPreview(rod.id, card,
+		UDim2.fromOffset(150, 130),
+		UDim2.new(0.5, 0, 0, 120))
 
-	-- Name
+	-- Rod name (cream/white).
 	UIStyle.MakeLabel({
-		Size = UDim2.new(1, -16, 0, 22),
-		Position = UDim2.new(0, 8, 0.55, 6),
+		Size = UDim2.new(1, -12, 0, 22),
+		Position = UDim2.new(0, 6, 1, -78),
 		Text = rod.name,
 		Font = UIStyle.FontBold,
 		TextSize = UIStyle.TextSize.Body,
@@ -165,31 +163,18 @@ local function buildRodCard(parent: Instance, rod: RodCatalog.Rod): Frame
 		Parent = card,
 	})
 
-	-- Description
-	UIStyle.MakeLabel({
-		Size = UDim2.new(1, -16, 0, 36),
-		Position = UDim2.new(0, 8, 0.55, 30),
-		Text = rod.description,
-		TextSize = UIStyle.TextSize.Caption,
-		TextColor3 = UIStyle.Palette.TextMuted,
-		TextWrapped = true,
-		TextYAlignment = Enum.TextYAlignment.Top,
-		Parent = card,
-	})
-
 	-- Price row
 	local priceFrame = Instance.new("Frame")
 	priceFrame.Name = "PriceRow"
-	priceFrame.Size = UDim2.new(1, -16, 0, 22)
-	priceFrame.Position = UDim2.new(0, 8, 1, -64)
+	priceFrame.Size = UDim2.new(1, -16, 0, 20)
+	priceFrame.Position = UDim2.new(0, 8, 1, -56)
 	priceFrame.BackgroundTransparency = 1
 	priceFrame.Parent = card
-	local _, priceLabel = IconFactory.Pill(priceFrame, IconFactory.Coin(18),
-		"", UIStyle.Palette.TextPrimary, UIStyle.TextSize.Body)
-	priceLabel.TextColor3 = UIStyle.Palette.TitleGold
+	local _, priceLabel = IconFactory.Pill(priceFrame, IconFactory.Coin(16),
+		"", UIStyle.Palette.TitleGold, UIStyle.TextSize.Body)
 	priceLabel.Font = UIStyle.FontBold
 
-	-- BUY button
+	-- BUY button — flat green, no extra gradient.
 	local buyBtn = UIStyle.MakeButton({
 		Size = UDim2.new(1, -16, 0, 32),
 		Position = UDim2.new(0, 8, 1, -36),
@@ -200,6 +185,8 @@ local function buildRodCard(parent: Instance, rod: RodCatalog.Rod): Frame
 		TextColor3 = Color3.fromRGB(20, 30, 20),
 		Parent = card,
 	})
+	UIStyle.ApplyStroke(buyBtn, Color3.fromRGB(20, 36, 24), 1)
+	UIStyle.BindHover(buyBtn, 1.03)
 	buyBtn.MouseButton1Click:Connect(function()
 		if not buyBtn.AutoButtonColor then return end
 		buyBtn.Text = "..."
@@ -209,13 +196,13 @@ local function buildRodCard(parent: Instance, rod: RodCatalog.Rod): Frame
 	cardRefs[rod.id] = {
 		panel = card, stroke = stroke, buyBtn = buyBtn,
 		priceFrame = priceFrame, priceLabel = priceLabel,
-		tierLabel = tierLabel,
 	}
 	refreshCard(rod)
 	return card
 end
 
--- Build the tall featured/hero slot for the top-tier rod.
+-- Build the tall featured/hero slot for the top-tier rod. Has the radial
+-- HeroGlow behind the rod preview (this is the only card with one).
 local function buildHeroCard(parent: Instance, rod: RodCatalog.Rod): Frame
 	local card = UIStyle.HeroSlot({
 		Name = rod.id .. "_Hero",
@@ -224,27 +211,33 @@ local function buildHeroCard(parent: Instance, rod: RodCatalog.Rod): Frame
 	card.Parent = parent
 	local stroke = card:FindFirstChildOfClass("UIStroke") :: UIStroke
 
-	-- Tier label
-	local tierLabel = UIStyle.MakeLabel({
-		Size = UDim2.new(1, -16, 0, 26),
-		Position = UDim2.fromOffset(8, 12),
+	-- Tier label — gold like the reference's "[Day 7]".
+	UIStyle.MakeLabel({
+		Size = UDim2.new(1, -16, 0, 32),
+		Position = UDim2.fromOffset(8, 18),
 		Text = string.format("[Tier %d]", rod.tier),
 		Font = UIStyle.FontDisplay,
-		TextSize = 26,
+		TextSize = 28,
 		TextColor3 = UIStyle.Palette.TitleGoldHero,
 		Parent = card,
 	})
-	UIStyle.ApplyStroke(tierLabel, Color3.fromRGB(80, 40, 10), 1)
 
-	-- Larger rod preview
-	buildRodPreview(rod.id, card, UDim2.new(1, -32, 0, 220))
-	local preview = card:FindFirstChild("RodPreview") :: ViewportFrame
-	preview.Position = UDim2.new(0.5, 0, 0, 48)
+	-- Radial colored glow behind the centerpiece.
+	UIStyle.HeroGlow({
+		Size = UDim2.fromOffset(180, 180),
+		Position = UDim2.new(0.5, 0, 0, 160),
+		Color = tierGlowColor(rod.tier),
+		Parent = card,
+	})
+	-- Rod preview on top of the glow.
+	buildRodPreview(rod.id, card,
+		UDim2.fromOffset(170, 170),
+		UDim2.new(0.5, 0, 0, 160))
 
-	-- Big name
+	-- Big name, gold ("ASTRAL ROD" style).
 	UIStyle.MakeLabel({
 		Size = UDim2.new(1, -16, 0, 32),
-		Position = UDim2.new(0, 8, 0, 280),
+		Position = UDim2.new(0, 8, 0, 264),
 		Text = string.upper(rod.name),
 		Font = UIStyle.FontDisplay,
 		TextSize = 26,
@@ -252,40 +245,30 @@ local function buildHeroCard(parent: Instance, rod: RodCatalog.Rod): Frame
 		Parent = card,
 	})
 
-	UIStyle.MakeLabel({
-		Size = UDim2.new(1, -24, 0, 56),
-		Position = UDim2.new(0, 12, 0, 318),
-		Text = rod.description,
-		TextSize = UIStyle.TextSize.Body,
-		TextColor3 = UIStyle.Palette.TextPrimary,
-		TextWrapped = true,
-		TextYAlignment = Enum.TextYAlignment.Top,
-		Parent = card,
-	})
-
-	-- Price
+	-- Price row
 	local priceFrame = Instance.new("Frame")
 	priceFrame.Name = "PriceRow"
-	priceFrame.Size = UDim2.new(1, -24, 0, 28)
-	priceFrame.Position = UDim2.new(0, 12, 1, -82)
+	priceFrame.Size = UDim2.new(1, -24, 0, 26)
+	priceFrame.Position = UDim2.new(0, 12, 1, -78)
 	priceFrame.BackgroundTransparency = 1
 	priceFrame.Parent = card
-	local _, priceLabel = IconFactory.Pill(priceFrame, IconFactory.Coin(22),
-		"", UIStyle.Palette.TextPrimary, UIStyle.TextSize.Heading)
-	priceLabel.TextColor3 = UIStyle.Palette.TitleGoldHero
+	local _, priceLabel = IconFactory.Pill(priceFrame, IconFactory.Coin(20),
+		"", UIStyle.Palette.TitleGoldHero, UIStyle.TextSize.Heading)
 	priceLabel.Font = UIStyle.FontBold
 
+	-- "Claim"-style flat button (recessed dark, rounded).
 	local buyBtn = UIStyle.MakeButton({
 		Size = UDim2.new(1, -24, 0, 42),
 		Position = UDim2.new(0, 12, 1, -50),
 		Text = "BUY",
 		Font = UIStyle.FontDisplay,
 		TextSize = UIStyle.TextSize.Heading,
-		BackgroundColor3 = UIStyle.Palette.Legendary,
-		TextColor3 = Color3.fromRGB(50, 28, 8),
+		BackgroundColor3 = Color3.fromRGB(40, 32, 44),
+		TextColor3 = UIStyle.Palette.TextPrimary,
 		Parent = card,
 	})
-	UIStyle.ApplyStroke(buyBtn, Color3.fromRGB(120, 70, 20), 2)
+	UIStyle.ApplyStroke(buyBtn, UIStyle.Palette.SlotStroke, 2)
+	UIStyle.BindHover(buyBtn, 1.03)
 	buyBtn.MouseButton1Click:Connect(function()
 		if not buyBtn.AutoButtonColor then return end
 		buyBtn.Text = "..."
@@ -295,7 +278,6 @@ local function buildHeroCard(parent: Instance, rod: RodCatalog.Rod): Frame
 	cardRefs[rod.id] = {
 		panel = card, stroke = stroke, buyBtn = buyBtn,
 		priceFrame = priceFrame, priceLabel = priceLabel,
-		tierLabel = tierLabel,
 	}
 	refreshCard(rod)
 	return card
@@ -324,58 +306,55 @@ local function openShop()
 	dim.AutoButtonColor = false
 	dim.Size = UDim2.fromScale(1, 1)
 	dim.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-	dim.BackgroundTransparency = 0.45
+	dim.BackgroundTransparency = 0.5
 	dim.BorderSizePixel = 0
 	dim.Parent = shopGui
 	dim.MouseButton1Click:Connect(closeShop)
 
-	-- Main panel
+	-- Main panel — semi-transparent dark glass.
 	local panel = UIStyle.MakePanel({
 		Name = "ShopPanel",
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Position = UDim2.fromScale(0.5, 0.5),
-		Size = UDim2.fromScale(0.78, 0.74),
+		Size = UDim2.fromOffset(880, 500),
 		BackgroundColor3 = UIStyle.Palette.Panel,
 		Parent = shopGui,
 	})
-	local panelConstraint = Instance.new("UISizeConstraint")
-	panelConstraint.MinSize = Vector2.new(720, 460)
-	panelConstraint.MaxSize = Vector2.new(960, 560)
-	panelConstraint.Parent = panel
 
-	-- Cream banner title sticking up from the panel top edge.
+	-- Banner title — rectangular cream/orange, overhangs the top edge.
 	UIStyle.BannerTitle({
-		Width = 360,
-		Height = 56,
-		Position = UDim2.new(0.5, 0, 0, -28),
-		Text = "FISHERMAN'S WARES",
-		TextSize = 26,
+		Width = 380,
+		Height = 64,
+		Position = UDim2.new(0.5, 0, 0, -34),
+		Text = "Fisherman's Wares",
+		TextSize = 30,
 		Parent = panel,
 	})
 
-	-- Close button — circle, top right.
+	-- Close button — small dark, top-right corner.
 	local closeBtn = UIStyle.MakeButton({
 		Name = "CloseBtn",
 		AnchorPoint = Vector2.new(1, 0),
-		Size = UDim2.fromOffset(40, 40),
+		Size = UDim2.fromOffset(36, 36),
 		Position = UDim2.new(1, -12, 0, 12),
 		Text = "X",
 		Font = UIStyle.FontBold,
 		TextSize = UIStyle.TextSize.Heading,
-		BackgroundColor3 = UIStyle.Palette.Risky,
-		TextColor3 = Color3.fromRGB(255, 245, 240),
+		BackgroundColor3 = Color3.fromRGB(40, 30, 40),
+		TextColor3 = UIStyle.Palette.TextPrimary,
 		Parent = panel,
 	})
-	UIStyle.ApplyCorner(closeBtn, UDim.new(1, 0))
-	UIStyle.ApplyStroke(closeBtn, Color3.fromRGB(140, 50, 50), 2)
+	UIStyle.ApplyStroke(closeBtn, UIStyle.Palette.SlotStroke, 2)
+	UIStyle.BindHover(closeBtn, 1.06)
 	closeBtn.MouseButton1Click:Connect(closeShop)
 
-	-- Content area: left grid (3 cards) + right hero column.
+	-- Content area: leave room at top for the banner overlap and a bit
+	-- of breathing room around the edges.
 	local content = Instance.new("Frame")
 	content.Name = "Content"
 	content.BackgroundTransparency = 1
-	content.Position = UDim2.new(0, 16, 0, 56)
-	content.Size = UDim2.new(1, -32, 1, -76)
+	content.Position = UDim2.new(0, 18, 0, 50)
+	content.Size = UDim2.new(1, -36, 1, -68)
 	content.Parent = panel
 
 	-- Sort: lower tiers go to grid, top tier becomes hero.
@@ -387,20 +366,20 @@ local function openShop()
 	local gridRods = {}
 	for i = 1, #rods - 1 do table.insert(gridRods, rods[i]) end
 
-	-- Hero column on the right
+	-- Hero column on the right.
 	local heroCol = Instance.new("Frame")
 	heroCol.Name = "HeroCol"
 	heroCol.AnchorPoint = Vector2.new(1, 0)
 	heroCol.Position = UDim2.new(1, 0, 0, 0)
-	heroCol.Size = UDim2.new(0, 260, 1, 0)
+	heroCol.Size = UDim2.new(0, 240, 1, 0)
 	heroCol.BackgroundTransparency = 1
 	heroCol.Parent = content
 	buildHeroCard(heroCol, heroRod)
 
-	-- Left grid
+	-- Left grid.
 	local gridCol = Instance.new("Frame")
 	gridCol.Name = "GridCol"
-	gridCol.Size = UDim2.new(1, -276, 1, 0)
+	gridCol.Size = UDim2.new(1, -260, 1, 0)
 	gridCol.BackgroundTransparency = 1
 	gridCol.Parent = content
 
@@ -408,7 +387,7 @@ local function openShop()
 	listLayout.FillDirection = Enum.FillDirection.Horizontal
 	listLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
 	listLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-	listLayout.Padding = UDim.new(0, 12)
+	listLayout.Padding = UDim.new(0, 14)
 	listLayout.SortOrder = Enum.SortOrder.LayoutOrder
 	listLayout.Parent = gridCol
 
@@ -418,13 +397,11 @@ local function openShop()
 	end
 end
 
--- Esc closes the shop too.
 UserInputService.InputBegan:Connect(function(input, gpe)
 	if gpe then return end
 	if input.KeyCode == Enum.KeyCode.Escape and activeShopGui then closeShop() end
 end)
 
--- Bind ProximityPrompt.Triggered on every shop trigger tagged Powerup.
 local function bindTrigger(part: Instance)
 	if not part:IsA("BasePart") then return end
 	if part:GetAttribute("ShopType") ~= "Powerup" then return end
@@ -441,7 +418,6 @@ for _, t in ipairs(CollectionService:GetTagged(PhishConstants.Tags.ShopTrigger))
 end
 CollectionService:GetInstanceAddedSignal(PhishConstants.Tags.ShopTrigger):Connect(bindTrigger)
 
--- Track local coins / rodTier from HUD updates so card affordability stays current.
 local function applySnapshot(snap: any)
 	if type(snap) ~= "table" then return end
 	if snap.coins ~= nil then localState.coins = snap.coins end
@@ -454,7 +430,6 @@ task.spawn(function()
 	if ok then applySnapshot(snap) end
 end)
 
--- React to purchase results.
 RemoteService.OnClientEvent("PurchaseResult", function(payload)
 	if type(payload) ~= "table" then return end
 	if payload.newCoins ~= nil then localState.coins = payload.newCoins end
