@@ -15,8 +15,13 @@ RemoteService.Events = {
 	"RequestCast",           -- player throws lure ({ aimPos = Vector3 })
 	"RequestReelTap",        -- player taps during reel mini-game
 	"SubmitDecision",        -- KEEP / CUT_BAIT ({ decision = "KEEP" | "CUT_BAIT", flags = { elementId } })
+	"RequestVerdict",        -- legacy verdict prompt compatibility
 	"RequestOpenPhishDex",   -- player opens dex screen
 	"RequestPurchaseRod",    -- shop purchase ({ rodId = string })
+	"RequestPurchaseCatcher", -- shop purchase ({ catcherId = string })
+	"RequestDeployCatcher",  -- deploy owned catcher ({ catcherId = string, target = Vector3 })
+	"RequestPurchaseGear",   -- shop purchase ({ gearId = string })
+	"RequestDeployGear",     -- deploy owned gear ({ gearId = string, target = Vector3 })
 	"RequestSellAllFish",    -- sell every caught fish tool in backpack/character
 	"RequestDebugCoins",     -- test shortcut: grant coins while iterating locally
 
@@ -29,12 +34,17 @@ RemoteService.Events = {
 	"ReelFailed",            -- player ran out of taps / time, fish escaped
 	"ShowInspectionCard",    -- card data minus isLegit/species/redFlags (see DecisionService)
 	"DecisionResult",        -- decision outcome + species + flags + rewards
+	"VerdictPromptReady",    -- legacy verdict prompt compatibility
+	"CatchResolved",         -- legacy result compatibility
+	"LineSnapped",           -- legacy line failure compatibility
 	"HudUpdated",            -- coins / accuracy / role / xp
 	"SpeciesUnlocked",       -- toast: new dex entry unlocked
 	"PhishermanArrived",     -- boss event start
 	"PhishermanDefeated",    -- boss event end
 	"LeaderboardUpdated",    -- snapshot for Board of Fame
 	"PurchaseResult",        -- { ok, message, rodId, newCoins, newRodTier }
+	"CatcherUpdated",        -- passive catcher ownership/deployment/stash changed
+	"GearUpdated",           -- gear ownership/deployment changed
 	"SellResult",            -- { soldCount, coinsDelta, newCoins }
 	"Notify",                -- generic toast
 }

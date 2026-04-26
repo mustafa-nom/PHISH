@@ -210,9 +210,9 @@ local function giveRod(player: Player)
 	RodService.RefreshRod(player)
 end
 
-local function bindNpcPrompt(npcModel: Instance)
-	local prompt = npcModel:FindFirstChildWhichIsA("ProximityPrompt", true)
-	if not prompt then return end
+local function bindRodPrompt(prompt: ProximityPrompt)
+	if prompt:GetAttribute("PhishRodBound") == true then return end
+	prompt:SetAttribute("PhishRodBound", true)
 	prompt.Triggered:Connect(function(player)
 		local ok, _ = RemoteValidation.RunChain({
 			function() return RemoteValidation.RequirePlayer(player) end,
@@ -223,6 +223,29 @@ local function bindNpcPrompt(npcModel: Instance)
 	end)
 end
 
+local function bindNpcPrompt(npcModel: Instance)
+	local prompt = npcModel:FindFirstChildWhichIsA("ProximityPrompt", true)
+	if prompt then bindRodPrompt(prompt) end
+
+	npcModel.DescendantAdded:Connect(function(descendant)
+		if descendant:IsA("ProximityPrompt") then
+			bindRodPrompt(descendant)
+		end
+	end)
+end
+
+local function bindFallbackPrompts()
+	for _, prompt in ipairs(workspace:GetDescendants()) do
+		if prompt:IsA("ProximityPrompt") and prompt.ActionText == "Take a rod" then
+			bindRodPrompt(prompt)
+		end
+	end
+	workspace.DescendantAdded:Connect(function(descendant)
+		if not descendant:IsA("ProximityPrompt") or descendant.ActionText ~= "Take a rod" then return end
+		bindRodPrompt(descendant)
+	end)
+end
+
 function RodService.Init()
 	buildAllTemplates()
 
@@ -230,6 +253,7 @@ function RodService.Init()
 		bindNpcPrompt(npc)
 	end
 	CollectionService:GetInstanceAddedSignal(PhishConstants.Tags.NpcAngler):Connect(bindNpcPrompt)
+	bindFallbackPrompts()
 
 	RemoteService.OnServerEvent("RequestRod", function(player)
 		local ok, _ = RemoteValidation.RunChain({

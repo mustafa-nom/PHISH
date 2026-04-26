@@ -16,6 +16,11 @@ export type Profile = {
 	unlockedSpecies: { [string]: number },        -- speciesId -> catch count
 	foundSpecies: { [string]: boolean },          -- speciesId -> encountered at least once
 	fishInventory: { [string]: number },          -- speciesId -> unsold fish count
+	ownedCatchers: { [string]: number },          -- catcherId -> purchased count
+	deployedCatchers: { [string]: any },           -- deployId -> deployment metadata
+	catcherInventory: { [string]: number },        -- speciesId -> passive stash count
+	catcherInventoryValue: number,                 -- total sell value of passive stash
+	ownedGear: { [string]: number },               -- gearId -> consumable count
 	civicXP: number,
 	rodGiven: boolean,
 	rodTier: number,                              -- 1..4; gates which water tiles you can fish
@@ -36,6 +41,11 @@ local function newProfile(): Profile
 		unlockedSpecies = {},
 		foundSpecies = {},
 		fishInventory = {},
+		ownedCatchers = {},
+		deployedCatchers = {},
+		catcherInventory = {},
+		catcherInventoryValue = 0,
+		ownedGear = {},
 		civicXP = 0,
 		rodGiven = false,
 		rodTier = 1,                       -- starter rod
@@ -97,6 +107,11 @@ function DataService.Snapshot(player: Player): { [string]: any }
 		unlockedSpecies = p.unlockedSpecies,
 		foundSpecies = p.foundSpecies,
 		fishInventory = p.fishInventory,
+		ownedCatchers = p.ownedCatchers,
+		deployedCatchers = p.deployedCatchers,
+		catcherInventory = p.catcherInventory,
+		catcherInventoryValue = p.catcherInventoryValue,
+		ownedGear = p.ownedGear,
 		civicXP = p.civicXP,
 		rodTier = p.rodTier,
 	}

@@ -14,6 +14,7 @@ local Workspace = game:GetService("Workspace")
 local Services = script.Parent
 local CardService = require(Services:WaitForChild("CardService"))
 local DataService = require(Services:WaitForChild("DataService"))
+local GearService = require(Services:WaitForChild("GearService"))
 local Helpers = Services:WaitForChild("Helpers")
 local RemoteValidation = require(Helpers:WaitForChild("RemoteValidation"))
 local SignalTracker = require(Helpers:WaitForChild("SignalTracker"))
@@ -28,6 +29,8 @@ local stateByPlayer: { [Player]: State } = {}
 local reelCountByPlayer: { [Player]: number } = {}
 local timerThreadByPlayer: { [Player]: thread } = {}
 local waterDifficultyByPlayer: { [Player]: number } = {}
+local cashMultiplierByPlayer: { [Player]: number } = {}
+local sellBonusByPlayer: { [Player]: number } = {}
 
 local function setState(player: Player, s: State)
 	stateByPlayer[player] = s
@@ -41,8 +44,18 @@ function FishingService.SetIdle(player: Player)
 	setState(player, "Idle")
 	reelCountByPlayer[player] = 0
 	waterDifficultyByPlayer[player] = nil
+	cashMultiplierByPlayer[player] = nil
+	sellBonusByPlayer[player] = nil
 	local t = timerThreadByPlayer[player]
 	if t then task.cancel(t); timerThreadByPlayer[player] = nil end
+end
+
+function FishingService.GetCurrentSellMultiplier(player: Player): number
+	return cashMultiplierByPlayer[player] or 1
+end
+
+function FishingService.GetCurrentSellBonus(player: Player): number
+	return sellBonusByPlayer[player] or 0
 end
 
 -- Find the water tile sitting at this aim position. Casts a short ray straight
@@ -137,6 +150,8 @@ local function onCast(player: Player, clientAim: any)
 	local waterDifficulty = tile:GetAttribute("Difficulty") or minTier
 	if type(waterDifficulty) ~= "number" then waterDifficulty = minTier end
 	waterDifficultyByPlayer[player] = math.clamp(math.floor(waterDifficulty), 1, 5)
+	cashMultiplierByPlayer[player] = GearService.GetCashMultiplierAt(landing)
+	sellBonusByPlayer[player] = GearService.GetSellValueBonusAt(landing)
 	setState(player, "Waiting")
 	RemoteService.FireClient(player, "CastStarted", {
 		aim = landing,

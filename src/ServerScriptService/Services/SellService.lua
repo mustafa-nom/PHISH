@@ -39,8 +39,14 @@ local function sellAll(player: Player)
 	})
 	if not ok then return end
 
+	local profile = DataService.Get(player)
+	local stashCount = 0
+	for _, count in pairs(profile.catcherInventory) do
+		stashCount += count
+	end
+
 	local tools = collectFishTools(player)
-	if #tools == 0 then
+	if #tools == 0 and stashCount == 0 then
 		RemoteService.FireClient(player, "Notify", {
 			kind = "Error",
 			message = "You don't have any fish to sell yet.",
@@ -49,7 +55,6 @@ local function sellAll(player: Player)
 		return
 	end
 
-	local profile = DataService.Get(player)
 	local total = 0
 	local sold = 0
 	for _, tool in ipairs(tools) do
@@ -63,6 +68,26 @@ local function sellAll(player: Player)
 			end
 			tool:Destroy()
 		end
+	end
+
+	if stashCount > 0 then
+		total += math.max(0, math.floor(profile.catcherInventoryValue or 0))
+		sold += stashCount
+		profile.catcherInventory = {}
+		profile.catcherInventoryValue = 0
+		for _, deployment in pairs(profile.deployedCatchers) do
+			if type(deployment) == "table" then
+				deployment.storedCount = 0
+				deployment.lastCatchSpecies = nil
+				deployment.lastCatchValue = nil
+			end
+		end
+		RemoteService.FireClient(player, "CatcherUpdated", {
+			ownedCatchers = profile.ownedCatchers,
+			deployedCatchers = profile.deployedCatchers,
+			catcherInventory = profile.catcherInventory,
+			catcherInventoryValue = profile.catcherInventoryValue,
+		})
 	end
 
 	if sold == 0 then return end
