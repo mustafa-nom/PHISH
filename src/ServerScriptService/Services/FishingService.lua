@@ -60,6 +60,7 @@ local function scheduleBite(player: Player)
 	timerThreadByPlayer[player] = task.delay(wait_, function()
 		if FishingService.GetState(player) ~= "Waiting" then return end
 		setState(player, "Biting")
+		-- Client shows green "Reel it in" button; one RequestReelTap (by default) lands the card
 		RemoteService.FireClient(player, "BiteOccurred", {
 			tapsRequired = PhishConstants.REEL_TAPS_REQUIRED,
 			windowSeconds = PhishConstants.REEL_WINDOW_SECONDS,

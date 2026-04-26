@@ -10,8 +10,8 @@ PhishConstants.BITE_MIN_WAIT_SECONDS = 2.0
 PhishConstants.BITE_MAX_WAIT_SECONDS = 5.0
 PhishConstants.BITE_TIMEOUT_SECONDS = 8.0    -- player has this long to start reeling
 
--- Reel mini-game (simplified for MVP — N successful taps = caught)
-PhishConstants.REEL_TAPS_REQUIRED = 3
+-- Reel: one deliberate "reel in" after a bite (was 3 generic taps; see ReelController UI)
+PhishConstants.REEL_TAPS_REQUIRED = 1
 PhishConstants.REEL_WINDOW_SECONDS = 6.0
 
 -- Decision window
