@@ -19,6 +19,8 @@ RemoteService.Events = {
 
 	-- Server → Client
 	"RodGranted",            -- ack that rod is in player's backpack
+	"CastStarted",           -- server accepted the cast; client plays SFX/visuals
+	"TutorialNudge",         -- one-shot hints: { title, text, durationSec }
 	"BiteOccurred",          -- bite has happened, start reel mini-game (payload: { tapsRequired, windowSeconds })
 	"ReelProgress",          -- per-tap progress update
 	"ReelFailed",            -- player ran out of taps / time, fish escaped
