@@ -12,6 +12,7 @@ local CardService = require(Services:WaitForChild("CardService"))
 local DataService = require(Services:WaitForChild("DataService"))
 local FishingService = require(Services:WaitForChild("FishingService"))
 local ScoringService = require(Services:WaitForChild("ScoringService"))
+local LevelService = require(Services:WaitForChild("LevelService"))
 local PhishDexService = require(Services:WaitForChild("PhishDexService"))
 local FishModelService = require(Services:WaitForChild("FishModelService"))
 local Helpers = Services:WaitForChild("Helpers")
@@ -103,6 +104,8 @@ local function onSubmitDecision(player: Player, payload: any)
 	local wasCorrect = (playerSaidLegit == actuallyLegit)
 
 	PhishDexService.RecordFound(player, card.species)
+	local profile = DataService.Get(player)
+	local xpBefore = profile.xp
 	local rewardDelta = ScoringService.GrantCatchReward(player, wasCorrect, card)
 	local fishAdded = false
 	if wasCorrect then
@@ -128,9 +131,9 @@ local function onSubmitDecision(player: Player, payload: any)
 		end
 	end
 	local flagScore = scoreFlags(card, placedFlags)
-	local profile = DataService.Get(player)
 	profile.coins = math.max(0, profile.coins + flagScore.coinsDelta)
 	profile.xp = math.max(0, profile.xp + flagScore.xpDelta)
+	local levelResult = LevelService.HandleXpChanged(player, xpBefore, profile.xp)
 	-- Refresh HUD with the flag-adjusted totals.
 	ScoringService.PushHud(player)
 
@@ -146,6 +149,9 @@ local function onSubmitDecision(player: Player, payload: any)
 		xpDelta = rewardDelta.xpDelta + flagScore.xpDelta,
 		fishSellValue = rewardDelta.fishSellValue or 0,
 		fishAddedToInventory = fishAdded,
+		level = levelResult.level,
+		leveledUp = levelResult.leveledUp,
+		boatSkinName = levelResult.boatSkinName,
 		flagsCorrect = flagScore.correct,
 		flagsFalse = flagScore.falsePositive,
 		flagBonusCoins = flagScore.coinsDelta,

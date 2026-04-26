@@ -5,6 +5,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RemoteService = require(ReplicatedStorage:WaitForChild("RemoteService"))
+local Progression = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Progression"))
 
 export type Profile = {
 	coins: number,
@@ -74,9 +75,21 @@ function DataService.Snapshot(player: Player): { [string]: any }
 	local p = DataService.Get(player)
 	local accuracy = 0
 	if p.totalCatches > 0 then accuracy = p.correctCatches / p.totalCatches end
+	local levelInfo = Progression.GetLevelInfo(p.xp)
 	return {
 		coins = p.coins,
 		xp = p.xp,
+		level = levelInfo.level,
+		xpIntoLevel = levelInfo.xpIntoLevel,
+		xpForNextLevel = levelInfo.xpForNextLevel,
+		levelProgress = levelInfo.progress,
+		isMaxLevel = levelInfo.isMaxLevel,
+		boatSkin = {
+			id = levelInfo.boatSkin.id,
+			name = levelInfo.boatSkin.name,
+			minLevel = levelInfo.boatSkin.minLevel,
+		},
+		unlockedBoatSkins = Progression.GetUnlockedBoatSkins(levelInfo.level),
 		totalCatches = p.totalCatches,
 		correctCatches = p.correctCatches,
 		accuracy = accuracy,

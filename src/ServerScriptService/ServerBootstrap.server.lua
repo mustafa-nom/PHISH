@@ -11,6 +11,7 @@ local ServicesFolder = script.Parent:WaitForChild("Services")
 local function load(name: string) return require(ServicesFolder:WaitForChild(name)) end
 
 local DataService = load("DataService")
+local LevelService = load("LevelService")
 local ScoringService = load("ScoringService")
 local PhishDexService = load("PhishDexService")
 local FishModelService = load("FishModelService")
@@ -27,6 +28,7 @@ local AnalyticsService = load("AnalyticsService")
 local MapIntegrityService = load("MapIntegrityService")
 
 DataService.Init()
+LevelService.Init()
 ScoringService.Init()
 PhishDexService.Init()
 FishModelService.Init()

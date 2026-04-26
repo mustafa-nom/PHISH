@@ -15,15 +15,15 @@ if existing then existing:Destroy() end
 
 local hud = Instance.new("Frame")
 hud.Name = "PhishHud"
-hud.Size = UDim2.new(1, 0, 0, 56)
+hud.Size = UDim2.new(1, 0, 0, 64)
 hud.Position = UDim2.fromScale(0, 0)
 hud.BackgroundTransparency = 1
 hud.Parent = screen
 
-local function makeChip(name: string, color: Color3, anchor: Vector2, pos: UDim2): Frame
+local function makeChip(name: string, color: Color3, anchor: Vector2, pos: UDim2, size: UDim2?): Frame
 	local frame = UIStyle.MakePanel({
 		Name = name,
-		Size = UDim2.new(0, 200, 0, 40),
+		Size = size or UDim2.new(0, 200, 0, 40),
 		AnchorPoint = anchor,
 		Position = pos,
 		BackgroundColor3 = color,
@@ -49,12 +49,15 @@ local accuracyLabel = makeIconChip("AccuracyChip", UIStyle.Palette.Highlight,
 	Vector2.new(0.5, 0), UDim2.new(0.5, 0, 0, 8),
 	IconFactory.Target(26))
 
-local roleFrame = makeChip("RoleChip", UIStyle.Palette.Safe, Vector2.new(1, 0), UDim2.new(1, -16, 0, 8))
+local roleFrame = makeChip("RoleChip", UIStyle.Palette.Safe, Vector2.new(1, 0), UDim2.new(1, -16, 0, 8),
+	UDim2.new(0, 230, 0, 46))
 local roleLabel = UIStyle.MakeLabel({
 	Size = UDim2.fromScale(1, 1),
-	Text = "Angler",
-	TextSize = UIStyle.TextSize.Heading,
+	Text = "Lv 1 Angler\n0 / 60 XP",
+	TextSize = UIStyle.TextSize.Body,
 	TextColor3 = UIStyle.Palette.TextPrimary,
+	TextWrapped = true,
+	LineHeight = 0.9,
 })
 roleLabel.Parent = roleFrame
 
@@ -63,7 +66,13 @@ local function render(snapshot: any)
 	coinsLabel.Text = tostring(snapshot.coins or 0)
 	local acc = snapshot.accuracy or 0
 	accuracyLabel.Text = string.format("%d%%", math.floor(acc * 100))
-	roleLabel.Text = snapshot.role or "Angler"
+	local level = snapshot.level or 1
+	local role = snapshot.role or "Angler"
+	local xpText = "MAX XP"
+	if snapshot.isMaxLevel ~= true then
+		xpText = string.format("%d / %d XP", snapshot.xpIntoLevel or 0, snapshot.xpForNextLevel or 1)
+	end
+	roleLabel.Text = string.format("Lv %d %s\n%s", level, role, xpText)
 end
 
 RemoteService.OnClientEvent("HudUpdated", render)
