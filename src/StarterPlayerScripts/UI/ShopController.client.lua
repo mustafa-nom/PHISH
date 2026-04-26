@@ -100,8 +100,8 @@ local function buildRodPreview(rodId: string, parent: Instance, size: UDim2, pos
 	local cam = Instance.new("Camera")
 	cam.FieldOfView = 30
 	local maxSize = math.max(boundsSize.X, boundsSize.Y, boundsSize.Z)
-	local distance = math.max(4.5, maxSize * 1.45)
-	cam.CFrame = CFrame.new(Vector3.new(distance * 0.45, distance * 0.16, distance), Vector3.zero)
+	local distance = math.max(5, maxSize * 1.6)
+	cam.CFrame = CFrame.new(Vector3.new(distance * 0.42, distance * 0.08, distance), Vector3.zero)
 	cam.Parent = vf
 	vf.CurrentCamera = cam
 

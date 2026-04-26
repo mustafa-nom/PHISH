@@ -222,7 +222,7 @@ showChip = function()
 	local chip = Instance.new("TextButton")
 	chip.Name = "PhishTutorialChip"
 	chip.AnchorPoint = Vector2.new(1, 0)
-	chip.Position = UDim2.new(1, -16, 0, 110)
+	chip.Position = UDim2.new(1, -16, 0, 56)
 	chip.Size = UDim2.fromOffset(48, 48)
 	chip.BackgroundColor3 = UIStyle.Palette.AskFirst
 	chip.BorderSizePixel = 0
@@ -277,7 +277,7 @@ showBanner = function(title, text, opts)
 		Name = "PhishTutorialBanner",
 		Size = UDim2.new(0, 340, 0, 124),
 		AnchorPoint = Vector2.new(1, 0),
-		Position = UDim2.new(1, 16 + 340, 0, 110),  -- start off-screen right
+		Position = UDim2.new(1, 16 + 340, 0, 56),  -- start off-screen right
 		BackgroundColor3 = UIStyle.Palette.Highlight,
 		Parent = screen,
 	})
@@ -340,7 +340,7 @@ showBanner = function(title, text, opts)
 	-- Slide in from the right.
 	TweenService:Create(frame,
 		TweenInfo.new(0.32, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-		{ Position = UDim2.new(1, -16, 0, 110) }):Play()
+		{ Position = UDim2.new(1, -16, 0, 56) }):Play()
 	activeBanner = frame
 
 	if opts and not opts.sticky then
