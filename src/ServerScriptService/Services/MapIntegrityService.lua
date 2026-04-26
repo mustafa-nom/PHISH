@@ -196,45 +196,32 @@ local function resetMap()
 end
 
 -- ---------------------------------------------------------------------------
--- 3. Boat buoyancy. Water tiles are CanCollide=false (so players can swim
---    through), which means an unanchored boat hull falls straight through
---    them. Each BoatHull-tagged BasePart gets a server-side VectorForce
---    spring-damped to the water surface — same idea as SwimController's
---    player buoyancy, but server-side and applied per hull assembly.
+-- 3. Boat hovercraft pin. Water tiles are CanCollide=false (so players can
+--    swim through), which means an unanchored boat hull falls straight
+--    through them. Force-based buoyancy proved finicky (forces fight the
+--    VehicleSeat), so we use the original RowboatService's hovercraft
+--    approach: every Heartbeat, snap the hull's Y to the water surface
+--    while leaving X / Z free for the VehicleSeat to drive.
+--
+--    One pin per assembly (deduped by AssemblyRootPart).
 -- ---------------------------------------------------------------------------
 
-local BUOYANCY_SPRING = 35
-local BUOYANCY_DAMPING = 8
-local BUOYANCY_OFFSET = -0.2          -- hull bottom sits this far below water surface
-local BUOYANCY_RAYCAST_UP = 16
-local BUOYANCY_RAYCAST_DOWN = 40
-local BUOYANCY_MAX_FORCE = 60000
+local HOVER_OFFSET = -0.1             -- hull bottom sits this far below water
+local HOVER_RAYCAST_UP = 16
+local HOVER_RAYCAST_DOWN = 40
 
-type BuoyancyRefs = { force: VectorForce, attachment: Attachment }
-local hullForces: { [BasePart]: BuoyancyRefs } = {}
+local hullParts: { [BasePart]: boolean } = {}
 
-local function ensureBuoyancyForce(part: BasePart)
-	if hullForces[part] then return end
-	if part.Anchored then return end
-	local att = Instance.new("Attachment")
-	att.Name = "PhishBoatBuoyancyAttachment"
-	att.Parent = part
-	local force = Instance.new("VectorForce")
-	force.Name = "PhishBoatBuoyancy"
-	force.Attachment0 = att
-	force.RelativeTo = Enum.ActuatorRelativeTo.World
-	force.ApplyAtCenterOfMass = true
-	force.Force = Vector3.zero
-	force.Parent = part
-	hullForces[part] = { force = force, attachment = att }
+local function bindHull(inst: Instance)
+	if inst:IsA("BasePart") then
+		hullParts[inst] = true
+	end
 end
 
-local function removeBuoyancyForce(part: BasePart)
-	local refs = hullForces[part]
-	if not refs then return end
-	if refs.force.Parent then refs.force:Destroy() end
-	if refs.attachment.Parent then refs.attachment:Destroy() end
-	hullForces[part] = nil
+local function unbindHull(inst: Instance)
+	if inst:IsA("BasePart") then
+		hullParts[inst] = nil
+	end
 end
 
 local function waterSurfaceUnder(part: BasePart): number?
@@ -245,8 +232,8 @@ local function waterSurfaceUnder(part: BasePart): number?
 	params.FilterType = Enum.RaycastFilterType.Include
 	params.FilterDescendantsInstances = { waterFolder }
 	params.IgnoreWater = true
-	local origin = part.Position + Vector3.new(0, BUOYANCY_RAYCAST_UP, 0)
-	local direction = Vector3.new(0, -(BUOYANCY_RAYCAST_UP + BUOYANCY_RAYCAST_DOWN), 0)
+	local origin = part.Position + Vector3.new(0, HOVER_RAYCAST_UP, 0)
+	local direction = Vector3.new(0, -(HOVER_RAYCAST_UP + HOVER_RAYCAST_DOWN), 0)
 	local result = Workspace:Raycast(origin, direction, params)
 	if result and result.Instance and CollectionService:HasTag(result.Instance, WATER_TAG) then
 		return result.Position.Y
@@ -254,44 +241,37 @@ local function waterSurfaceUnder(part: BasePart): number?
 	return nil
 end
 
-local function updateBuoyancy()
-	-- Dedupe by assembly: if the user tagged multiple parts of the same
-	-- welded boat, applying the force to all of them stacks gravity-cancel
-	-- and launches the boat. One force per assembly.
+local function pinHovercraft()
+	-- Dedupe by assembly so multi-tagged welded boats only get pinned once.
 	local seenAssemblies: { [BasePart]: boolean } = {}
-	for part, refs in pairs(hullForces) do
-		if not part.Parent or part.Anchored then
-			removeBuoyancyForce(part)
+	for part in pairs(hullParts) do
+		if not part.Parent then
+			hullParts[part] = nil
+			continue
+		end
+		if part.Anchored then
 			continue
 		end
 		local rootPart = part.AssemblyRootPart or part
-		if seenAssemblies[rootPart] then
-			refs.force.Force = Vector3.zero
-			continue
-		end
+		if seenAssemblies[rootPart] then continue end
 		seenAssemblies[rootPart] = true
 
 		local waterY = waterSurfaceUnder(part)
-		if not waterY then
-			refs.force.Force = Vector3.zero
-			continue
-		end
-		local mass = part.AssemblyMass
-		local targetY = waterY + BUOYANCY_OFFSET
-		local displacement = targetY - part.Position.Y
-		local verticalVelocity = part.AssemblyLinearVelocity.Y
-		local extra = math.clamp(
-			(displacement * BUOYANCY_SPRING - verticalVelocity * BUOYANCY_DAMPING) * mass,
-			-BUOYANCY_MAX_FORCE, BUOYANCY_MAX_FORCE
-		)
-		local upward = mass * Workspace.Gravity + extra
-		refs.force.Force = Vector3.new(0, upward, 0)
-	end
-end
+		if not waterY then continue end
+		local targetY = waterY + HOVER_OFFSET
 
-local function bindHull(inst: Instance)
-	if inst:IsA("BasePart") then
-		ensureBuoyancyForce(inst)
+		-- Snap Y on the assembly root, preserve X / Z and rotation.
+		local cf = rootPart.CFrame
+		if math.abs(cf.Y - targetY) > 0.005 then
+			rootPart.CFrame = CFrame.new(cf.X, targetY, cf.Z) * (cf - cf.Position)
+		end
+		-- Zero out vertical velocity so accumulated falling speed doesn't
+		-- punch through the pin on the next physics tick. Leave X / Z so
+		-- VehicleSeat / driver input still moves the boat.
+		local v = rootPart.AssemblyLinearVelocity
+		if v.Y ~= 0 then
+			rootPart.AssemblyLinearVelocity = Vector3.new(v.X, 0, v.Z)
+		end
 	end
 end
 
@@ -307,12 +287,13 @@ function MapIntegrityService.Init()
 	hideAllVehicleSeatHuds()
 	CollectionService:GetInstanceAddedSignal(BOAT_SEAT_TAG):Connect(hideVehicleSeatHud)
 
-	-- Wire buoyancy to existing + future BoatHull-tagged parts.
+	-- Wire hovercraft pin to existing + future BoatHull-tagged parts.
 	for _, p in ipairs(CollectionService:GetTagged(BOAT_HULL_TAG)) do
 		bindHull(p)
 	end
 	CollectionService:GetInstanceAddedSignal(BOAT_HULL_TAG):Connect(bindHull)
-	RunService.Heartbeat:Connect(updateBuoyancy)
+	CollectionService:GetInstanceRemovedSignal(BOAT_HULL_TAG):Connect(unbindHull)
+	RunService.Heartbeat:Connect(pinHovercraft)
 
 	takeSnapshots()
 
