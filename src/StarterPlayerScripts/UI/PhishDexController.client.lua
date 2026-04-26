@@ -12,7 +12,6 @@ local FishArt = require(Modules:WaitForChild("FishArt"))
 local UIBuilder = require(script.Parent:WaitForChild("UIBuilder"))
 
 local screen = UIBuilder.GetScreenGui()
-local fishTemplates = ReplicatedStorage:WaitForChild("PhishFishTemplates")
 
 local function clearOld()
 	local old = screen:FindFirstChild("PhishDex")
@@ -35,72 +34,52 @@ local PREVIEW_POS = UDim2.new(0.5, 0, 0, 48)
 local PREVIEW_SIZE = UDim2.fromOffset(134, 72)
 local PREVIEW_ZINDEX = 5
 
-local function buildImagePreview(speciesId: string, found: boolean, parent: Instance): ImageLabel
+-- Index uses 2D art only: uploaded fish stickers from FishArt.lua, with the
+-- same art silhouette-tinted for NOT FOUND. No ViewportFrame / 3D models
+-- (they read as "rotating" in the small tile and fight the card art look).
+local function buildFishPreview(speciesId: string, found: boolean, parent: Instance): ImageLabel
 	local img = Instance.new("ImageLabel")
 	img.Name = "FishPreview"
 	img.AnchorPoint = PREVIEW_ANCHOR
 	img.Position = PREVIEW_POS
 	img.Size = PREVIEW_SIZE
-	img.BackgroundTransparency = 1
 	img.ScaleType = Enum.ScaleType.Fit
-	img.Image = FishArt.Get(speciesId) or ""
 	img.ZIndex = PREVIEW_ZINDEX
-	if not found then
-		-- Silhouette: lift the tint off the dark CardSlot background so
-		-- the fish shape is still readable for unseen species. The old
-		-- (40,40,50) + 0.15 transparency was nearly invisible against
-		-- CardSlot (22,16,24).
-		img.ImageColor3 = Color3.fromRGB(75, 70, 95)
+	img.BorderSizePixel = 0
+
+	local art = FishArt.Get(speciesId)
+	if art and art ~= "" then
+		img.BackgroundTransparency = 1
+		img.Image = art
+		if not found then
+			-- Same 2D asset as placeholder: dark silhouette so the shape
+			-- still reads against the slot.
+			img.ImageColor3 = Color3.fromRGB(75, 70, 95)
+		else
+			img.ImageColor3 = Color3.fromRGB(255, 255, 255)
+		end
 		img.ImageTransparency = 0
+	else
+		-- No rbxassetid yet: static 2D card (never 3D).
+		img.Image = ""
+		img.BackgroundTransparency = 0.12
+		img.BackgroundColor3 = UIStyle.Palette.CardSlot
+		UIStyle.ApplyCorner(img, UDim.new(0, 8))
+		UIStyle.ApplyStroke(img, UIStyle.Palette.SlotStroke, 2)
+		UIStyle.MakeLabel({
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			Position = UDim2.fromScale(0.5, 0.5),
+			Size = UDim2.fromScale(1, 1),
+			Text = "??",
+			Font = UIStyle.FontDisplay,
+			TextSize = 22,
+			TextColor3 = UIStyle.Palette.TextMuted,
+			ZIndex = PREVIEW_ZINDEX + 1,
+			Parent = img,
+		})
 	end
 	img.Parent = parent
 	return img
-end
-
-local function buildViewportPreview(speciesId: string, found: boolean, parent: Instance): ViewportFrame
-	local vf = Instance.new("ViewportFrame")
-	vf.Name = "FishPreview"
-	vf.AnchorPoint = PREVIEW_ANCHOR
-	vf.Position = PREVIEW_POS
-	vf.Size = PREVIEW_SIZE
-	vf.BackgroundTransparency = 1
-	vf.Ambient = Color3.fromRGB(150, 140, 130)
-	vf.LightColor = Color3.fromRGB(255, 240, 210)
-	vf.LightDirection = Vector3.new(-0.4, -1, -0.25)
-	vf.ZIndex = PREVIEW_ZINDEX
-	vf.Parent = parent
-
-	local template = fishTemplates:FindFirstChild(speciesId)
-	if template and template:IsA("Model") then
-		local clone = template:Clone()
-		for _, part in ipairs(clone:GetDescendants()) do
-			if part:IsA("BasePart") then
-				part.Anchored = true
-				part.Color = found and part.Color or Color3.fromRGB(50, 45, 55)
-				part.Transparency = found and part.Transparency or 0.25
-			elseif not found and part:IsA("PointLight") then
-				part.Enabled = false
-			end
-		end
-		clone:PivotTo(CFrame.new(0, 0, 0) * CFrame.Angles(0, math.rad(-20), 0))
-		clone.Parent = vf
-	end
-
-	local cam = Instance.new("Camera")
-	cam.FieldOfView = 32
-	cam.CFrame = CFrame.new(Vector3.new(0, 0.4, 8), Vector3.new(0, 0.1, 0))
-	cam.Parent = vf
-	vf.CurrentCamera = cam
-	return vf
-end
-
--- Prefer the 2D sticker art when an asset id is wired up. Fall back to the
--- 3D viewport so the index keeps working before any uploads are done.
-local function buildFishPreview(speciesId: string, found: boolean, parent: Instance): GuiObject
-	if FishArt.Has(speciesId) then
-		return buildImagePreview(speciesId, found, parent)
-	end
-	return buildViewportPreview(speciesId, found, parent)
 end
 
 local open: () -> ()
@@ -203,8 +182,7 @@ open = function()
 		})
 		tile.Parent = gridFrame
 
-		-- Fish viewport sits directly on the dark slot — no colored
-		-- backdrop. The rarity color is conveyed via the rarity label.
+		-- 2D fish art (or static "??" slot if no rbxassetid in FishArt yet).
 		buildFishPreview(tostring(e.id or ""), found, tile)
 
 		-- Labels sit just below the 134x72 preview (bottom edge ~y=84).
