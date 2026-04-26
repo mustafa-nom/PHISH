@@ -1,2 +1,0 @@
---!strict
--- Retired with the puppy/action-card Stranger Danger flow.

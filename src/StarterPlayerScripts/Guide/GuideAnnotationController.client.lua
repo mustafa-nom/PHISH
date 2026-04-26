@@ -1,3 +1,0 @@
---!strict
--- Retired. Stranger Danger now uses Explorer dialog notes plus Guide booth
--- badge submission; Backpack Checkpoint uses ScannerGuideHud.
