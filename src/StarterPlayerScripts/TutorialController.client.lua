@@ -201,7 +201,7 @@ end
 -- Banner + minimize chip. Lives top-right out of the play area.
 -- ---------------------------------------------------------------------------
 
-local STAGE_LABELS = { "1", "2", "3", "4" }
+local STAGE_LABELS = { "1", "2", "3", "4", "5" }
 
 local function clearBanner()
 	if activeBanner then activeBanner:Destroy(); activeBanner = nil end
@@ -288,7 +288,7 @@ showBanner = function(title, text, opts)
 	stagePill.Size = UDim2.fromOffset(72, 22)
 	stagePill.BackgroundColor3 = UIStyle.Palette.AskFirst
 	stagePill.BorderSizePixel = 0
-	stagePill.Text = string.format("STEP %s/4", STAGE_LABELS[stage] or tostring(stage))
+	stagePill.Text = string.format("STEP %s/5", STAGE_LABELS[stage] or tostring(stage))
 	stagePill.Font = UIStyle.FontDisplay
 	stagePill.TextSize = 12
 	stagePill.TextColor3 = Color3.fromRGB(60, 36, 8)
@@ -391,24 +391,48 @@ local function gotoStage3()
 		{ sticky = true })
 end
 
-local function gotoStage4()
+local function tutorialDone()
+	clearBanner()
+	clearChip()
+	clearArrow()
+	clearBeam()
+	currentTitle = ""
+	currentText = ""
+end
+
+-- Stage 5: walk back to the angler and sell. Repaints the beam + arrow.
+local function gotoStage5()
+	if stage >= 5 then return end
+	stage = 5
+	local target: BasePart? = findNpcAdornee()
+	if target then
+		showArrow(target, "SELL")
+		showBeamTo(target)
+	end
+	showBanner("Sell your fish",
+		"Walk back to the angler and press E to sell. Pearls let you upgrade your gear.",
+		{ sticky = true })
+end
+
+-- Stage 4 splits on whether a fish actually got added:
+--   correct catch -> brief celebration, then stage 5 (sell)
+--   wrong call -> "every catch teaches you" + auto-dismiss
+local function gotoStage4(fishAdded: boolean?)
 	if stage >= 4 then return end
 	stage = 4
-	showBanner("Nice catch!",
-		"Every fish you catch teaches you a phishing pattern. Keep fishing and check your Field Guide!",
-		{ sticky = true })
-	-- Final stage: nuke EVERYTHING after 6 seconds — banner, chip, arrow,
-	-- beam — regardless of whether the player minimized it. Previously the
-	-- non-sticky timer in showBanner only cleared the banner if it was
-	-- still the active one, so a minimized chip persisted forever.
-	task.delay(6, function()
-		clearBanner()
-		clearChip()
-		clearArrow()
-		clearBeam()
-		currentTitle = ""
-		currentText = ""
-	end)
+	if fishAdded then
+		showBanner("Nice catch!",
+			"You've got a fish. Now sell it at the angler for pearls.",
+			{ sticky = true })
+		task.delay(2.0, function()
+			if stage == 4 then gotoStage5() end
+		end)
+	else
+		showBanner("Keep fishing!",
+			"Every catch teaches you a phishing pattern. Cast again to try another.",
+			{ sticky = true })
+		task.delay(6, tutorialDone)
+	end
 end
 
 local function alreadyHasRod(character: Model): boolean
@@ -447,8 +471,21 @@ RemoteService.OnClientEvent("CastStarted", function()
 	gotoStage3()
 end)
 
-RemoteService.OnClientEvent("DecisionResult", function()
+RemoteService.OnClientEvent("DecisionResult", function(payload)
 	if sawDecisionFirst then return end
 	sawDecisionFirst = true
-	gotoStage4()
+	local fishAdded = type(payload) == "table" and payload.fishAddedToInventory == true
+	gotoStage4(fishAdded)
+end)
+
+-- Player sold their first fish: tutorial complete.
+RemoteService.OnClientEvent("SellResult", function(payload)
+	if stage < 5 then return end
+	if type(payload) ~= "table" or (payload.soldCount or 0) <= 0 then return end
+	clearArrow()
+	clearBeam()
+	showBanner("Way to go!",
+		"That's your first pearls. Keep fishing — the more phish you spot, the smarter you get.",
+		{ sticky = true })
+	task.delay(5, tutorialDone)
 end)
