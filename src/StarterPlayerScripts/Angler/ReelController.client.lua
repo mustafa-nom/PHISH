@@ -4,6 +4,7 @@
 -- ShowInspectionCard. Optional Space/Enter when this panel is up for accessibility.
 
 local Players = game:GetService("Players")
+local StarterGui = game:GetService("StarterGui")
 local UserInputService = game:GetService("UserInputService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RemoteService = require(ReplicatedStorage:WaitForChild("RemoteService"))
@@ -13,18 +14,30 @@ local PhishConstants = require(ReplicatedStorage:WaitForChild("Modules"):WaitFor
 local UIBuilder = require(Players.LocalPlayer.PlayerScripts:WaitForChild("UI"):WaitForChild("UIBuilder"))
 
 local screen = UIBuilder.GetScreenGui()
+local guiParent = screen.Parent
 
 local active = false
 local taps = 0
 local required = PhishConstants.REEL_TAPS_REQUIRED
 local mainButton: TextButton? = nil
 local barFill: Frame? = nil
+local reelGui: ScreenGui? = nil
 
-local function clearBar()
-	local old = screen:FindFirstChild("PhishReelBar")
+local function setBackpackHidden(hidden: boolean)
+	pcall(function()
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, not hidden)
+	end)
+end
+
+local function clearBar(restoreBackpack: boolean?)
+	local old = guiParent and guiParent:FindFirstChild("PhishReelPrompt")
 	if old then old:Destroy() end
+	reelGui = nil
 	mainButton = nil
 	barFill = nil
+	if restoreBackpack ~= false then
+		setBackpackHidden(false)
+	end
 end
 
 local function onReelPressed()
@@ -45,13 +58,23 @@ end
 
 local function showReelUI()
 	clearBar()
+
+	reelGui = Instance.new("ScreenGui")
+	reelGui.Name = "PhishReelPrompt"
+	reelGui.ResetOnSpawn = false
+	reelGui.IgnoreGuiInset = true
+	reelGui.DisplayOrder = 60
+	reelGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+	reelGui.Parent = guiParent
+	setBackpackHidden(true)
+
 	local panel = UIStyle.MakePanel({
 		Name = "PhishReelBar",
 		AnchorPoint = Vector2.new(0.5, 1),
 		Position = UDim2.new(0.5, 0, 1, -24),
 		Size = UDim2.new(0, 400, 0, 200),
 	})
-	panel.Parent = screen
+	panel.Parent = reelGui
 	local minSize = Instance.new("UISizeConstraint")
 	minSize.MinSize = Vector2.new(320, 180)
 	minSize.MaxSize = Vector2.new(480, 240)
@@ -110,7 +133,7 @@ local function showReelUI()
 end
 
 local function updateBar()
-	local panel = screen:FindFirstChild("PhishReelBar")
+	local panel = reelGui and reelGui:FindFirstChild("PhishReelBar")
 	if not panel then return end
 	local sub = panel:FindFirstChild("Subtext") :: TextLabel?
 	if sub and required > 0 then
@@ -153,7 +176,7 @@ end)
 
 RemoteService.OnClientEvent("ShowInspectionCard", function()
 	active = false
-	clearBar()
+	clearBar(false)
 end)
 
 -- Accessibility: same action as the green button (only while reel is active)
