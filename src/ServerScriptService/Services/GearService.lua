@@ -55,6 +55,24 @@ local function emitUpdate(player: Player)
 	RemoteService.FireClient(player, "HudUpdated", DataService.Snapshot(player))
 end
 
+local function consumeDeployableTool(player: Player, gearId: string)
+	for _, container in ipairs({ player.Character, player:FindFirstChildOfClass("Backpack") }) do
+		if container then
+			for _, child in ipairs(container:GetChildren()) do
+				if
+					child:IsA("Tool")
+					and child:GetAttribute("DeployableKind") == "Gear"
+					and child:GetAttribute("DeployableId") == gearId
+				then
+					child:Destroy()
+					RemoteService.FireClient(player, "DeployableUsed", { kind = "Gear", id = gearId })
+					return
+				end
+			end
+		end
+	end
+end
+
 local function mkPart(name: string, parent: Instance, props: { [string]: any }): Part
 	local p = Instance.new("Part")
 	p.Name = name
@@ -157,6 +175,7 @@ local function deployGear(player: Player, payload: any)
 
 	profile.ownedGear[gear.id] -= 1
 	local position = Vector3.new(payload.target.X, tile.Position.Y + tile.Size.Y / 2 + 0.08, payload.target.Z)
+	consumeDeployableTool(player, gear.id)
 	local boost = {
 		owner = player,
 		gearId = gear.id,

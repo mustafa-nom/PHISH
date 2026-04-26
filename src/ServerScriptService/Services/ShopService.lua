@@ -20,6 +20,33 @@ local RemoteValidation = require(Helpers:WaitForChild("RemoteValidation"))
 
 local ShopService = {}
 
+local function buildDeployableTool(kind: string, id: string, displayName: string): Tool
+	local tool = Instance.new("Tool")
+	tool.Name = displayName
+	tool.ToolTip = "Equip, aim at water, then click to deploy."
+	tool.RequiresHandle = true
+	tool.CanBeDropped = false
+	tool:SetAttribute("DeployableKind", kind)
+	tool:SetAttribute("DeployableId", id)
+
+	local handle = Instance.new("Part")
+	handle.Name = "Handle"
+	handle.Size = Vector3.new(0.8, 0.8, 0.8)
+	handle.Shape = Enum.PartType.Ball
+	handle.Material = Enum.Material.Neon
+	handle.Color = kind == "Catcher" and Color3.fromRGB(80, 170, 220) or Color3.fromRGB(255, 205, 80)
+	handle.CanCollide = false
+	handle.Massless = true
+	handle.Parent = tool
+	return tool
+end
+
+local function giveDeployableTool(player: Player, kind: string, id: string, displayName: string)
+	local backpack = player:FindFirstChildOfClass("Backpack")
+	if not backpack then return end
+	buildDeployableTool(kind, id, displayName).Parent = backpack
+end
+
 local function reply(player: Player, ok: boolean, message: string, rodId: string?)
 	local profile = DataService.Get(player)
 	RemoteService.FireClient(player, "PurchaseResult", {
@@ -79,6 +106,7 @@ local function onPurchaseCatcher(player: Player, payload: any)
 
 	profile.coins -= catcher.price
 	profile.ownedCatchers[catcher.id] = (profile.ownedCatchers[catcher.id] or 0) + 1
+	giveDeployableTool(player, "Catcher", catcher.id, catcher.name)
 	RemoteService.FireClient(player, "HudUpdated", DataService.Snapshot(player))
 	RemoteService.FireClient(player, "CatcherUpdated", {
 		ownedCatchers = profile.ownedCatchers,
@@ -109,6 +137,7 @@ local function onPurchaseGear(player: Player, payload: any)
 
 	profile.coins -= gear.price
 	profile.ownedGear[gear.id] = (profile.ownedGear[gear.id] or 0) + 1
+	giveDeployableTool(player, "Gear", gear.id, gear.name)
 	RemoteService.FireClient(player, "HudUpdated", DataService.Snapshot(player))
 	RemoteService.FireClient(player, "GearUpdated", { ownedGear = profile.ownedGear })
 	reply(player, true, string.format("Purchased %s!", gear.name), gear.id)

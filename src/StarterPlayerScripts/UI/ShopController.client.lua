@@ -22,7 +22,6 @@ local RemoteService = require(ReplicatedStorage:WaitForChild("RemoteService"))
 local UIBuilder = require(script.Parent:WaitForChild("UIBuilder"))
 
 local player = Players.LocalPlayer
-local mouse = player:GetMouse()
 
 local localState = {
 	coins = 0,
@@ -45,7 +44,6 @@ type CardRefs = {
 local cardRefs: { [string]: CardRefs } = {}
 local activeShopGui: ScreenGui? = nil
 local activeRender: (() -> ())? = nil
-local pendingDeploy: { kind: string, id: string }? = nil
 local closeShop: () -> ()
 
 local function findRodTemplate(rodId: string): Model?
@@ -63,17 +61,17 @@ local function buildRodPreview(rodId: string, parent: Instance, size: UDim2): Vi
 	vf.Size = size
 	vf.AnchorPoint = Vector2.new(0.5, 0)
 	vf.Position = UDim2.new(0.5, 0, 0, 8)
-	vf.BackgroundColor3 = Color3.fromRGB(18, 14, 22)
+	vf.BackgroundColor3 = Color3.fromRGB(48, 42, 56)
 	vf.BorderSizePixel = 0
-	vf.LightDirection = Vector3.new(-0.5, -1, -0.3)
-	vf.Ambient = Color3.fromRGB(150, 130, 110)
-	vf.LightColor = Color3.fromRGB(255, 230, 180)
+	vf.LightDirection = Vector3.new(-0.35, -0.85, -0.4)
+	vf.Ambient = Color3.fromRGB(255, 245, 220)
+	vf.LightColor = Color3.fromRGB(255, 255, 245)
 	vf.Parent = parent
 	UIStyle.ApplyCorner(vf, UDim.new(0, 10))
 	UIStyle.ApplyStroke(vf, UIStyle.Palette.SlotStroke, 1)
 	UIStyle.ApplyGradient(vf,
-		Color3.fromRGB(40, 32, 50),
-		Color3.fromRGB(14, 10, 18),
+		Color3.fromRGB(76, 66, 88),
+		Color3.fromRGB(35, 30, 42),
 		90
 	)
 
@@ -81,16 +79,25 @@ local function buildRodPreview(rodId: string, parent: Instance, size: UDim2): Vi
 	if not template then return vf end
 	local clone = template:Clone()
 	for _, p in ipairs(clone:GetDescendants()) do
-		if p:IsA("BasePart") then p.Anchored = true end
+		if p:IsA("BasePart") then
+			p.Anchored = true
+			p.Color = p.Color:Lerp(Color3.fromRGB(255, 245, 220), 0.12)
+		end
 	end
 	clone.Parent = vf
 	if clone.PrimaryPart then
 		clone:PivotTo(CFrame.new(0, 0, 0))
 	end
 
+	local boundsCFrame, boundsSize = clone:GetBoundingBox()
+	local basePivot = CFrame.new(-boundsCFrame.Position) * clone:GetPivot()
+	clone:PivotTo(CFrame.Angles(0, math.rad(-28), 0) * basePivot)
+
 	local cam = Instance.new("Camera")
-	cam.FieldOfView = 35
-	cam.CFrame = CFrame.new(Vector3.new(2.4, 1.2, 5), Vector3.new(0, 0.5, 0))
+	cam.FieldOfView = 30
+	local maxSize = math.max(boundsSize.X, boundsSize.Y, boundsSize.Z)
+	local distance = math.max(4.5, maxSize * 1.45)
+	cam.CFrame = CFrame.new(Vector3.new(distance * 0.45, distance * 0.16, distance), Vector3.zero)
 	cam.Parent = vf
 	vf.CurrentCamera = cam
 
@@ -100,9 +107,318 @@ local function buildRodPreview(rodId: string, parent: Instance, size: UDim2): Vi
 		if not vf.Parent then conn:Disconnect(); return end
 		if not clone.PrimaryPart then return end
 		local angle = (os.clock() - startTime) * 0.6
-		clone:PivotTo(CFrame.new(0, 0, 0) * CFrame.Angles(0, angle, 0))
+		clone:PivotTo(CFrame.Angles(0, angle + math.rad(-28), 0) * basePivot)
 	end)
 	return vf
+end
+
+local function makeShopPreviewFrame(parent: Instance, name: string, topColor: Color3, bottomColor: Color3): ViewportFrame
+	local vf = Instance.new("ViewportFrame")
+	vf.Name = name
+	vf.Size = UDim2.fromScale(1, 0.36)
+	vf.BackgroundColor3 = topColor
+	vf.BorderSizePixel = 0
+	vf.LightDirection = Vector3.new(-0.35, -0.85, -0.4)
+	vf.Ambient = Color3.fromRGB(255, 245, 220)
+	vf.LightColor = Color3.fromRGB(255, 255, 245)
+	vf.Parent = parent
+	UIStyle.ApplyCorner(vf, UDim.new(0, 12))
+	UIStyle.ApplyGradient(vf, topColor, bottomColor, 90)
+	return vf
+end
+
+local function addPreviewPart(parent: Instance, name: string, props: { [string]: any }): Part
+	local part = Instance.new("Part")
+	part.Name = name
+	part.Anchored = true
+	part.CanCollide = false
+	part.CanTouch = false
+	part.CanQuery = false
+	part.TopSurface = Enum.SurfaceType.Smooth
+	part.BottomSurface = Enum.SurfaceType.Smooth
+	part.Material = Enum.Material.SmoothPlastic
+	for k, v in pairs(props) do
+		(part :: any)[k] = v
+	end
+	part.Parent = parent
+	return part
+end
+
+local function addPreviewLight(parent: Instance, color: Color3, range: number?)
+	local light = Instance.new("PointLight")
+	light.Color = color
+	light.Range = range or 5
+	light.Brightness = 1.5
+	light.Parent = parent
+end
+
+local function animatePreview(vf: ViewportFrame, model: Model, tilt: number, spinSpeed: number, bobHeight: number)
+	local root = addPreviewPart(model, "PreviewRoot", {
+		Size = Vector3.new(0.2, 0.2, 0.2),
+		Transparency = 1,
+		CFrame = CFrame.new(),
+	})
+	model.PrimaryPart = root
+	model.Parent = vf
+
+	local boundsCFrame, boundsSize = model:GetBoundingBox()
+	local basePivot = CFrame.new(-boundsCFrame.Position) * model:GetPivot()
+	model:PivotTo(CFrame.Angles(math.rad(tilt), math.rad(-20), 0) * basePivot)
+
+	local cam = Instance.new("Camera")
+	cam.FieldOfView = 32
+	local maxSize = math.max(boundsSize.X, boundsSize.Y, boundsSize.Z)
+	local distance = math.max(4, maxSize * 2.0)
+	cam.CFrame = CFrame.new(Vector3.new(distance * 0.35, distance * 0.18, distance), Vector3.new(0, 0, 0))
+	cam.Parent = vf
+	vf.CurrentCamera = cam
+
+	local startTime = os.clock()
+	local conn
+	conn = RunService.RenderStepped:Connect(function()
+		if not vf.Parent then conn:Disconnect(); return end
+		if not model.PrimaryPart then return end
+		local elapsed = os.clock() - startTime
+		local bob = math.sin(elapsed * 2.2) * bobHeight
+		local angle = elapsed * spinSpeed
+		model:PivotTo(CFrame.new(0, bob, 0) * CFrame.Angles(math.rad(tilt), angle + math.rad(-20), 0) * basePivot)
+	end)
+end
+
+local function buildMinnowNet(model: Model)
+	local wood = Color3.fromRGB(135, 92, 54)
+	local net = Color3.fromRGB(120, 210, 230)
+	addPreviewPart(model, "NetPanel", {
+		Size = Vector3.new(1.75, 1.0, 0.05),
+		Color = net,
+		Transparency = 0.45,
+		CFrame = CFrame.new(0, 0.25, 0),
+	})
+	for _, spec in ipairs({
+		{ "Top", Vector3.new(1.95, 0.08, 0.1), CFrame.new(0, 0.8, 0) },
+		{ "Bottom", Vector3.new(1.95, 0.08, 0.1), CFrame.new(0, -0.3, 0) },
+		{ "Left", Vector3.new(0.08, 1.15, 0.1), CFrame.new(-1.0, 0.25, 0) },
+		{ "Right", Vector3.new(0.08, 1.15, 0.1), CFrame.new(1.0, 0.25, 0) },
+	}) do
+		addPreviewPart(model, spec[1] :: string, {
+			Size = spec[2] :: Vector3,
+			Color = wood,
+			CFrame = spec[3] :: CFrame,
+		})
+	end
+	for x = -0.5, 0.5, 0.5 do
+		addPreviewPart(model, "NetLineV", {
+			Size = Vector3.new(0.035, 1.0, 0.06),
+			Color = Color3.fromRGB(220, 250, 255),
+			Transparency = 0.2,
+			CFrame = CFrame.new(x, 0.25, 0.04),
+		})
+	end
+	for y = 0, 0.5, 0.5 do
+		addPreviewPart(model, "NetLineH", {
+			Size = Vector3.new(1.75, 0.035, 0.06),
+			Color = Color3.fromRGB(220, 250, 255),
+			Transparency = 0.2,
+			CFrame = CFrame.new(0, y, 0.04),
+		})
+	end
+	addPreviewPart(model, "Handle", {
+		Size = Vector3.new(0.18, 1.15, 0.18),
+		Color = wood,
+		CFrame = CFrame.new(0, -1.0, 0) * CFrame.Angles(0, 0, math.rad(-16)),
+	})
+end
+
+local function buildSmartTrap(model: Model)
+	local body = Color3.fromRGB(80, 150, 190)
+	local metal = Color3.fromRGB(35, 50, 62)
+	local glow = Color3.fromRGB(100, 235, 255)
+	addPreviewPart(model, "TrapCore", {
+		Size = Vector3.new(1.3, 0.95, 1.0),
+		Color = body,
+		Transparency = 0.18,
+		CFrame = CFrame.new(),
+	})
+	for _, x in ipairs({ -0.72, 0.72 }) do
+		for _, z in ipairs({ -0.52, 0.52 }) do
+			addPreviewPart(model, "CagePost", {
+				Size = Vector3.new(0.09, 1.18, 0.09),
+				Color = metal,
+				CFrame = CFrame.new(x, 0, z),
+			})
+		end
+	end
+	for _, y in ipairs({ -0.58, 0.58 }) do
+		addPreviewPart(model, "CageRail", {
+			Size = Vector3.new(1.55, 0.08, 0.08),
+			Color = metal,
+			CFrame = CFrame.new(0, y, -0.55),
+		})
+		addPreviewPart(model, "CageRail", {
+			Size = Vector3.new(1.55, 0.08, 0.08),
+			Color = metal,
+			CFrame = CFrame.new(0, y, 0.55),
+		})
+	end
+	local sensor = addPreviewPart(model, "Sensor", {
+		Size = Vector3.new(0.42, 0.42, 0.42),
+		Color = glow,
+		Material = Enum.Material.Neon,
+		Shape = Enum.PartType.Ball,
+		CFrame = CFrame.new(0, 0.8, 0),
+	})
+	addPreviewLight(sensor, glow, 7)
+end
+
+local function buildDeepSeaScanner(model: Model)
+	local dark = Color3.fromRGB(38, 34, 78)
+	local violet = Color3.fromRGB(160, 90, 230)
+	local glow = Color3.fromRGB(120, 230, 255)
+	addPreviewPart(model, "Base", {
+		Size = Vector3.new(1.3, 0.3, 1.0),
+		Color = dark,
+		CFrame = CFrame.new(0, -0.5, 0),
+	})
+	addPreviewPart(model, "Mast", {
+		Size = Vector3.new(0.18, 1.45, 0.18),
+		Color = violet,
+		Material = Enum.Material.Neon,
+		CFrame = CFrame.new(0, 0.15, 0),
+	})
+	addPreviewPart(model, "ScannerBar", {
+		Size = Vector3.new(1.55, 0.12, 0.12),
+		Color = glow,
+		Material = Enum.Material.Neon,
+		CFrame = CFrame.new(0, 0.9, 0),
+	})
+	for _, scale in ipairs({ 1.0, 1.45 }) do
+		addPreviewPart(model, "PulseRingA", {
+			Size = Vector3.new(1.1 * scale, 0.05, 0.05),
+			Color = glow,
+			Material = Enum.Material.Neon,
+			Transparency = 0.1,
+			CFrame = CFrame.new(0, 0.9, 0.35 * scale),
+		})
+		addPreviewPart(model, "PulseRingB", {
+			Size = Vector3.new(0.05, 0.05, 0.75 * scale),
+			Color = glow,
+			Material = Enum.Material.Neon,
+			Transparency = 0.1,
+			CFrame = CFrame.new(0.55 * scale, 0.9, 0),
+		})
+	end
+end
+
+local function buildCatcherPreview(parent: Instance, catcherId: string)
+	local vf = makeShopPreviewFrame(parent, "CatcherPreview", Color3.fromRGB(74, 145, 184), Color3.fromRGB(30, 72, 98))
+	local model = Instance.new("Model")
+	model.Name = catcherId .. "_Preview"
+	if catcherId == "smart_trap" then
+		buildSmartTrap(model)
+	elseif catcherId == "deep_sea_scanner" then
+		buildDeepSeaScanner(model)
+	else
+		buildMinnowNet(model)
+	end
+	animatePreview(vf, model, -8, 0.85, 0.08)
+end
+
+local function buildCashBob(model: Model)
+	local glow = Color3.fromRGB(255, 210, 75)
+	local core = addPreviewPart(model, "CashBob", {
+		Size = Vector3.new(0.95, 0.95, 0.95),
+		Color = glow,
+		Material = Enum.Material.Neon,
+		Shape = Enum.PartType.Ball,
+		CFrame = CFrame.new(0, 0.15, 0),
+	})
+	addPreviewLight(core, glow, 8)
+	addPreviewPart(model, "BobTop", {
+		Size = Vector3.new(0.7, 0.2, 0.7),
+		Color = Color3.fromRGB(255, 120, 70),
+		CFrame = CFrame.new(0, 0.78, 0),
+	})
+	addPreviewPart(model, "ValueRing", {
+		Size = Vector3.new(1.55, 0.05, 0.05),
+		Color = Color3.fromRGB(255, 245, 180),
+		Material = Enum.Material.Neon,
+		CFrame = CFrame.new(0, 0.15, 0.72),
+	})
+end
+
+local function buildLuckyChum(model: Model)
+	local green = Color3.fromRGB(110, 220, 120)
+	addPreviewPart(model, "Bucket", {
+		Size = Vector3.new(1.15, 0.9, 1.0),
+		Color = Color3.fromRGB(85, 135, 115),
+		CFrame = CFrame.new(0, -0.1, 0),
+	})
+	addPreviewPart(model, "BucketLip", {
+		Size = Vector3.new(1.35, 0.16, 1.2),
+		Color = Color3.fromRGB(230, 210, 150),
+		CFrame = CFrame.new(0, 0.42, 0),
+	})
+	for _, offset in ipairs({ Vector3.new(-0.35, 0.65, 0.15), Vector3.new(0.18, 0.73, -0.1), Vector3.new(0.45, 0.57, 0.22) }) do
+		local chum = addPreviewPart(model, "ChumGlow", {
+			Size = Vector3.new(0.3, 0.3, 0.3),
+			Color = green,
+			Material = Enum.Material.Neon,
+			Shape = Enum.PartType.Ball,
+			CFrame = CFrame.new(offset),
+		})
+		addPreviewLight(chum, green, 4)
+	end
+end
+
+local function buildPearlLantern(model: Model)
+	local metal = Color3.fromRGB(70, 55, 92)
+	local pearl = Color3.fromRGB(255, 225, 245)
+	addPreviewPart(model, "LanternBase", {
+		Size = Vector3.new(1.0, 0.12, 0.85),
+		Color = metal,
+		CFrame = CFrame.new(0, -0.5, 0),
+	})
+	addPreviewPart(model, "LanternTop", {
+		Size = Vector3.new(0.82, 0.12, 0.72),
+		Color = metal,
+		CFrame = CFrame.new(0, 0.65, 0),
+	})
+	for _, x in ipairs({ -0.45, 0.45 }) do
+		for _, z in ipairs({ -0.38, 0.38 }) do
+			addPreviewPart(model, "LanternPost", {
+				Size = Vector3.new(0.08, 1.1, 0.08),
+				Color = metal,
+				CFrame = CFrame.new(x, 0.08, z),
+			})
+		end
+	end
+	local pearlCore = addPreviewPart(model, "Pearl", {
+		Size = Vector3.new(0.62, 0.62, 0.62),
+		Color = pearl,
+		Material = Enum.Material.Neon,
+		Shape = Enum.PartType.Ball,
+		CFrame = CFrame.new(0, 0.08, 0),
+	})
+	addPreviewLight(pearlCore, pearl, 8)
+	addPreviewPart(model, "Handle", {
+		Size = Vector3.new(0.14, 0.62, 0.14),
+		Color = Color3.fromRGB(245, 190, 95),
+		CFrame = CFrame.new(0, 1.02, 0),
+	})
+end
+
+local function buildGearPreview(parent: Instance, gearId: string)
+	local vf = makeShopPreviewFrame(parent, "GearPreview", Color3.fromRGB(240, 178, 80), Color3.fromRGB(150, 84, 32))
+	local model = Instance.new("Model")
+	model.Name = gearId .. "_Preview"
+	if gearId == "lucky_chum" then
+		buildLuckyChum(model)
+	elseif gearId == "pearl_lantern" then
+		buildPearlLantern(model)
+	else
+		buildCashBob(model)
+	end
+	animatePreview(vf, model, -6, 1.05, 0.1)
 end
 
 local function refreshCard(rod: RodCatalog.Rod)
@@ -249,15 +565,15 @@ local function buildHeroCard(parent: Instance, rod: RodCatalog.Rod): Frame
 	})
 	UIStyle.ApplyStroke(tierLabel, Color3.fromRGB(80, 40, 10), 1)
 
-	-- Larger rod preview
-	buildRodPreview(rod.id, card, UDim2.new(1, -32, 0, 220))
+	-- Larger rod preview, but leave a fixed lower band for name/description/price.
+	buildRodPreview(rod.id, card, UDim2.new(1, -32, 0, 178))
 	local preview = card:FindFirstChild("RodPreview") :: ViewportFrame
 	preview.Position = UDim2.new(0.5, 0, 0, 48)
 
 	-- Big name
 	UIStyle.MakeLabel({
 		Size = UDim2.new(1, -16, 0, 32),
-		Position = UDim2.new(0, 8, 0, 280),
+		Position = UDim2.new(0, 8, 0, 236),
 		Text = string.upper(rod.name),
 		Font = UIStyle.FontDisplay,
 		TextSize = 26,
@@ -266,10 +582,10 @@ local function buildHeroCard(parent: Instance, rod: RodCatalog.Rod): Frame
 	})
 
 	UIStyle.MakeLabel({
-		Size = UDim2.new(1, -24, 0, 56),
-		Position = UDim2.new(0, 12, 0, 318),
+		Size = UDim2.new(1, -24, 0, 70),
+		Position = UDim2.new(0, 12, 0, 272),
 		Text = rod.description,
-		TextSize = UIStyle.TextSize.Body,
+		TextSize = UIStyle.TextSize.Subtitle,
 		TextColor3 = UIStyle.Palette.TextPrimary,
 		TextWrapped = true,
 		TextYAlignment = Enum.TextYAlignment.Top,
@@ -280,7 +596,7 @@ local function buildHeroCard(parent: Instance, rod: RodCatalog.Rod): Frame
 	local priceFrame = Instance.new("Frame")
 	priceFrame.Name = "PriceRow"
 	priceFrame.Size = UDim2.new(1, -24, 0, 28)
-	priceFrame.Position = UDim2.new(0, 12, 1, -82)
+	priceFrame.Position = UDim2.new(0, 12, 1, -92)
 	priceFrame.BackgroundTransparency = 1
 	priceFrame.Parent = card
 	local _, priceLabel = IconFactory.Pill(priceFrame, IconFactory.Coin(22),
@@ -290,7 +606,7 @@ local function buildHeroCard(parent: Instance, rod: RodCatalog.Rod): Frame
 
 	local buyBtn = UIStyle.MakeButton({
 		Size = UDim2.new(1, -24, 0, 42),
-		Position = UDim2.new(0, 12, 1, -50),
+		Position = UDim2.new(0, 12, 1, -54),
 		Text = "BUY",
 		Font = UIStyle.FontDisplay,
 		TextSize = UIStyle.TextSize.Heading,
@@ -324,24 +640,6 @@ local function deployedCatcherCount(catcherId: string): number
 	return count
 end
 
-local function makeSimplePreview(parent: Instance, color: Color3, labelText: string)
-	local preview = Instance.new("Frame")
-	preview.Size = UDim2.fromScale(1, 0.36)
-	preview.BackgroundColor3 = color
-	preview.BorderSizePixel = 0
-	preview.Parent = parent
-	UIStyle.ApplyCorner(preview, UDim.new(0, 12))
-
-	UIStyle.MakeLabel({
-		Size = UDim2.fromScale(1, 1),
-		Text = labelText,
-		Font = UIStyle.FontBold,
-		TextSize = UIStyle.TextSize.Title,
-		TextColor3 = Color3.new(1, 1, 1),
-		Parent = preview,
-	})
-end
-
 local function buildCatcherCard(parent: Instance, catcher: CatcherCatalog.Catcher): Frame
 	local card = UIStyle.MakePanel({
 		Name = catcher.id,
@@ -349,7 +647,7 @@ local function buildCatcherCard(parent: Instance, catcher: CatcherCatalog.Catche
 		BackgroundColor3 = UIStyle.Palette.Panel,
 		Parent = parent,
 	})
-	makeSimplePreview(card, Color3.fromRGB(80, 140, 180), "CATCHER")
+	buildCatcherPreview(card, catcher.id)
 
 	local owned = (localState.ownedCatchers :: any)[catcher.id] or 0
 	local deployed = deployedCatcherCount(catcher.id)
@@ -389,7 +687,7 @@ local function buildCatcherCard(parent: Instance, catcher: CatcherCatalog.Catche
 	IconFactory.Pill(priceFrame, IconFactory.Coin(18), tostring(catcher.price), UIStyle.Palette.TextPrimary, UIStyle.TextSize.Body)
 
 	local buyBtn = UIStyle.MakeButton({
-		Size = UDim2.new(0.48, -8, 0, 30),
+		Size = UDim2.new(1, -16, 0, 30),
 		Position = UDim2.new(0, 8, 1, -34),
 		Text = "BUY",
 		TextSize = UIStyle.TextSize.Body,
@@ -402,22 +700,6 @@ local function buildCatcherCard(parent: Instance, catcher: CatcherCatalog.Catche
 		buyBtn.Text = "..."
 		RemoteService.FireServer("RequestPurchaseCatcher", { catcherId = catcher.id })
 	end)
-
-	local deployBtn = UIStyle.MakeButton({
-		Size = UDim2.new(0.48, -8, 0, 30),
-		Position = UDim2.new(0.52, 0, 1, -34),
-		Text = "DEPLOY",
-		TextSize = UIStyle.TextSize.Body,
-		BackgroundColor3 = available > 0 and UIStyle.Palette.Highlight or UIStyle.Palette.TextMuted,
-		Parent = card,
-	})
-	deployBtn.AutoButtonColor = available > 0
-	deployBtn.MouseButton1Click:Connect(function()
-		if not deployBtn.AutoButtonColor then return end
-		pendingDeploy = { kind = "Catcher", id = catcher.id }
-		closeShop()
-		UIBuilder.Toast("Click a water tile to deploy " .. catcher.name .. ".", 4, "Success")
-	end)
 	return card
 end
 
@@ -428,7 +710,7 @@ local function buildGearCard(parent: Instance, gear: GearCatalog.Gear): Frame
 		BackgroundColor3 = UIStyle.Palette.Panel,
 		Parent = parent,
 	})
-	makeSimplePreview(card, Color3.fromRGB(240, 178, 80), "GEAR")
+	buildGearPreview(card, gear.id)
 
 	local owned = (localState.ownedGear :: any)[gear.id] or 0
 	UIStyle.MakeLabel({
@@ -465,7 +747,7 @@ local function buildGearCard(parent: Instance, gear: GearCatalog.Gear): Frame
 	IconFactory.Pill(priceFrame, IconFactory.Coin(18), tostring(gear.price), UIStyle.Palette.TextPrimary, UIStyle.TextSize.Body)
 
 	local buyBtn = UIStyle.MakeButton({
-		Size = UDim2.new(0.48, -8, 0, 30),
+		Size = UDim2.new(1, -16, 0, 30),
 		Position = UDim2.new(0, 8, 1, -34),
 		Text = "BUY",
 		TextSize = UIStyle.TextSize.Body,
@@ -477,22 +759,6 @@ local function buildGearCard(parent: Instance, gear: GearCatalog.Gear): Frame
 		if not buyBtn.AutoButtonColor then return end
 		buyBtn.Text = "..."
 		RemoteService.FireServer("RequestPurchaseGear", { gearId = gear.id })
-	end)
-
-	local deployBtn = UIStyle.MakeButton({
-		Size = UDim2.new(0.48, -8, 0, 30),
-		Position = UDim2.new(0.52, 0, 1, -34),
-		Text = "DEPLOY",
-		TextSize = UIStyle.TextSize.Body,
-		BackgroundColor3 = owned > 0 and UIStyle.Palette.Highlight or UIStyle.Palette.TextMuted,
-		Parent = card,
-	})
-	deployBtn.AutoButtonColor = owned > 0
-	deployBtn.MouseButton1Click:Connect(function()
-		if not deployBtn.AutoButtonColor then return end
-		pendingDeploy = { kind = "Gear", id = gear.id }
-		closeShop()
-		UIBuilder.Toast("Click a water tile to deploy " .. gear.name .. ".", 4, "Success")
 	end)
 	return card
 end
@@ -705,21 +971,7 @@ end
 -- Esc closes the shop too.
 UserInputService.InputBegan:Connect(function(input, gpe)
 	if gpe then return end
-	if pendingDeploy and input.UserInputType == Enum.UserInputType.MouseButton1 then
-		local target = mouse.Hit.Position
-		if pendingDeploy.kind == "Catcher" then
-			RemoteService.FireServer("RequestDeployCatcher", { catcherId = pendingDeploy.id, target = target })
-		else
-			RemoteService.FireServer("RequestDeployGear", { gearId = pendingDeploy.id, target = target })
-		end
-		pendingDeploy = nil
-		return
-	end
 	if input.KeyCode == Enum.KeyCode.Escape and activeShopGui then closeShop() end
-	if input.KeyCode == Enum.KeyCode.Escape and pendingDeploy then
-		pendingDeploy = nil
-		UIBuilder.Toast("Deployment cancelled.", 2, "Error")
-	end
 end)
 
 -- Bind ProximityPrompt.Triggered on every shop trigger tagged Powerup.

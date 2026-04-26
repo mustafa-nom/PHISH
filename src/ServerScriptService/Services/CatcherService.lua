@@ -73,6 +73,24 @@ local function emitUpdate(player: Player, message: string?)
 	RemoteService.FireClient(player, "HudUpdated", DataService.Snapshot(player))
 end
 
+local function consumeDeployableTool(player: Player, catcherId: string)
+	for _, container in ipairs({ player.Character, player:FindFirstChildOfClass("Backpack") }) do
+		if container then
+			for _, child in ipairs(container:GetChildren()) do
+				if
+					child:IsA("Tool")
+					and child:GetAttribute("DeployableKind") == "Catcher"
+					and child:GetAttribute("DeployableId") == catcherId
+				then
+					child:Destroy()
+					RemoteService.FireClient(player, "DeployableUsed", { kind = "Catcher", id = catcherId })
+					return
+				end
+			end
+		end
+	end
+end
+
 local function mkPart(name: string, parent: Instance, props: { [string]: any }): Part
 	local p = Instance.new("Part")
 	p.Name = name
@@ -248,6 +266,7 @@ local function deployCatcher(player: Player, payload: any)
 	local deployId = tostring(player.UserId) .. "_" .. tostring(deployCounter)
 	local position = Vector3.new(payload.target.X, tile.Position.Y + tile.Size.Y / 2 + 0.15, payload.target.Z)
 	local model = buildCatcherModel(player, catcher, position)
+	consumeDeployableTool(player, catcher.id)
 	profile.deployedCatchers[deployId] = {
 		id = deployId,
 		catcherId = catcher.id,

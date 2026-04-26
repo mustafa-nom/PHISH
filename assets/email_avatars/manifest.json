@@ -1,0 +1,342 @@
+[
+  {
+    "card_id": "phish_urgency_001",
+    "sender": "Netflix Billing",
+    "email": "netflix-acct@netfllx-billing.com",
+    "legitimacy": "SCAM",
+    "path": "assets/email_avatars/phish_urgency_001__netflix-billing.png",
+    "status": "skipped",
+    "model": "black-forest-labs/flux-schnell",
+    "prediction_id": null
+  },
+  {
+    "card_id": "legit_github_001",
+    "sender": "GitHub",
+    "email": "noreply@github.com",
+    "legitimacy": "LEGITIMATE",
+    "path": "assets/email_avatars/legit_github_001__github.png",
+    "status": "skipped",
+    "model": "black-forest-labs/flux-schnell",
+    "prediction_id": null
+  },
+  {
+    "card_id": "phish_authority_001",
+    "sender": "IRS Tax Department",
+    "email": "official@irs-gov-refund.org",
+    "legitimacy": "SCAM",
+    "path": "assets/email_avatars/phish_authority_001__irs-tax-department.png",
+    "status": "skipped",
+    "model": "black-forest-labs/flux-schnell",
+    "prediction_id": null
+  },
+  {
+    "card_id": "phish_reward_001",
+    "sender": "Apple Rewards",
+    "email": "prize-team@apple-rewards-claim.net",
+    "legitimacy": "SCAM",
+    "path": "assets/email_avatars/phish_reward_001__apple-rewards.png",
+    "status": "skipped",
+    "model": "black-forest-labs/flux-schnell",
+    "prediction_id": null
+  },
+  {
+    "card_id": "phish_fear_001",
+    "sender": "Microsoft Account Team",
+    "email": "security-alert@ms-account-secure.com",
+    "legitimacy": "SCAM",
+    "path": "assets/email_avatars/phish_fear_001__microsoft-account-team.png",
+    "status": "skipped",
+    "model": "black-forest-labs/flux-schnell",
+    "prediction_id": null
+  },
+  {
+    "card_id": "legit_bank_001",
+    "sender": "Chase",
+    "email": "no-reply@chase.com",
+    "legitimacy": "LEGITIMATE",
+    "path": "assets/email_avatars/legit_bank_001__chase.png",
+    "status": "skipped",
+    "model": "black-forest-labs/flux-schnell",
+    "prediction_id": null
+  },
+  {
+    "card_id": "phish_curiosity_001",
+    "sender": "Notification",
+    "email": "alerts@view-message-now.co",
+    "legitimacy": "SCAM",
+    "path": "assets/email_avatars/phish_curiosity_001__notification.png",
+    "status": "skipped",
+    "model": "black-forest-labs/flux-schnell",
+    "prediction_id": null
+  },
+  {
+    "card_id": "phish_familiarity_001",
+    "sender": "Mom",
+    "email": "mom.real.account@gmaiI.com",
+    "legitimacy": "SCAM",
+    "path": "assets/email_avatars/phish_familiarity_001__mom.png",
+    "status": "skipped",
+    "model": "black-forest-labs/flux-schnell",
+    "prediction_id": null
+  },
+  {
+    "card_id": "legit_school_001",
+    "sender": "Roosevelt Middle School",
+    "email": "office@rms.k12.us",
+    "legitimacy": "LEGITIMATE",
+    "path": "assets/email_avatars/legit_school_001__roosevelt-middle-school.png",
+    "status": "skipped",
+    "model": "black-forest-labs/flux-schnell",
+    "prediction_id": null
+  },
+  {
+    "card_id": "legit_shipping_001",
+    "sender": "UPS",
+    "email": "tracking@ups.com",
+    "legitimacy": "LEGITIMATE",
+    "path": "assets/email_avatars/legit_shipping_001__ups.png",
+    "status": "skipped",
+    "model": "black-forest-labs/flux-schnell",
+    "prediction_id": null
+  },
+  {
+    "card_id": "phish_urgency_002",
+    "sender": "Amazon Support",
+    "email": "delivery-issue@amaz0n-support.help",
+    "legitimacy": "SCAM",
+    "path": "assets/email_avatars/phish_urgency_002__amazon-support.png",
+    "status": "skipped",
+    "model": "black-forest-labs/flux-schnell",
+    "prediction_id": null
+  },
+  {
+    "card_id": "phish_urgency_003",
+    "sender": "Cloudflare DNS",
+    "email": "renewals@dns-renew-now.net",
+    "legitimacy": "SCAM",
+    "path": "assets/email_avatars/phish_urgency_003__cloudflare-dns.png",
+    "status": "skipped",
+    "model": "black-forest-labs/flux-schnell",
+    "prediction_id": null
+  },
+  {
+    "card_id": "phish_authority_002",
+    "sender": "FBI Cyber Division",
+    "email": "officer.barnes@fbi-cyber-watch.com",
+    "legitimacy": "SCAM",
+    "path": "assets/email_avatars/phish_authority_002__fbi-cyber-division.png",
+    "status": "skipped",
+    "model": "black-forest-labs/flux-schnell",
+    "prediction_id": null
+  },
+  {
+    "card_id": "phish_authority_003",
+    "sender": "Roblox Moderator",
+    "email": "review@roblox-moderation.app",
+    "legitimacy": "SCAM",
+    "path": "assets/email_avatars/phish_authority_003__roblox-moderator.png",
+    "status": "skipped",
+    "model": "black-forest-labs/flux-schnell",
+    "prediction_id": null
+  },
+  {
+    "card_id": "phish_reward_002",
+    "sender": "Roblox Rewards",
+    "email": "winners@robux-bonus-claim.club",
+    "legitimacy": "SCAM",
+    "path": "assets/email_avatars/phish_reward_002__roblox-rewards.png",
+    "status": "skipped",
+    "model": "black-forest-labs/flux-schnell",
+    "prediction_id": null
+  },
+  {
+    "card_id": "phish_curiosity_002",
+    "sender": "Photo Tag Notice",
+    "email": "noreply@viewmedia-now.co",
+    "legitimacy": "SCAM",
+    "path": "assets/email_avatars/phish_curiosity_002__photo-tag-notice.png",
+    "status": "skipped",
+    "model": "black-forest-labs/flux-schnell",
+    "prediction_id": null
+  },
+  {
+    "card_id": "phish_fear_002",
+    "sender": "iCloud Security",
+    "email": "security@icloud-photo-recovery.com",
+    "legitimacy": "SCAM",
+    "path": "assets/email_avatars/phish_fear_002__icloud-security.png",
+    "status": "skipped",
+    "model": "black-forest-labs/flux-schnell",
+    "prediction_id": null
+  },
+  {
+    "card_id": "phish_familiarity_002",
+    "sender": "Jordan",
+    "email": "jordan.real.94@gmaiI.com",
+    "legitimacy": "SCAM",
+    "path": "assets/email_avatars/phish_familiarity_002__jordan.png",
+    "status": "skipped",
+    "model": "black-forest-labs/flux-schnell",
+    "prediction_id": null
+  },
+  {
+    "card_id": "legit_recovery_001",
+    "sender": "GitHub",
+    "email": "noreply@github.com",
+    "legitimacy": "LEGITIMATE",
+    "path": "assets/email_avatars/legit_recovery_001__github.png",
+    "status": "skipped",
+    "model": "black-forest-labs/flux-schnell",
+    "prediction_id": null
+  },
+  {
+    "card_id": "legit_newsletter_001",
+    "sender": "Atlas Obscura",
+    "email": "newsletter@atlasobscura.com",
+    "legitimacy": "LEGITIMATE",
+    "path": "assets/email_avatars/legit_newsletter_001__atlas-obscura.png",
+    "status": "skipped",
+    "model": "black-forest-labs/flux-schnell",
+    "prediction_id": null
+  },
+  {
+    "card_id": "phish_spear_001",
+    "sender": "Maya from Robotics",
+    "email": "maya.clublead@gmaiI.com",
+    "legitimacy": "SCAM",
+    "path": "assets/email_avatars/phish_spear_001__maya-from-robotics.png",
+    "status": "skipped",
+    "model": "black-forest-labs/flux-schnell",
+    "prediction_id": null
+  },
+  {
+    "card_id": "phish_authority_004",
+    "sender": "School IT Helpdesk",
+    "email": "support@district-device-check.com",
+    "legitimacy": "SCAM",
+    "path": "assets/email_avatars/phish_authority_004__school-it-helpdesk.png",
+    "status": "skipped",
+    "model": "black-forest-labs/flux-schnell",
+    "prediction_id": null
+  },
+  {
+    "card_id": "phish_shared_doc_001",
+    "sender": "Google Docs",
+    "email": "sharing@googledocs-share.co",
+    "legitimacy": "SCAM",
+    "path": "assets/email_avatars/phish_shared_doc_001__google-docs.png",
+    "status": "skipped",
+    "model": "black-forest-labs/flux-schnell",
+    "prediction_id": null
+  },
+  {
+    "card_id": "phish_payroll_001",
+    "sender": "Payroll Portal",
+    "email": "payroll-update@workday-secure-pay.com",
+    "legitimacy": "SCAM",
+    "path": "assets/email_avatars/phish_payroll_001__payroll-portal.png",
+    "status": "skipped",
+    "model": "black-forest-labs/flux-schnell",
+    "prediction_id": null
+  },
+  {
+    "card_id": "phish_qr_001",
+    "sender": "Parking Office",
+    "email": "tickets@city-parking-payments.net",
+    "legitimacy": "SCAM",
+    "path": "assets/email_avatars/phish_qr_001__parking-office.png",
+    "status": "skipped",
+    "model": "black-forest-labs/flux-schnell",
+    "prediction_id": null
+  },
+  {
+    "card_id": "phish_crypto_001",
+    "sender": "Wallet Support",
+    "email": "airdrop@wallet-verify.events",
+    "legitimacy": "SCAM",
+    "path": "assets/email_avatars/phish_crypto_001__wallet-support.png",
+    "status": "skipped",
+    "model": "black-forest-labs/flux-schnell",
+    "prediction_id": null
+  },
+  {
+    "card_id": "rumor_school_001",
+    "sender": "Group Chat Forward",
+    "email": "forward@chat.local",
+    "legitimacy": "SCAM",
+    "path": "assets/email_avatars/rumor_school_001__group-chat-forward.png",
+    "status": "skipped",
+    "model": "black-forest-labs/flux-schnell",
+    "prediction_id": null
+  },
+  {
+    "card_id": "rumor_health_001",
+    "sender": "Wellness Alert",
+    "email": "tips@health-truth-now.info",
+    "legitimacy": "SCAM",
+    "path": "assets/email_avatars/rumor_health_001__wellness-alert.png",
+    "status": "skipped",
+    "model": "black-forest-labs/flux-schnell",
+    "prediction_id": null
+  },
+  {
+    "card_id": "mod_imposter_001",
+    "sender": "Game Moderator",
+    "email": "moderator@roblox-review-team.app",
+    "legitimacy": "SCAM",
+    "path": "assets/email_avatars/mod_imposter_001__game-moderator.png",
+    "status": "skipped",
+    "model": "black-forest-labs/flux-schnell",
+    "prediction_id": null
+  },
+  {
+    "card_id": "mod_imposter_002",
+    "sender": "Discord Trust Team",
+    "email": "safety@discord-ticket-review.com",
+    "legitimacy": "SCAM",
+    "path": "assets/email_avatars/mod_imposter_002__discord-trust-team.png",
+    "status": "skipped",
+    "model": "black-forest-labs/flux-schnell",
+    "prediction_id": null
+  },
+  {
+    "card_id": "ai_hallucination_001",
+    "sender": "StudyBot Summary",
+    "email": "studybot@class-tools.ai",
+    "legitimacy": "SCAM",
+    "path": "assets/email_avatars/ai_hallucination_001__studybot-summary.png",
+    "status": "skipped",
+    "model": "black-forest-labs/flux-schnell",
+    "prediction_id": null
+  },
+  {
+    "card_id": "ai_hallucination_002",
+    "sender": "Policy Assistant",
+    "email": "answers@ai-school-helper.tools",
+    "legitimacy": "SCAM",
+    "path": "assets/email_avatars/ai_hallucination_002__policy-assistant.png",
+    "status": "skipped",
+    "model": "black-forest-labs/flux-schnell",
+    "prediction_id": null
+  },
+  {
+    "card_id": "legit_kindness_001",
+    "sender": "Team Captain",
+    "email": "captain@schoolclub.org",
+    "legitimacy": "LEGITIMATE",
+    "path": "assets/email_avatars/legit_kindness_001__team-captain.png",
+    "status": "skipped",
+    "model": "black-forest-labs/flux-schnell",
+    "prediction_id": null
+  },
+  {
+    "card_id": "legit_safety_report_001",
+    "sender": "Community Safety",
+    "email": "safety@schoolclub.org",
+    "legitimacy": "LEGITIMATE",
+    "path": "assets/email_avatars/legit_safety_report_001__community-safety.png",
+    "status": "skipped",
+    "model": "black-forest-labs/flux-schnell",
+    "prediction_id": null
+  }
+]

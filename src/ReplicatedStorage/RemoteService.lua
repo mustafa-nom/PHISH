@@ -45,6 +45,7 @@ RemoteService.Events = {
 	"PurchaseResult",        -- { ok, message, rodId, newCoins, newRodTier }
 	"CatcherUpdated",        -- passive catcher ownership/deployment/stash changed
 	"GearUpdated",           -- gear ownership/deployment changed
+	"DeployableUsed",        -- remove/clear the equipped deployable tool after success
 	"SellResult",            -- { soldCount, coinsDelta, newCoins }
 	"Notify",                -- generic toast
 }

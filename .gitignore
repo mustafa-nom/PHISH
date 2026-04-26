@@ -18,6 +18,7 @@ build.rbxlx
 Thumbs.db
 .vscode/
 .idea/
+.env
 
 # Local scratch (screenshots, throwaway notes)
 _temp/
