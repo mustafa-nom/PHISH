@@ -11,6 +11,7 @@ local RemoteService = require(ReplicatedStorage:WaitForChild("RemoteService"))
 
 local Services = script.Parent
 local CardService = require(Services:WaitForChild("CardService"))
+local DataService = require(Services:WaitForChild("DataService"))
 local Helpers = Services:WaitForChild("Helpers")
 local RemoteValidation = require(Helpers:WaitForChild("RemoteValidation"))
 local SignalTracker = require(Helpers:WaitForChild("SignalTracker"))
@@ -99,6 +100,7 @@ local function onCast(player: Player)
 		return
 	end
 	setState(player, "Waiting")
+	RemoteService.FireClient(player, "CastStarted", { aim = zone.Position })
 	scheduleBite(player)
 end
 
@@ -123,6 +125,17 @@ local function onReelTap(player: Player)
 		RemoteService.FireClient(player, "ShowInspectionCard", CardService.ToPublic(card))
 		local t = timerThreadByPlayer[player]
 		if t then task.cancel(t); timerThreadByPlayer[player] = nil end
+		-- First-card nudge: teach the player what to look at.
+		if DataService.MarkTutorial(player, "FirstInspection") then
+			task.delay(0.6, function()
+				if not player.Parent then return end
+				RemoteService.FireClient(player, "TutorialNudge", {
+					title = "Read it like a real email",
+					text = "Check the sender's address AND the link's true URL — scams usually fake one but rarely both.",
+					durationSec = 7,
+				})
+			end)
+		end
 	end
 end
 

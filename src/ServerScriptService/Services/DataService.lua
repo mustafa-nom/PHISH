@@ -15,6 +15,7 @@ export type Profile = {
 	unlockedSpecies: { [string]: number },        -- speciesId -> catch count
 	civicXP: number,
 	rodGiven: boolean,
+	tutorialFlags: { [string]: boolean },          -- one-shot UI hints already shown
 }
 
 local DataService = {}
@@ -31,7 +32,19 @@ local function newProfile(): Profile
 		unlockedSpecies = {},
 		civicXP = 0,
 		rodGiven = false,
+		tutorialFlags = {},
 	}
+end
+
+function DataService.MarkTutorial(player: Player, key: string): boolean
+	local profile = DataService.Get(player)
+	if profile.tutorialFlags[key] then return false end
+	profile.tutorialFlags[key] = true
+	return true
+end
+
+function DataService.HasSeenTutorial(player: Player, key: string): boolean
+	return DataService.Get(player).tutorialFlags[key] == true
 end
 
 function DataService.Get(player: Player): Profile
