@@ -20,6 +20,7 @@ local RemoteValidation = require(Helpers:WaitForChild("RemoteValidation"))
 local DataService = require(Services:WaitForChild("DataService"))
 local PondService = require(Services:WaitForChild("PondService"))
 local BobberService = require(Services:WaitForChild("BobberService"))
+local IntroService = require(Services:WaitForChild("IntroService"))
 
 local CastingService = {}
 
@@ -108,6 +109,8 @@ local function handleRequestCast(player: Player, payload: any)
 	if biteScheduler then
 		biteScheduler(player, enc)
 	end
+
+	IntroService.MaybeNudgeFirstCast(player)
 end
 
 function CastingService.Init()

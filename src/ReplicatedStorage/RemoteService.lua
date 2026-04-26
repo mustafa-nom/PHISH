@@ -30,6 +30,8 @@ RemoteService.Events = {
 	"RequestExitBoat",
 
 	-- Server → Client
+	"ShowIntroSlide",
+	"TutorialNudge",
 	"BiteOccurred",
 	"FieldGuideEntryUnlocked",
 	"ReelMinigameStarted",
