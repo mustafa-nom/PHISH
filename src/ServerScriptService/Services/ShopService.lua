@@ -28,6 +28,7 @@ local function buildDeployableTool(kind: string, id: string, displayName: string
 	tool.CanBeDropped = false
 	tool:SetAttribute("DeployableKind", kind)
 	tool:SetAttribute("DeployableId", id)
+	tool:SetAttribute("Phish3DIcon", true)  -- Satchel renders this slot as a 3D viewport
 
 	local handle = Instance.new("Part")
 	handle.Name = "Handle"

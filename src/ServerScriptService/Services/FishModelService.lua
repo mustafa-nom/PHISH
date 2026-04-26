@@ -181,6 +181,7 @@ local function createTool(speciesId: string, sellValue: number): Tool?
 	tool:SetAttribute("FishId", speciesId)
 	tool:SetAttribute("DisplayName", species.displayName)
 	tool:SetAttribute("SellValue", sellValue)
+	tool:SetAttribute("Phish3DIcon", true)  -- Satchel renders this slot as a 3D viewport
 
 	local handle = Instance.new("Part")
 	handle.Name = "Handle"

@@ -140,6 +140,7 @@ local function buildTool(spec: RodCatalog.Rod): Tool
 	tool:SetAttribute("PhishRod", true)
 	tool:SetAttribute("RodId", spec.id)
 	tool:SetAttribute("RodTier", spec.tier)
+	tool:SetAttribute("Phish3DIcon", true)  -- Satchel renders this slot as a 3D viewport
 	CollectionService:AddTag(tool, ROD_TOOL_NAME)
 	return tool
 end
