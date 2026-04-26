@@ -32,11 +32,11 @@ local function makePill(name: string, anchor: Vector2, pos: UDim2, size: Vector2
 	chip.Parent = hud
 	UIStyle.ApplyCorner(chip, UDim.new(0, 12))
 	UIStyle.ApplyStroke(chip, UIStyle.Palette.PanelStroke, 2)
-	UIStyle.ApplyGradient(chip,
-		Color3.fromRGB(60, 50, 60),
-		Color3.fromRGB(28, 22, 30),
-		90
-	)
+	UIStyle.ApplyGradient(chip, {
+		top = Color3.fromRGB(60, 50, 60),
+		bottom = Color3.fromRGB(28, 22, 30),
+		rotation = 90,
+	})
 
 	local pad = Instance.new("UIPadding")
 	pad.PaddingLeft = UDim.new(0, 14)
