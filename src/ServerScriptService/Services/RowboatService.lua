@@ -39,6 +39,7 @@ type BoatState = {
 	seat: VehicleSeat,
 	lockedY: number,            -- the Y the boat will never leave
 	yaw: number,                -- current heading in radians around world up
+	wake: ParticleEmitter?,     -- water wake VFX behind the stern
 }
 
 local boats: { [BasePart]: BoatState } = {}
@@ -165,6 +166,59 @@ local function rigidify(hull: BasePart, model: Model)
 	end
 end
 
+-- Place a small invisible attachment behind the stern of the boat with a
+-- ParticleEmitter on it. The emitter is disabled until the boat moves
+-- forward; the tick loop toggles Enabled and adjusts Rate based on speed.
+local function buildWake(model: Model, hull: BasePart): ParticleEmitter
+	-- Tear down any prior wake emitter from a previous setup pass.
+	for _, d in ipairs(model:GetDescendants()) do
+		if d.Name == "BoatWakeAttachment" then d:Destroy() end
+	end
+
+	-- Anchor the emitter to whichever part is the back of the boat. We
+	-- prefer a part literally named "Stern" but fall back to the hull.
+	local sternPart: BasePart = hull
+	for _, d in ipairs(model:GetDescendants()) do
+		if d:IsA("BasePart") and d.Name == "Stern" then sternPart = d; break end
+	end
+
+	local attachment = Instance.new("Attachment")
+	attachment.Name = "BoatWakeAttachment"
+	-- Place the attachment behind and slightly below the stern so the wake
+	-- spawns at the waterline directly behind the boat. "Behind" depends
+	-- on which axis is the boat's back; we place it at the part's local
+	-- origin and let the model orientation point the spray rearward.
+	attachment.CFrame = CFrame.new(0, -0.4, sternPart.Size.Z * 0.5 + 0.5)
+	attachment.Parent = sternPart
+
+	local emitter = Instance.new("ParticleEmitter")
+	emitter.Name = "BoatWake"
+	emitter.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+	emitter.Color = ColorSequence.new(Color3.fromRGB(220, 240, 255))
+	emitter.LightEmission = 0.3
+	emitter.LightInfluence = 0
+	emitter.Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.2),
+		NumberSequenceKeypoint.new(0.6, 0.4),
+		NumberSequenceKeypoint.new(1, 1),
+	})
+	emitter.Size = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.6),
+		NumberSequenceKeypoint.new(1, 2.4),
+	})
+	emitter.Lifetime = NumberRange.new(0.6, 1.0)
+	emitter.Rate = 0
+	emitter.Speed = NumberRange.new(2, 4)
+	emitter.SpreadAngle = Vector2.new(20, 20)
+	emitter.Acceleration = Vector3.new(0, -2, 0)
+	emitter.Rotation = NumberRange.new(-180, 180)
+	emitter.RotSpeed = NumberRange.new(-60, 60)
+	emitter.Drag = 4
+	emitter.Enabled = false
+	emitter.Parent = attachment
+	return emitter
+end
+
 local function setupBoat(hull: BasePart)
 	if boats[hull] then return end
 	local model = hull:FindFirstAncestorOfClass("Model")
@@ -179,10 +233,10 @@ local function setupBoat(hull: BasePart)
 	rigidify(hull, model)
 	if not model.PrimaryPart then model.PrimaryPart = hull end
 
-	-- Sample the spawn-pose yaw once. The boat's "forward" convention is
-	-- its RightVector, so derive yaw from it: R = (cos θ, _, -sin θ).
-	local rv = hull.CFrame.RightVector
-	local startYaw = math.atan2(-rv.Z, rv.X)
+	-- Sample the spawn-pose yaw once. The boat's bow points along its
+	-- LookVector, so derive yaw from it: L = (-sin θ, 0, -cos θ).
+	local lv = hull.CFrame.LookVector
+	local startYaw = math.atan2(-lv.X, -lv.Z)
 
 	boats[hull] = {
 		model = model,
@@ -190,11 +244,20 @@ local function setupBoat(hull: BasePart)
 		seat = seat,
 		lockedY = hull.Position.Y,
 		yaw = startYaw,
+		wake = buildWake(model, hull),
 	}
 	print(("[PHISH] RowboatService: kinematic boat ready %s (lockedY=%.2f, yaw=%.2frad)"):format(hull:GetFullName(), hull.Position.Y, startYaw))
 end
 
 local function cleanupBoat(hull: BasePart)
+	local state = boats[hull]
+	if state and state.wake then
+		local att = state.wake.Parent
+		state.wake:Destroy()
+		if att and att:IsA("Attachment") and att.Name == "BoatWakeAttachment" then
+			att:Destroy()
+		end
+	end
 	boats[hull] = nil
 end
 
@@ -228,13 +291,24 @@ local function tick(dt: number)
 		local distance = throttle * speed * dt
 
 		-- Build a clean upright CFrame from yaw, then translate along the
-		-- boat's RightVector (its "forward" convention).
+		-- boat's LookVector (the bow direction).
 		local pivot = state.model:GetPivot()
 		local pos = pivot.Position
 		local heading = CFrame.new(pos.X, state.lockedY, pos.Z) * CFrame.Angles(0, state.yaw, 0)
-		local nextCFrame = heading + heading.RightVector * distance
+		local nextCFrame = heading + heading.LookVector * distance
 
 		state.model:PivotTo(nextCFrame)
+
+		-- Wake VFX: more particles the faster we're going forward, off in
+		-- reverse and when idling.
+		if state.wake then
+			if throttle > 0.05 then
+				state.wake.Enabled = true
+				state.wake.Rate = 30 + 60 * throttle
+			else
+				state.wake.Enabled = false
+			end
+		end
 	end
 end
 
@@ -258,8 +332,8 @@ function RowboatService.RelockY(hull: BasePart)
 	local state = boats[hull]
 	if not state then return end
 	state.lockedY = hull.Position.Y
-	local rv = hull.CFrame.RightVector
-	state.yaw = math.atan2(-rv.Z, rv.X)
+	local lv = hull.CFrame.LookVector
+	state.yaw = math.atan2(-lv.X, -lv.Z)
 end
 
 return RowboatService
