@@ -236,6 +236,49 @@ local function consolidateShopNpcs()
 	prompt.Enabled = true
 end
 
+-- ---------------------------------------------------------------------------
+-- Sound id scrub. Saved Sound instances in the map referenced user-uploaded
+-- asset ids that became private / mismatched type, plus a missing built-in
+-- path. Every "Failed to load sound ..." spam in Output came from one of
+-- these. Replace them with verified built-in paths or remove the SoundId.
+-- ---------------------------------------------------------------------------
+
+local SOUND_REPLACEMENTS: { [string]: string } = {
+	-- "Asset type does not match requested type" — replace.
+	["rbxassetid://9046491310"] = "rbxasset://sounds/impact_water.mp3",  -- water lapping
+	["rbxassetid://9114143000"] = "",                                     -- ambient wind/birds (silence)
+	["rbxassetid://3802267087"] = "rbxasset://sounds/electronicpingshort.wav",
+	["rbxassetid://1839997057"] = "rbxasset://sounds/impact_water.mp3",
+	["rbxassetid://5852457427"] = "rbxasset://sounds/swordlunge.wav",
+	["rbxassetid://5658149932"] = "rbxasset://sounds/clickfast.wav",
+	["rbxassetid://3863676626"] = "rbxasset://sounds/snap.mp3",
+	-- "Temp read failed" — built-in file got removed in a Roblox release.
+	["rbxasset://sounds/action_jump_landing.mp3"] = "rbxasset://sounds/electronicpingshort.wav",
+	["rbxasset://sounds/bell.wav"] = "rbxasset://sounds/snap.mp3",
+}
+
+local function scrubSounds(root: Instance)
+	for _, d in ipairs(root:GetDescendants()) do
+		if d:IsA("Sound") then
+			local replacement = SOUND_REPLACEMENTS[d.SoundId]
+			if replacement ~= nil then
+				d.SoundId = replacement
+				if replacement == "" then
+					d.Playing = false
+					d.Looped = false
+				end
+			end
+		end
+	end
+end
+
+local function scrubAllSounds()
+	scrubSounds(workspace)
+	scrubSounds(game:GetService("SoundService"))
+	scrubSounds(game:GetService("ReplicatedStorage"))
+	scrubSounds(game:GetService("ServerStorage"))
+end
+
 function MapIntegrityService.Init()
 	makeAllWaterNonCollide()
 	-- Catch any tile added later (e.g. live editing, deferred map gen).
@@ -244,6 +287,7 @@ function MapIntegrityService.Init()
 	hideAllVehicleSeatHuds()
 	CollectionService:GetInstanceAddedSignal(BOAT_SEAT_TAG):Connect(hideVehicleSeatHud)
 	consolidateShopNpcs()
+	scrubAllSounds()
 
 	takeSnapshots()
 

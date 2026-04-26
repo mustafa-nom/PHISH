@@ -188,7 +188,7 @@ RemoteService.OnClientEvent("TutorialNudge", showNudge)
 -- CastStarted: server confirmed the cast. Play a quick local SFX.
 local castSound = Instance.new("Sound")
 castSound.Name = "CastWhoosh"
-castSound.SoundId = "rbxassetid://9114143000"
+castSound.SoundId = "rbxasset://sounds/swordlunge.wav"
 castSound.Volume = 0.4
 castSound.Parent = script
 RemoteService.OnClientEvent("CastStarted", function()

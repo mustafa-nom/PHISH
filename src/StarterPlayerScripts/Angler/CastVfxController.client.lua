@@ -15,15 +15,17 @@ local RemoteService = require(ReplicatedStorage:WaitForChild("RemoteService"))
 
 local player = Players.LocalPlayer
 
--- ===== SOUND IDS (swap when real SFX pass lands) =====
--- Wrapped in pcall on Play so a missing asset just plays silence.
+-- ===== SOUND IDS =====
+-- Built-in rbxasset paths only. Previous user-uploaded ids ("Asset type
+-- does not match requested type") had been deleted or set private; built-in
+-- paths ship with every Roblox client and never go away.
 local SOUND_IDS = {
-	CastWhoosh = "rbxassetid://5852457427",
-	Splash = "rbxassetid://1839997057",
-	Bite = "rbxassetid://3802267087",
-	ReelClick = "rbxassetid://5658149932",
-	GotIt = "rbxassetid://3863676626",
-	GotAway = "rbxassetid://138081500",
+	CastWhoosh = "rbxasset://sounds/swordlunge.wav",
+	Splash = "rbxasset://sounds/impact_water.mp3",
+	Bite = "rbxasset://sounds/electronicpingshort.wav",
+	ReelClick = "rbxasset://sounds/clickfast.wav",
+	GotIt = "rbxasset://sounds/snap.mp3",
+	GotAway = "rbxasset://sounds/uuhhh.mp3",
 }
 
 local function makeSound(id: string, volume: number?): Sound

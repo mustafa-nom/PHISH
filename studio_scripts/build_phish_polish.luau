@@ -90,8 +90,11 @@ for i, pos in ipairs(fireflyAnchors) do
 	light.Parent = fly
 end
 
--- Ambient SFX. Sound ids may need replacement if a track 404s — pcall keeps the build alive.
+-- Ambient SFX. Built-in rbxasset paths only — user-uploaded ids drift
+-- between public/private/deleted, but rbxasset bundle ships with every
+-- client. Empty assetId skips the Sound entirely.
 local function ambient(parent, name, assetId, volume)
+	if not assetId or assetId == "" then return end
 	local s = Instance.new("Sound")
 	s.Name = name; s.SoundId = assetId; s.Volume = volume or 0.4
 	s.Looped = true
@@ -103,12 +106,13 @@ end
 
 local dock = map:FindFirstChild("PhishDock")
 local castAnchor = dock and dock:FindFirstChild("CastAnchor")
-if castAnchor then ambient(castAnchor, "WaterLapping", "rbxassetid://9046491310", 0.5) end
+if castAnchor then ambient(castAnchor, "WaterLapping", "rbxasset://sounds/impact_water.mp3", 0.35) end
 
 local centerAmbient = mkPart("AmbientCenter", polish, {
 	Size = V3(0.4, 0.4, 0.4), Transparency = 1, CanCollide = false, CFrame = CF(0, 6, 0),
 })
-ambient(centerAmbient, "WindBirds", "rbxassetid://9114143000", 0.3)
+-- No good built-in for ambient wind/birds. Skip rather than 404 every join.
+ambient(centerAmbient, "WindBirds", "", 0)
 
 print("[PHISH! POLISH] Done.")
 return true

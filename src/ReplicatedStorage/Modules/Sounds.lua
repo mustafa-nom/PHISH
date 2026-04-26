@@ -10,16 +10,18 @@
 
 local Sounds = {}
 
+-- Verified working built-in paths (Roblox dropped bell.wav and a few others
+-- so we route everything that previously used bell.wav through snap.mp3).
 Sounds.Cast       = "rbxasset://sounds/swordlunge.wav"
 Sounds.Splash     = "rbxasset://sounds/impact_water.mp3"
 Sounds.Bite       = "rbxasset://sounds/electronicpingshort.wav"
 Sounds.ReelTap    = "rbxasset://sounds/clickfast.wav"
 Sounds.ReelFail   = "rbxasset://sounds/uuhhh.mp3"
 Sounds.CardOpen   = "rbxasset://sounds/electronicpingshort.wav"
-Sounds.Correct    = "rbxasset://sounds/bell.wav"
+Sounds.Correct    = "rbxasset://sounds/snap.mp3"
 Sounds.Wrong      = "rbxasset://sounds/bass.wav"
 Sounds.Confetti   = "rbxasset://sounds/snap.mp3"
-Sounds.RareCatch  = "rbxasset://sounds/bell.wav"
+Sounds.RareCatch  = "rbxasset://sounds/snap.mp3"
 Sounds.PhishermanArrived = "rbxasset://sounds/bass.wav"
 Sounds.TutorialPing = "rbxasset://sounds/electronicpingshort.wav"
 
