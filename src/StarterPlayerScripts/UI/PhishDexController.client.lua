@@ -16,6 +16,14 @@ local function clearOld()
 	if old then old:Destroy() end
 end
 
+local function rarityColor(rarity: string?): Color3
+	if rarity == "Rare" then return Color3.fromRGB(120, 200, 255) end
+	if rarity == "Uncommon" then return Color3.fromRGB(130, 210, 130) end
+	if rarity == "Epic" then return Color3.fromRGB(220, 130, 250) end
+	if rarity == "Legendary" then return Color3.fromRGB(255, 200, 80) end
+	return UIStyle.Palette.AskFirst
+end
+
 local open: () -> ()
 
 local function toggle()
@@ -72,63 +80,86 @@ open = function()
 	closeBtn.Parent = panel
 	closeBtn.MouseButton1Click:Connect(clearOld)
 
-	local list = Instance.new("ScrollingFrame")
-	list.Size = UDim2.new(1, -32, 1, -88)
-	list.Position = UDim2.fromOffset(16, 76)
-	list.BackgroundTransparency = 1
-	list.CanvasSize = UDim2.fromOffset(0, 0)
-	list.AutomaticCanvasSize = Enum.AutomaticSize.Y
-	list.ScrollBarThickness = 6
-	list.Parent = panel
-	local layout = Instance.new("UIListLayout")
-	layout.SortOrder = Enum.SortOrder.LayoutOrder
-	layout.Padding = UDim.new(0, 6)
-	layout.Parent = list
+	local gridFrame = Instance.new("ScrollingFrame")
+	gridFrame.Name = "TileGrid"
+	gridFrame.Size = UDim2.new(1, -32, 1, -88)
+	gridFrame.Position = UDim2.fromOffset(16, 76)
+	gridFrame.BackgroundTransparency = 1
+	gridFrame.CanvasSize = UDim2.fromOffset(0, 0)
+	gridFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	gridFrame.ScrollBarThickness = 6
+	gridFrame.Parent = panel
+
+	local grid = Instance.new("UIGridLayout")
+	grid.CellSize = UDim2.fromOffset(150, 150)
+	grid.CellPadding = UDim2.fromOffset(8, 8)
+	grid.FillDirection = Enum.FillDirection.Horizontal
+	grid.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	grid.SortOrder = Enum.SortOrder.LayoutOrder
+	grid.Parent = gridFrame
 
 	for _, e in ipairs(entries) do
 		local found = e.found == true
 		local mastered = e.unlocked == true
-		local row = UIStyle.MakePanel({
-			Size = UDim2.new(1, 0, 0, found and 86 or 58),
+		local tile = UIStyle.MakePanel({
+			Name = tostring(e.id or "FishTile"),
+			Size = UDim2.fromOffset(150, 150),
 			BackgroundColor3 = found and UIStyle.Palette.Panel or UIStyle.Palette.Background,
 		})
-		row.Parent = list
+		tile.Parent = gridFrame
+
+		local badge = Instance.new("Frame")
+		badge.Name = "Badge"
+		badge.AnchorPoint = Vector2.new(0.5, 0)
+		badge.Position = UDim2.new(0.5, 0, 0, 10)
+		badge.Size = UDim2.fromOffset(62, 46)
+		badge.BackgroundColor3 = found and rarityColor(e.rarity) or UIStyle.Palette.TextMuted
+		badge.BackgroundTransparency = found and 0 or 0.35
+		badge.BorderSizePixel = 0
+		badge.Parent = tile
+		UIStyle.ApplyCorner(badge, UDim.new(0, 12))
 
 		UIStyle.MakeLabel({
-			Size = UDim2.new(1, -24, 0, 24),
-			Position = UDim2.fromOffset(12, 4),
+			Size = UDim2.fromScale(1, 1),
+			Text = found and string.sub(tostring(e.displayName or "?"), 1, 1) or "?",
+			Font = UIStyle.FontBold,
+			TextSize = UIStyle.TextSize.Title,
+			TextColor3 = found and UIStyle.Palette.TextPrimary or UIStyle.Palette.Background,
+			Parent = badge,
+		})
+
+		UIStyle.MakeLabel({
+			Size = UDim2.new(1, -16, 0, 38),
+			Position = UDim2.fromOffset(8, 62),
 			Text = found and e.displayName or "Unknown fish",
 			Font = UIStyle.FontBold,
-			TextSize = UIStyle.TextSize.Heading,
-			TextXAlignment = Enum.TextXAlignment.Left,
-		}).Parent = row
+			TextSize = UIStyle.TextSize.Body,
+			TextXAlignment = Enum.TextXAlignment.Center,
+			TextWrapped = true,
+			Parent = tile,
+		})
 
 		local status = mastered and "Mastered" or (found and "Found" or "Not found")
-		local sub = string.format("%s  |  %s  |  %d / %d",
-			e.rarity or "Common",
-			status,
-			e.count or 0,
-			e.catchesToUnlock or 3)
 		UIStyle.MakeLabel({
-			Size = UDim2.new(1, -24, 0, 20),
-			Position = UDim2.fromOffset(12, 30),
-			Text = found and ((e.realPatternName or "") .. "  |  " .. sub) or sub,
+			Size = UDim2.new(1, -16, 0, 18),
+			Position = UDim2.fromOffset(8, 104),
+			Text = string.format("%s | %s", e.rarity or "Common", status),
 			TextSize = UIStyle.TextSize.Caption,
 			TextColor3 = UIStyle.Palette.TextMuted,
-			TextXAlignment = Enum.TextXAlignment.Left,
-		}).Parent = row
+			TextXAlignment = Enum.TextXAlignment.Center,
+			TextWrapped = true,
+			Parent = tile,
+		})
 
-		if found then
-			UIStyle.MakeLabel({
-				Size = UDim2.new(1, -24, 0, 28),
-				Position = UDim2.fromOffset(12, 52),
-				Text = e.description or "",
-				TextSize = UIStyle.TextSize.Caption,
-				TextColor3 = UIStyle.Palette.TextPrimary,
-				TextXAlignment = Enum.TextXAlignment.Left,
-				TextWrapped = true,
-			}).Parent = row
-		end
+		UIStyle.MakeLabel({
+			Size = UDim2.new(1, -16, 0, 18),
+			Position = UDim2.fromOffset(8, 126),
+			Text = string.format("%d / %d", e.count or 0, e.catchesToUnlock or 3),
+			TextSize = UIStyle.TextSize.Caption,
+			TextColor3 = mastered and UIStyle.Palette.Safe or UIStyle.Palette.TextPrimary,
+			TextXAlignment = Enum.TextXAlignment.Center,
+			Parent = tile,
+		})
 	end
 end
 
