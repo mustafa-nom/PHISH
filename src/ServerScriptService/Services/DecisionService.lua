@@ -101,6 +101,7 @@ local function onSubmitDecision(player: Player, payload: any)
 	local actuallyLegit = card.isLegit == true
 	local wasCorrect = (playerSaidLegit == actuallyLegit)
 
+	PhishDexService.RecordFound(player, card.species)
 	local rewardDelta = ScoringService.GrantCatchReward(player, wasCorrect, card)
 	if wasCorrect then
 		PhishDexService.RecordCatch(player, card.species)

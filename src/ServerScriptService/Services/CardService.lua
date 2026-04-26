@@ -10,7 +10,7 @@ local DataService = require(Services:WaitForChild("DataService"))
 
 local CardService = {}
 
-local function difficultyForPlayer(player: Player): number
+local function progressionDifficultyForPlayer(player: Player): number
 	local p = DataService.Get(player)
 	-- Tutorial nudge: first 3 catches are easy. After that, scale gently.
 	if p.totalCatches < 3 then return 1 end
@@ -23,8 +23,9 @@ end
 -- client.
 local activeByPlayer: { [Player]: any } = {}
 
-function CardService.PickAndArm(player: Player): any
-	local card = ScamCards.PickForDifficulty(difficultyForPlayer(player))
+function CardService.PickAndArm(player: Player, waterDifficulty: number?): any
+	local targetDifficulty = math.max(progressionDifficultyForPlayer(player), waterDifficulty or 1)
+	local card = ScamCards.PickForWaterDifficulty(targetDifficulty)
 	activeByPlayer[player] = card
 	return card
 end

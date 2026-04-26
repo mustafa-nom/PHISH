@@ -281,6 +281,34 @@ ScamCards.All = {
 		redFlags = {},
 		reward = { xp = 10, coins = 3 },
 	},
+	{
+		id = "phish_spear_001", zone = "Abyss", isLegit = false,
+		species = "FamiliarityFlounder", difficulty = 4,
+		sender = { name = "Maya from Robotics", address = "maya.clublead@gmaiI.com", avatarColor = C3(120, 200, 220) },
+		subject = "private sponsor link for tonight",
+		body = "Hey, I got the sponsor reimbursement form but it expires tonight. Can you log in and upload the team roster? Please don't forward it because the sponsor said only one team lead can use this link.",
+		links = { { displayText = "Sponsor reimbursement form", trueUrl = "https://forms-sponsor-portal.net/robotics/reimburse" } },
+		redFlags = {
+			{ element = "sender.address", reason = "Capital I instead of lowercase l in gmail" },
+			{ element = "body", reason = "Secrecy plus urgent login request" },
+			{ element = "links[1]", reason = "Generic sponsor portal domain, not the real sponsor" },
+		},
+		reward = { xp = 40, coins = 16 },
+	},
+	{
+		id = "phish_authority_004", zone = "Abyss", isLegit = false,
+		species = "AuthorityAnglerfish", difficulty = 4,
+		sender = { name = "School IT Helpdesk", address = "support@district-device-check.com", avatarColor = C3(80, 120, 190) },
+		subject = "Device compliance review - action needed before class",
+		body = "Your school laptop failed the nightly compliance scan. Sign in below to keep your account from being locked before first period. If the page asks for a backup code, enter it to finish verification.",
+		links = { { displayText = "Review device status", trueUrl = "https://district-device-check.com/login" } },
+		redFlags = {
+			{ element = "sender.address", reason = "District IT should use the school district domain" },
+			{ element = "body", reason = "Asks for backup codes, which should never be shared" },
+			{ element = "links[1]", reason = "Lookalike IT domain controlled outside the school" },
+		},
+		reward = { xp = 40, coins = 16 },
+	},
 }
 
 function ScamCards.PickForDifficulty(maxDifficulty: number): ScamCard
@@ -290,6 +318,28 @@ function ScamCards.PickForDifficulty(maxDifficulty: number): ScamCard
 	end
 	if #pool == 0 then return ScamCards.All[1] end
 	return pool[math.random(1, #pool)]
+end
+
+function ScamCards.PickForWaterDifficulty(targetDifficulty: number): ScamCard
+	local target = math.clamp(math.floor(targetDifficulty), 1, 5)
+	local exactPool = {}
+	for _, c in ipairs(ScamCards.All) do
+		if c.difficulty == target then table.insert(exactPool, c) end
+	end
+	if #exactPool > 0 then return exactPool[math.random(1, #exactPool)] end
+
+	local fallbackPool = {}
+	local bestDifficulty = 0
+	for _, c in ipairs(ScamCards.All) do
+		if c.difficulty <= target and c.difficulty > bestDifficulty then
+			bestDifficulty = c.difficulty
+			fallbackPool = { c }
+		elseif c.difficulty == bestDifficulty then
+			table.insert(fallbackPool, c)
+		end
+	end
+	if #fallbackPool > 0 then return fallbackPool[math.random(1, #fallbackPool)] end
+	return ScamCards.PickForDifficulty(target)
 end
 
 function ScamCards.GetById(id: string): ScamCard?

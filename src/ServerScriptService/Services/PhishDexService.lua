@@ -18,6 +18,7 @@ function PhishDexService.Init()
 		local out = {}
 		for _, s in ipairs(PhishDex.Species) do
 			local count = profile.unlockedSpecies[s.id] or 0
+			local found = profile.foundSpecies[s.id] == true or count > 0
 			local unlocked = count >= s.catchesToUnlock
 			table.insert(out, {
 				id = s.id,
@@ -26,9 +27,10 @@ function PhishDexService.Init()
 				isLegit = s.isLegit,
 				count = count,
 				catchesToUnlock = s.catchesToUnlock,
+				found = found,
 				unlocked = unlocked,
-				description = unlocked and s.description or nil,
-				realPatternName = unlocked and s.realPatternName or nil,
+				description = found and s.description or nil,
+				realPatternName = found and s.realPatternName or nil,
 				realWorldInfo = unlocked and s.realWorldInfo or nil,
 				redFlags = unlocked and s.redFlags or nil,
 				defenseStrategy = unlocked and s.defenseStrategy or nil,
@@ -38,12 +40,21 @@ function PhishDexService.Init()
 	end)
 end
 
+function PhishDexService.RecordFound(player: Player, speciesId: string)
+	local species = PhishDex.Get(speciesId)
+	if not species then return end
+
+	local profile = DataService.Get(player)
+	profile.foundSpecies[speciesId] = true
+end
+
 -- Called after a correct catch. `speciesId` matches a PhishDex.Species.id.
 function PhishDexService.RecordCatch(player: Player, speciesId: string)
 	local species = PhishDex.Get(speciesId)
 	if not species then return end
 
 	local profile = DataService.Get(player)
+	profile.foundSpecies[speciesId] = true
 	local prev = profile.unlockedSpecies[speciesId] or 0
 	local next_ = prev + 1
 	profile.unlockedSpecies[speciesId] = next_

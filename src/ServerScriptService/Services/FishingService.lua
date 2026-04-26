@@ -27,6 +27,7 @@ local FishingService = {}
 local stateByPlayer: { [Player]: State } = {}
 local reelCountByPlayer: { [Player]: number } = {}
 local timerThreadByPlayer: { [Player]: thread } = {}
+local waterDifficultyByPlayer: { [Player]: number } = {}
 
 local function setState(player: Player, s: State)
 	stateByPlayer[player] = s
@@ -39,6 +40,7 @@ end
 function FishingService.SetIdle(player: Player)
 	setState(player, "Idle")
 	reelCountByPlayer[player] = 0
+	waterDifficultyByPlayer[player] = nil
 	local t = timerThreadByPlayer[player]
 	if t then task.cancel(t); timerThreadByPlayer[player] = nil end
 end
@@ -132,8 +134,15 @@ local function onCast(player: Player, clientAim: any)
 
 	-- Snap the landing Y to the water surface (tile top is roughly y = 0.5).
 	local landing = Vector3.new(clientAim.X, 0.5, clientAim.Z)
+	local waterDifficulty = tile:GetAttribute("Difficulty") or minTier
+	if type(waterDifficulty) ~= "number" then waterDifficulty = minTier end
+	waterDifficultyByPlayer[player] = math.clamp(math.floor(waterDifficulty), 1, 5)
 	setState(player, "Waiting")
-	RemoteService.FireClient(player, "CastStarted", { aim = landing, biome = tile:GetAttribute("Biome") })
+	RemoteService.FireClient(player, "CastStarted", {
+		aim = landing,
+		biome = tile:GetAttribute("Biome"),
+		difficulty = waterDifficultyByPlayer[player],
+	})
 	scheduleBite(player)
 end
 
@@ -154,7 +163,7 @@ local function onReelTap(player: Player)
 	RemoteService.FireClient(player, "ReelProgress", { count = n, required = PhishConstants.REEL_TAPS_REQUIRED })
 	if n >= PhishConstants.REEL_TAPS_REQUIRED then
 		setState(player, "Inspecting")
-		local card = CardService.PickAndArm(player)
+		local card = CardService.PickAndArm(player, waterDifficultyByPlayer[player])
 		RemoteService.FireClient(player, "ShowInspectionCard", CardService.ToPublic(card))
 		local t = timerThreadByPlayer[player]
 		if t then task.cancel(t); timerThreadByPlayer[player] = nil end
