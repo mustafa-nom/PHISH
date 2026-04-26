@@ -21,6 +21,97 @@ type BobberRecord = {
 	dipUntil: number?,
 	color: Color3,
 	lucky: boolean,
+	ripple: ParticleEmitter?,
+}
+
+-- Visual presets per ripple style (matched to fish.bobberCue.ripple in
+-- FishRegistry). Different particle shapes/colors per category sell the
+-- bite cue in the world.
+local RIPPLE_PRESETS: { [string]: { color: Color3, rate: number, lifetime: NumberRange, size: NumberSequence, speed: NumberRange } } = {
+	GlitterSplash = {
+		color = Color3.fromRGB(255, 220, 100),
+		rate = 28,
+		lifetime = NumberRange.new(0.4, 0.7),
+		size = NumberSequence.new(0.5, 0),
+		speed = NumberRange.new(4, 8),
+	},
+	ConfettiSplash = {
+		color = Color3.fromRGB(240, 130, 240),
+		rate = 22,
+		lifetime = NumberRange.new(0.5, 0.9),
+		size = NumberSequence.new(0.6, 0.1),
+		speed = NumberRange.new(3, 7),
+	},
+	UnderlineRipple = {
+		color = Color3.fromRGB(80, 150, 240),
+		rate = 16,
+		lifetime = NumberRange.new(0.6, 1.0),
+		size = NumberSequence.new(0.8, 0),
+		speed = NumberRange.new(2, 5),
+	},
+	WobbleRipple = {
+		color = Color3.fromRGB(190, 210, 255),
+		rate = 14,
+		lifetime = NumberRange.new(0.7, 1.1),
+		size = NumberSequence.new(0.7, 0.2),
+		speed = NumberRange.new(2, 4),
+	},
+	PageFlutter = {
+		color = Color3.fromRGB(230, 230, 230),
+		rate = 18,
+		lifetime = NumberRange.new(0.5, 0.9),
+		size = NumberSequence.new(0.5, 0),
+		speed = NumberRange.new(3, 6),
+	},
+	PixelGlitch = {
+		color = Color3.fromRGB(180, 255, 220),
+		rate = 26,
+		lifetime = NumberRange.new(0.3, 0.55),
+		size = NumberSequence.new(0.3, 0),
+		speed = NumberRange.new(5, 9),
+	},
+	FakeBadge = {
+		color = Color3.fromRGB(120, 160, 230),
+		rate = 12,
+		lifetime = NumberRange.new(0.7, 1.2),
+		size = NumberSequence.new(0.7, 0.1),
+		speed = NumberRange.new(2, 4),
+	},
+	LifebuoyHook = {
+		color = Color3.fromRGB(150, 200, 240),
+		rate = 14,
+		lifetime = NumberRange.new(0.7, 1.0),
+		size = NumberSequence.new(0.7, 0.2),
+		speed = NumberRange.new(2, 5),
+	},
+	CrownGlint = {
+		color = Color3.fromRGB(255, 220, 110),
+		rate = 22,
+		lifetime = NumberRange.new(0.4, 0.7),
+		size = NumberSequence.new(0.6, 0),
+		speed = NumberRange.new(4, 8),
+	},
+	SoftGlow = {
+		color = Color3.fromRGB(255, 200, 220),
+		rate = 12,
+		lifetime = NumberRange.new(0.9, 1.4),
+		size = NumberSequence.new(0.8, 0.3),
+		speed = NumberRange.new(1, 3),
+	},
+	WarmGlow = {
+		color = Color3.fromRGB(255, 230, 140),
+		rate = 14,
+		lifetime = NumberRange.new(0.9, 1.4),
+		size = NumberSequence.new(0.8, 0.3),
+		speed = NumberRange.new(1, 3),
+	},
+	RainbowShimmer = {
+		color = Color3.fromRGB(180, 240, 255),
+		rate = 36,
+		lifetime = NumberRange.new(0.6, 1.2),
+		size = NumberSequence.new(0.6, 0),
+		speed = NumberRange.new(3, 7),
+	},
 }
 
 local bobbers: { [Player]: BobberRecord } = {}
@@ -77,6 +168,7 @@ function BobberService.SpawnFor(player: Player, color: Color3?, lucky: boolean?)
 		dipUntil = nil,
 		color = resolved,
 		lucky = lucky == true,
+		ripple = nil,
 	}
 	RemoteService.FireClient(player, "BobberSpawned", {
 		Color = resolved,
@@ -93,6 +185,30 @@ function BobberService.SetCue(player: Player, color: Color3, ripple: string?)
 	local light = record.part:FindFirstChildOfClass("PointLight")
 	if light then light.Color = color end
 	record.dipUntil = os.clock() + Constants.BOBBER.BiteDipReturnTime
+
+	-- Spawn (or refresh) a ParticleEmitter on the bobber matching the cue.
+	if record.ripple and record.ripple.Parent then record.ripple:Destroy() end
+	local preset = ripple and RIPPLE_PRESETS[ripple] or nil
+	if preset then
+		local p = Instance.new("ParticleEmitter")
+		p.Color = ColorSequence.new(preset.color)
+		p.Rate = preset.rate
+		p.Lifetime = preset.lifetime
+		p.Size = preset.size
+		p.Speed = preset.speed
+		p.Rotation = NumberRange.new(0, 360)
+		p.RotSpeed = NumberRange.new(-180, 180)
+		p.LightEmission = 0.5
+		p.LightInfluence = 0
+		p.SpreadAngle = Vector2.new(40, 40)
+		p.VelocityInheritance = 0
+		p.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+		p.Parent = record.part
+		record.ripple = p
+		-- Burst on the dip.
+		p:Emit(20)
+	end
+
 	RemoteService.FireClient(player, "BobberDip", {
 		Color = color,
 		Ripple = ripple,
