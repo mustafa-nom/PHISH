@@ -1,33 +1,38 @@
 --!strict
--- Client init. The other controllers are LocalScripts that auto-start; this
--- bootstrap exists to:
+-- Client init for PHISH!. Other controllers are LocalScripts that auto-start;
+-- this bootstrap exists to:
 --   * make sure the remote folder is replicated before any controller fires
 --   * create the shared ScreenGui parent
---   * acknowledge progression on join
+--   * pull the player's data snapshot on join
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Constants = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Constants"))
 local RemoteService = require(ReplicatedStorage:WaitForChild("RemoteService"))
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
--- Wait for the remote folder so other controllers don't race.
-ReplicatedStorage:WaitForChild("BuddyBridgeRemotes")
+ReplicatedStorage:WaitForChild(Constants.REMOTE_FOLDER_NAME)
 
--- Shared ScreenGui that every UI controller mounts under.
-local screen = playerGui:FindFirstChild("BuddyBridgeUI")
+local screen = playerGui:FindFirstChild(Constants.SCREEN_GUI_NAME)
 if not screen then
 	screen = Instance.new("ScreenGui")
-	screen.Name = "BuddyBridgeUI"
+	screen.Name = Constants.SCREEN_GUI_NAME
 	screen.ResetOnSpawn = false
 	screen.IgnoreGuiInset = false
 	screen.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 	screen.Parent = playerGui
-else
-	screen.IgnoreGuiInset = false
 end
 
-local _ = RemoteService
+-- Pull initial snapshot. InventoryUpdated is event-driven afterwards.
+task.spawn(function()
+	local ok, snap = pcall(function()
+		return RemoteService.InvokeServer("GetSnapshot")
+	end)
+	if ok and snap then
+		local _ = snap
+	end
+end)
 
-print("[BuddyBridge] Client bootstrap ready.")
+print("[PHISH!] Client bootstrap ready.")

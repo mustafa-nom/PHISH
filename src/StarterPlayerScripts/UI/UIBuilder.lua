@@ -12,12 +12,12 @@ UIBuilder.UIStyle = UIStyle
 function UIBuilder.GetScreenGui(): ScreenGui
 	local player = Players.LocalPlayer
 	local playerGui = player:WaitForChild("PlayerGui")
-	local screen = playerGui:WaitForChild("BuddyBridgeUI", 5)
+	local screen = playerGui:WaitForChild("PhishUI", 5)
 	if screen and screen:IsA("ScreenGui") then
 		return screen :: ScreenGui
 	end
 	local newScreen = Instance.new("ScreenGui")
-	newScreen.Name = "BuddyBridgeUI"
+	newScreen.Name = "PhishUI"
 	newScreen.ResetOnSpawn = false
 	newScreen.IgnoreGuiInset = false
 	newScreen.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
