@@ -149,6 +149,19 @@ local function render(payload: any)
 		}).Parent = panel
 	end
 
+	if payload.fishAddedToInventory == true and (payload.fishSellValue or 0) > 0 then
+		UIStyle.MakeLabel({
+			Size = UDim2.new(1, -32, 0, 28),
+			Position = UDim2.fromOffset(16, math.min(y + 40, 320)),
+			Text = string.format("Fish added to backpack - sell value: %d pearls", payload.fishSellValue),
+			Font = UIStyle.FontBold,
+			TextSize = UIStyle.TextSize.Body,
+			TextColor3 = UIStyle.Palette.TextPrimary,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			TextWrapped = true,
+		}).Parent = panel
+	end
+
 	-- Reward row: coin + delta, sparkle + xp delta, both inline.
 	local coinsDelta = payload.coinsDelta or 0
 	local xpDelta = payload.xpDelta or 0

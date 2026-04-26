@@ -14,6 +14,7 @@ export type Profile = {
 	role: string,                                 -- "Angler" | "CoastGuard" | "HarborMaster"
 	unlockedSpecies: { [string]: number },        -- speciesId -> catch count
 	foundSpecies: { [string]: boolean },          -- speciesId -> encountered at least once
+	fishInventory: { [string]: number },          -- speciesId -> unsold fish count
 	civicXP: number,
 	rodGiven: boolean,
 	rodTier: number,                              -- 1..4; gates which water tiles you can fish
@@ -33,6 +34,7 @@ local function newProfile(): Profile
 		role = "Angler",
 		unlockedSpecies = {},
 		foundSpecies = {},
+		fishInventory = {},
 		civicXP = 0,
 		rodGiven = false,
 		rodTier = 1,                       -- starter rod
@@ -81,6 +83,7 @@ function DataService.Snapshot(player: Player): { [string]: any }
 		role = p.role,
 		unlockedSpecies = p.unlockedSpecies,
 		foundSpecies = p.foundSpecies,
+		fishInventory = p.fishInventory,
 		civicXP = p.civicXP,
 		rodTier = p.rodTier,
 	}

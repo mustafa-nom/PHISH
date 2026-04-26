@@ -17,6 +17,7 @@ RemoteService.Events = {
 	"SubmitDecision",        -- KEEP / CUT_BAIT ({ decision = "KEEP" | "CUT_BAIT", flags = { elementId } })
 	"RequestOpenPhishDex",   -- player opens dex screen
 	"RequestPurchaseRod",    -- shop purchase ({ rodId = string })
+	"RequestSellAllFish",    -- sell every caught fish tool in backpack/character
 	"RequestDebugCoins",     -- test shortcut: grant coins while iterating locally
 
 	-- Server → Client
@@ -34,6 +35,7 @@ RemoteService.Events = {
 	"PhishermanDefeated",    -- boss event end
 	"LeaderboardUpdated",    -- snapshot for Board of Fame
 	"PurchaseResult",        -- { ok, message, rodId, newCoins, newRodTier }
+	"SellResult",            -- { soldCount, coinsDelta, newCoins }
 	"Notify",                -- generic toast
 }
 
