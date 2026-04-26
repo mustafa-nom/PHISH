@@ -34,7 +34,7 @@ local function open()
 	UIStyle.MakeLabel({
 		Size = UDim2.new(1, 0, 0, 48),
 		Position = UDim2.fromOffset(0, 8),
-		Text = "📓 PHISH-DEX",
+		Text = "PHISH-DEX",
 		Font = UIStyle.FontBold,
 		TextSize = UIStyle.TextSize.Title,
 	}).Parent = panel
@@ -42,7 +42,7 @@ local function open()
 	local closeBtn = UIStyle.MakeButton({
 		Size = UDim2.fromOffset(40, 32),
 		Position = UDim2.new(1, -52, 0, 12),
-		Text = "✕",
+		Text = "X",
 		BackgroundColor3 = UIStyle.Palette.Risky,
 	})
 	closeBtn.Parent = panel

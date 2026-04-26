@@ -6,6 +6,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RemoteService = require(ReplicatedStorage:WaitForChild("RemoteService"))
 local UIStyle = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("UIStyle"))
+local IconFactory = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("IconFactory"))
 local UIBuilder = require(script.Parent:WaitForChild("UIBuilder"))
 
 local screen = UIBuilder.GetScreenGui()
@@ -36,14 +37,10 @@ local function render(payload: any)
 		BackgroundColor3 = headerColor,
 	})
 	header.Parent = panel
-	local headerLabel = UIStyle.MakeLabel({
-		Size = UDim2.fromScale(1, 1),
-		Text = correct and "✅ NICE CATCH" or "❌ THAT WAS BAIT",
-		Font = UIStyle.FontBold,
-		TextSize = UIStyle.TextSize.Title,
-		TextColor3 = Color3.new(1, 1, 1),
-	})
-	headerLabel.Parent = header
+	local headerIcon = correct and IconFactory.Check(36) or IconFactory.Cross(36)
+	IconFactory.Pill(header, headerIcon,
+		correct and "NICE CATCH" or "THAT WAS BAIT",
+		Color3.new(1, 1, 1), UIStyle.TextSize.Title)
 
 	local subtitle = string.format("%s — %s",
 		payload.speciesDisplayName or payload.species or "?",
@@ -82,23 +79,43 @@ local function render(payload: any)
 		y += 40
 	end
 
-	-- Reward chip
-	local rewardText = ""
-	if (payload.coinsDelta or 0) ~= 0 then
-		rewardText = string.format("🪙 %+d", payload.coinsDelta)
-	end
-	if (payload.xpDelta or 0) ~= 0 then
-		rewardText = rewardText .. string.format("   ✨ %+d XP", payload.xpDelta)
-	end
-	if rewardText ~= "" then
-		UIStyle.MakeLabel({
-			Size = UDim2.new(1, -32, 0, 32),
-			Position = UDim2.new(0, 16, 1, -48),
-			Text = rewardText,
-			Font = UIStyle.FontBold,
-			TextSize = UIStyle.TextSize.Heading,
-			TextXAlignment = Enum.TextXAlignment.Left,
-		}).Parent = panel
+	-- Reward row: coin + delta, sparkle + xp delta, both inline.
+	local coinsDelta = payload.coinsDelta or 0
+	local xpDelta = payload.xpDelta or 0
+	if coinsDelta ~= 0 or xpDelta ~= 0 then
+		local rewardRow = Instance.new("Frame")
+		rewardRow.Size = UDim2.new(1, -32, 0, 36)
+		rewardRow.Position = UDim2.new(0, 16, 1, -48)
+		rewardRow.BackgroundTransparency = 1
+		rewardRow.Parent = panel
+
+		local layout = Instance.new("UIListLayout")
+		layout.FillDirection = Enum.FillDirection.Horizontal
+		layout.VerticalAlignment = Enum.VerticalAlignment.Center
+		layout.Padding = UDim.new(0, 14)
+		layout.SortOrder = Enum.SortOrder.LayoutOrder
+		layout.Parent = rewardRow
+
+		if coinsDelta ~= 0 then
+			local cell = Instance.new("Frame")
+			cell.Size = UDim2.fromOffset(120, 36)
+			cell.BackgroundTransparency = 1
+			cell.LayoutOrder = 1
+			cell.Parent = rewardRow
+			IconFactory.Pill(cell, IconFactory.Coin(28),
+				string.format("%+d", coinsDelta),
+				UIStyle.Palette.TextPrimary, UIStyle.TextSize.Heading)
+		end
+		if xpDelta ~= 0 then
+			local cell = Instance.new("Frame")
+			cell.Size = UDim2.fromOffset(140, 36)
+			cell.BackgroundTransparency = 1
+			cell.LayoutOrder = 2
+			cell.Parent = rewardRow
+			IconFactory.Pill(cell, IconFactory.Sparkle(24),
+				string.format("%+d XP", xpDelta),
+				UIStyle.Palette.TextPrimary, UIStyle.TextSize.Heading)
+		end
 	end
 
 	task.delay(5, function()

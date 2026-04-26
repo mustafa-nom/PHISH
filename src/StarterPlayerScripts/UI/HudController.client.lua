@@ -5,6 +5,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RemoteService = require(ReplicatedStorage:WaitForChild("RemoteService"))
 
 local UIStyle = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("UIStyle"))
+local IconFactory = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("IconFactory"))
 local UIBuilder = require(script.Parent:WaitForChild("UIBuilder"))
 
 local screen = UIBuilder.GetScreenGui()
@@ -19,7 +20,7 @@ hud.Position = UDim2.fromScale(0, 0)
 hud.BackgroundTransparency = 1
 hud.Parent = screen
 
-local function chip(name: string, color: Color3, anchor: Vector2, pos: UDim2): TextLabel
+local function makeChip(name: string, color: Color3, anchor: Vector2, pos: UDim2): Frame
 	local frame = UIStyle.MakePanel({
 		Name = name,
 		Size = UDim2.new(0, 200, 0, 40),
@@ -28,25 +29,40 @@ local function chip(name: string, color: Color3, anchor: Vector2, pos: UDim2): T
 		BackgroundColor3 = color,
 	})
 	frame.Parent = hud
-	local label = UIStyle.MakeLabel({
-		Size = UDim2.fromScale(1, 1),
-		Text = "—",
-		TextSize = UIStyle.TextSize.Heading,
-		TextColor3 = UIStyle.Palette.TextPrimary,
-	})
-	label.Parent = frame
+	local pad = Instance.new("UIPadding")
+	pad.PaddingLeft = UDim.new(0, 12)
+	pad.PaddingRight = UDim.new(0, 12)
+	pad.Parent = frame
+	return frame
+end
+
+local function makeIconChip(name: string, color: Color3, anchor: Vector2, pos: UDim2, icon: GuiObject): TextLabel
+	local frame = makeChip(name, color, anchor, pos)
+	local _, label = IconFactory.Pill(frame, icon, "—", UIStyle.Palette.TextPrimary, 22)
 	return label
 end
 
-local coinsLabel = chip("CoinsChip", UIStyle.Palette.AskFirst, Vector2.new(0, 0), UDim2.new(0, 16, 0, 8))
-local accuracyLabel = chip("AccuracyChip", UIStyle.Palette.Highlight, Vector2.new(0.5, 0), UDim2.new(0.5, 0, 0, 8))
-local roleLabel = chip("RoleChip", UIStyle.Palette.Safe, Vector2.new(1, 0), UDim2.new(1, -16, 0, 8))
+local coinsLabel = makeIconChip("CoinsChip", UIStyle.Palette.AskFirst,
+	Vector2.new(0, 0), UDim2.new(0, 16, 0, 8),
+	IconFactory.Coin(28))
+local accuracyLabel = makeIconChip("AccuracyChip", UIStyle.Palette.Highlight,
+	Vector2.new(0.5, 0), UDim2.new(0.5, 0, 0, 8),
+	IconFactory.Target(26))
+
+local roleFrame = makeChip("RoleChip", UIStyle.Palette.Safe, Vector2.new(1, 0), UDim2.new(1, -16, 0, 8))
+local roleLabel = UIStyle.MakeLabel({
+	Size = UDim2.fromScale(1, 1),
+	Text = "Angler",
+	TextSize = UIStyle.TextSize.Heading,
+	TextColor3 = UIStyle.Palette.TextPrimary,
+})
+roleLabel.Parent = roleFrame
 
 local function render(snapshot: any)
 	if not snapshot then return end
-	coinsLabel.Text = string.format("🪙 %d", snapshot.coins or 0)
+	coinsLabel.Text = tostring(snapshot.coins or 0)
 	local acc = snapshot.accuracy or 0
-	accuracyLabel.Text = string.format("🎯 %d%%", math.floor(acc * 100))
+	accuracyLabel.Text = string.format("%d%%", math.floor(acc * 100))
 	roleLabel.Text = snapshot.role or "Angler"
 end
 
@@ -85,7 +101,7 @@ local function showNudge(payload: any)
 	card.Parent = screen
 	UIStyle.MakeLabel({
 		Size = UDim2.new(1, -24, 0, 28), Position = UDim2.fromOffset(12, 8),
-		Text = "💡 " .. (payload.title or "Tip"),
+		Text = payload.title or "Tip",
 		Font = UIStyle.FontBold, TextSize = UIStyle.TextSize.Heading,
 		TextXAlignment = Enum.TextXAlignment.Left,
 		Parent = card,
