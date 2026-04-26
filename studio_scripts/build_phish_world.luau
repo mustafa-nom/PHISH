@@ -271,10 +271,10 @@ local function buildDock(map)
 		Size = V3(5, 0.35, 4), Color = WOOD, Material = Enum.Material.WoodPlanks,
 		CFrame = CF(35.2, 0.8, 0) * CFrame.Angles(0, 0, math.rad(-18)),
 	})
-	mkPart("BeachRamp", dock, {
-		Size = V3(10, 0.35, 7), Color = C3(194, 144, 86), Material = Enum.Material.WoodPlanks,
-		CFrame = CF(7.4, 0.65, 0) * CFrame.Angles(0, 0, math.rad(-16)),
-	})
+	-- mkPart("BeachRamp", dock, {
+	-- 	Size = V3(10, 0.35, 7), Color = C3(194, 144, 86), Material = Enum.Material.WoodPlanks,
+	-- 	CFrame = CF(7.4, 0.65, 0) * CFrame.Angles(0, 0, math.rad(-16)),
+	-- })
 
 	-- Cast zones at the water-facing tip (3 of them spread across the tip)
 	for i = 1, 3 do

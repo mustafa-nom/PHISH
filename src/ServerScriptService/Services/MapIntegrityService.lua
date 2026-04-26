@@ -97,8 +97,8 @@ local function ensureEscapeRamps()
 		CFrame.new(35.2, 0.8, 0) * CFrame.Angles(0, 0, math.rad(-18)))
 
 	-- Wider beach ramp back to the island path.
-	makeRamp(folder, "BeachRamp", Vector3.new(10, 0.35, 7),
-		CFrame.new(7.4, 0.65, 0) * CFrame.Angles(0, 0, math.rad(-16)))
+	-- makeRamp(folder, "BeachRamp", Vector3.new(10, 0.35, 7),
+	-- 	CFrame.new(7.4, 0.65, 0) * CFrame.Angles(0, 0, math.rad(-16)))
 end
 
 -- ---------------------------------------------------------------------------
