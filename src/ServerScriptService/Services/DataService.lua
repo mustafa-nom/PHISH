@@ -15,7 +15,15 @@ export type PlayerData = {
 	TotalRuns: number,
 	PerfectRuns: number,
 	TreehouseLevel: number,
-	HasSeenTutorial: boolean,
+	-- Sub-tabled so we can gate Guide tutorial separately from Explorer
+	-- tutorial separately from any future tutorials. Old single-bool callers
+	-- should be updated to use `HasSeenTutorial.<key>` keys.
+	HasSeenTutorial: { [string]: boolean },
+	-- BackpackCheckpoint Field Manual session meta-progression: the set of
+	-- item keys this player has personally seen since they joined the
+	-- server. Pre-seeded into the manual at round start and updated as new
+	-- items spawn (per addendum #28).
+	EncounteredItems: { [string]: boolean },
 	Cosmetics: { string },
 	EquippedCosmetic: string?,
 }
@@ -30,7 +38,8 @@ local function defaults(): PlayerData
 		TotalRuns = 0,
 		PerfectRuns = 0,
 		TreehouseLevel = 1,
-		HasSeenTutorial = false,
+		HasSeenTutorial = {},
+		EncounteredItems = {},
 		Cosmetics = {},
 		EquippedCosmetic = nil,
 	}
@@ -64,6 +73,33 @@ function DataService.GrantSeeds(player: Player, amount: number): PlayerData
 	end
 	RemoteService.FireClient(player, "ProgressionUpdated", current)
 	return current
+end
+
+-- Returns true if this is the first time the player has encountered this
+-- item key (so callers can flag a "new!" badge). Idempotent on repeats.
+function DataService.MarkItemEncountered(player: Player, itemKey: string): boolean
+	local current = DataService.GetData(player)
+	if current.EncounteredItems[itemKey] then
+		return false
+	end
+	current.EncounteredItems[itemKey] = true
+	return true
+end
+
+function DataService.GetEncounteredItems(player: Player): { [string]: boolean }
+	local current = DataService.GetData(player)
+	return current.EncounteredItems
+end
+
+-- Tutorial gating helpers. `key` is something like "BackpackCheckpointGuide".
+function DataService.HasSeenTutorialKey(player: Player, key: string): boolean
+	local current = DataService.GetData(player)
+	return current.HasSeenTutorial[key] == true
+end
+
+function DataService.MarkTutorialSeen(player: Player, key: string)
+	local current = DataService.GetData(player)
+	current.HasSeenTutorial[key] = true
 end
 
 function DataService.NoteRunCompleted(player: Player, finalScore)
