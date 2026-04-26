@@ -9,7 +9,6 @@ local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
-local StarterGui = game:GetService("StarterGui")
 local UserInputService = game:GetService("UserInputService")
 
 local Modules = ReplicatedStorage:WaitForChild("Modules")
@@ -1105,27 +1104,17 @@ task.spawn(function()
 	if ok then applySnapshot(snap) end
 end)
 
--- After a successful purchase, briefly toggle the Backpack CoreGui so the
--- hotbar redraws and the new tool slot appears. Without this, catcher /
--- gear tools sit invisibly in the Backpack until something else (rod
--- swap, equipping a tool, respawn) forces the layout to refresh.
-local function nudgeHotbar()
-	pcall(function()
-		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, false)
-	end)
-	task.defer(function()
-		pcall(function()
-			StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, true)
-		end)
-	end)
-end
+-- Satchel listens to Backpack ChildAdded/ChildRemoved itself, so the
+-- hotbar updates the moment a purchased tool lands in the player's
+-- backpack. The old nudgeHotbar flickered the CoreGui Backpack to
+-- force the default hotbar to redraw — with Satchel that just
+-- re-enabled the default hotbar on top, double-stacking inventories.
 
 RemoteService.OnClientEvent("PurchaseResult", function(payload)
 	if type(payload) ~= "table" then return end
 	if payload.newCoins ~= nil then localState.coins = payload.newCoins end
 	if payload.newRodTier ~= nil then localState.rodTier = payload.newRodTier end
 	if activeShopGui then refreshAll() end
-	if payload.ok then nudgeHotbar() end
 	UIBuilder.Toast(payload.message or "", 3, payload.ok and "Success" or "Error")
 end)
 

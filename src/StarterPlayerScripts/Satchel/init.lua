@@ -442,8 +442,8 @@ local function MakeSlot(parent: Instance, initIndex: number?): GuiObject
 				local vp = Instance.new("ViewportFrame")
 				vp.Name = "PhishVpIcon"
 				vp.AnchorPoint = Vector2.new(0.5, 0.5)
-				vp.Position = UDim2.fromScale(0.5, 0.45)
-				vp.Size = UDim2.fromScale(0.86, 0.74)
+				vp.Position = UDim2.fromScale(0.5, 0.5)
+				vp.Size = UDim2.fromScale(0.9, 0.9)
 				vp.BackgroundTransparency = 1
 				vp.LightDirection = Vector3.new(-0.5, -1, -0.3)
 				vp.Ambient = Color3.fromRGB(170, 150, 130)
@@ -478,13 +478,17 @@ local function MakeSlot(parent: Instance, initIndex: number?): GuiObject
 				container.PrimaryPart = primary
 
 				if container.PrimaryPart then
-					container:PivotTo(CFrame.new(0, 0, 0))
-					local _, size = container:GetBoundingBox()
+					-- Pivot the model so the BOUNDING BOX center sits at the
+					-- world origin (model pivot != bbox center for assemblies
+					-- like welded boats / rods / fish), then look at origin.
+					local boundsCFrame, size = container:GetBoundingBox()
+					container:PivotTo(CFrame.new(-boundsCFrame.Position) * container:GetPivot())
+
 					local cam = Instance.new("Camera")
 					cam.FieldOfView = 35
 					local maxDim = math.max(size.X, size.Y, size.Z)
-					local distance = math.max(2.2, maxDim * 1.6)
-					cam.CFrame = CFrame.new(
+					local distance = math.max(2.2, maxDim * 1.55)
+					cam.CFrame = CFrame.lookAt(
 						Vector3.new(distance * 0.55, distance * 0.30, distance),
 						Vector3.zero
 					)

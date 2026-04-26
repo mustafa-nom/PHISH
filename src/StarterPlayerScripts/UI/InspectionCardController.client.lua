@@ -8,7 +8,7 @@
 -- email is longer than the visible area.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local StarterGui = game:GetService("StarterGui")
+local Players = game:GetService("Players")
 local RemoteService = require(ReplicatedStorage:WaitForChild("RemoteService"))
 local UIStyle = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("UIStyle"))
 local UIBuilder = require(script.Parent:WaitForChild("UIBuilder"))
@@ -16,14 +16,16 @@ local UIBuilder = require(script.Parent:WaitForChild("UIBuilder"))
 local screen = UIBuilder.GetScreenGui()
 local guiParent = screen.Parent  -- PlayerGui — the card lives here, not in PhishUI
 
--- Roblox's Backpack hotbar lives in CoreGui and renders above custom GUIs;
--- on shorter screens its tool slots overlap the bottom of the inspection
--- card and intercept clicks on KEEP / CUT BAIT. Hide it while the card is
--- up and restore it when the decision result clears.
+-- Hide Satchel's hotbar while the inspection card is up so its slots
+-- can't overlap KEEP / CUT BAIT and intercept clicks. The CoreGui
+-- Backpack is permanently disabled by Satchel; toggling it would just
+-- re-enable the default hotbar on top of Satchel.
 local function setBackpackHidden(hidden: boolean)
-	pcall(function()
-		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, not hidden)
-	end)
+	local pg = Players.LocalPlayer:FindFirstChild("PlayerGui")
+	local sg = pg and pg:FindFirstChild("BackpackGui")
+	if sg and sg:IsA("ScreenGui") then
+		sg.Enabled = not hidden
+	end
 end
 
 local function clearOld()
@@ -396,7 +398,6 @@ end)
 
 -- Defensive: if the player respawns mid-inspection, restore the hotbar so
 -- they aren't stuck without a rod tray.
-local Players = game:GetService("Players")
 local localPlayer = Players.LocalPlayer
 localPlayer.CharacterAdded:Connect(function()
 	setBackpackHidden(false)

@@ -4,7 +4,6 @@
 -- ShowInspectionCard. Optional Space/Enter when this panel is up for accessibility.
 
 local Players = game:GetService("Players")
-local StarterGui = game:GetService("StarterGui")
 local UserInputService = game:GetService("UserInputService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RemoteService = require(ReplicatedStorage:WaitForChild("RemoteService"))
@@ -23,10 +22,14 @@ local mainButton: TextButton? = nil
 local barFill: Frame? = nil
 local reelGui: ScreenGui? = nil
 
+-- Toggle Satchel's BackpackGui directly. Touching SetCoreGuiEnabled
+-- here would re-enable the default Roblox hotbar on top of Satchel.
 local function setBackpackHidden(hidden: boolean)
-	pcall(function()
-		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, not hidden)
-	end)
+	local pg = Players.LocalPlayer:FindFirstChild("PlayerGui")
+	local sg = pg and pg:FindFirstChild("BackpackGui")
+	if sg and sg:IsA("ScreenGui") then
+		sg.Enabled = not hidden
+	end
 end
 
 local function clearBar(restoreBackpack: boolean?)
