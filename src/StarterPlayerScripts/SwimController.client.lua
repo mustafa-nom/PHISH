@@ -13,7 +13,7 @@ local PhishConstants = require(ReplicatedStorage:WaitForChild("Modules"):WaitFor
 
 local player = Players.LocalPlayer
 
-local WATER_SURFACE_OFFSET = 0.6
+local WATER_SURFACE_OFFSET = -1.6
 local ACTIVATE_ABOVE_SURFACE = 4.25
 local RAYCAST_UP = 18
 local RAYCAST_DOWN = 42
