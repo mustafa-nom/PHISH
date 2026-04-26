@@ -114,6 +114,32 @@ The `[src/ReplicatedStorage/Modules/FishArt.lua](src/ReplicatedStorage/Modules/F
 3. Paste each numeric id into the matching slot in `[src/ReplicatedStorage/Modules/FishArt.lua](src/ReplicatedStorage/Modules/FishArt.lua)`. Plain integer; the module wraps it as `rbxassetid://<id>` automatically.
 4. Save, sync via Rojo, test by catching a fish — the top-right `NEW!` popup should display the sticker, and the Fish Index tile should switch from the 3D viewport to the 2D image.
 
+## Email avatar uploads (Inspection Card sender icons)
+
+The 34 generated PNGs in [assets/email_avatars/](assets/email_avatars/) (one per ScamCard sender) get uploaded to Roblox in one shot via [tools/upload_email_avatars.py](tools/upload_email_avatars.py). The script handles the Open Cloud API call, polls moderation, caches asset ids in `assets/email_avatars/upload_results.json`, and regenerates [src/ReplicatedStorage/Modules/SenderArt.lua](src/ReplicatedStorage/Modules/SenderArt.lua). `ScamCards.lua` reads from that module at load and populates `sender.avatarImage` for the inspection card.
+
+One-time setup:
+
+1. Create an Open Cloud API key at [create.roblox.com/dashboard/credentials](https://create.roblox.com/dashboard/credentials) with permissions **Asset → Read** and **Asset → Write**. Add the issuing IP (or `0.0.0.0/0` for hackathon ease) to the allowlist.
+2. Add the key to `.env`:
+   ```
+   ROBLOX_API_KEY=<paste here>
+   ```
+3. Find your numeric Roblox user id (or the group id, if uploads should be group-owned). Profile URL → the number after `/users/`.
+
+Run:
+
+```bash
+# user-owned uploads
+python3 tools/upload_email_avatars.py --user-id <userId>
+# or group-owned
+python3 tools/upload_email_avatars.py --group-id <groupId>
+```
+
+The script is idempotent — already-uploaded entries (matched by source PNG sha256) are skipped on re-runs. Pass `--force` to re-upload everything, `--dry-run` to preview, or `--regen-lua-only` to rewrite `SenderArt.lua` from the cache without hitting the API.
+
+After it finishes, sync via Rojo and catch a fish: the Inspection Card header should now show the per-sender avatar instead of the colored disc.
+
 ## Out of Scope (do not build in Studio)
 
 - Multiple ponds beyond Starter Cove

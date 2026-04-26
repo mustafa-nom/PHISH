@@ -1,0 +1,886 @@
+{
+  "ai_hallucination_001": {
+    "asset_id": "117345981305056",
+    "operation_id": "operations/5c988d91-e401-490c-a9ea-6c49a14f6aeb",
+    "raw": {
+      "assetId": "117345981305056",
+      "assetType": "Decal",
+      "creationContext": {
+        "creator": {
+          "userId": "10388904889"
+        }
+      },
+      "description": "Generated email avatar for ScamCard ai_hallucination_001",
+      "displayName": "PHISH email avatar - ai_hallucination_001",
+      "moderationResult": {
+        "moderationState": "Approved"
+      },
+      "path": "assets/117345981305056",
+      "revisionCreateTime": "2026-04-26T13:31:43.272460200Z",
+      "revisionId": "1",
+      "state": "Active"
+    },
+    "sha256": "ef5512a36fc3292e875068a16e98b02db0f5ecad8ea6ddd8044f564324d7a496",
+    "source_path": "assets/email_avatars/ai_hallucination_001__studybot-summary.png",
+    "status": "uploaded",
+    "uploaded_at": 1777210304
+  },
+  "ai_hallucination_002": {
+    "asset_id": "132860955474605",
+    "operation_id": "operations/92d4f825-d961-4ee9-9ede-22376afc1302",
+    "raw": {
+      "assetId": "132860955474605",
+      "assetType": "Decal",
+      "creationContext": {
+        "creator": {
+          "userId": "10388904889"
+        }
+      },
+      "description": "Generated email avatar for ScamCard ai_hallucination_002",
+      "displayName": "PHISH email avatar - ai_hallucination_002",
+      "moderationResult": {
+        "moderationState": "Approved"
+      },
+      "path": "assets/132860955474605",
+      "revisionCreateTime": "2026-04-26T13:31:43.718107800Z",
+      "revisionId": "1",
+      "state": "Active"
+    },
+    "sha256": "a6b26481c473e0e5eaad5aa4279ec4ca4f64ab395e49acdb6811edd1b7961a00",
+    "source_path": "assets/email_avatars/ai_hallucination_002__policy-assistant.png",
+    "status": "uploaded",
+    "uploaded_at": 1777210304
+  },
+  "legit_bank_001": {
+    "asset_id": "71307768734105",
+    "operation_id": "operations/af5345fa-b1de-437f-82d7-247bae50eaeb",
+    "raw": {
+      "assetId": "71307768734105",
+      "assetType": "Decal",
+      "creationContext": {
+        "creator": {
+          "userId": "10388904889"
+        }
+      },
+      "description": "Generated email avatar for ScamCard legit_bank_001",
+      "displayName": "PHISH email avatar - legit_bank_001",
+      "moderationResult": {
+        "moderationState": "Approved"
+      },
+      "path": "assets/71307768734105",
+      "revisionCreateTime": "2026-04-26T13:31:16.519651800Z",
+      "revisionId": "1",
+      "state": "Active"
+    },
+    "sha256": "c6614e90877a121261d0c7e96829f1d171ae6a07b42d7b318c999da10e8c5e6a",
+    "source_path": "assets/email_avatars/legit_bank_001__chase.png",
+    "status": "uploaded",
+    "uploaded_at": 1777210277
+  },
+  "legit_github_001": {
+    "asset_id": "106374546599872",
+    "operation_id": "operations/f3c56cd0-1285-4325-8806-1f3ef2ed2837",
+    "raw": {
+      "assetId": "106374546599872",
+      "assetType": "Decal",
+      "creationContext": {
+        "creator": {
+          "userId": "10388904889"
+        }
+      },
+      "description": "Generated email avatar for ScamCard legit_github_001",
+      "displayName": "PHISH email avatar - legit_github_001",
+      "moderationResult": {
+        "moderationState": "Approved"
+      },
+      "path": "assets/106374546599872",
+      "revisionCreateTime": "2026-04-26T13:31:11.674230800Z",
+      "revisionId": "1",
+      "state": "Active"
+    },
+    "sha256": "a953cc207e69da6a9d1dc54e45cdad4c8a6030a258bff1ab09ae8e11fbfcb082",
+    "source_path": "assets/email_avatars/legit_github_001__github.png",
+    "status": "uploaded",
+    "uploaded_at": 1777210272
+  },
+  "legit_kindness_001": {
+    "asset_id": "126200671321170",
+    "operation_id": "operations/a96b1716-1567-4690-9f6f-7beb8613eb95",
+    "raw": {
+      "assetId": "126200671321170",
+      "assetType": "Decal",
+      "creationContext": {
+        "creator": {
+          "userId": "10388904889"
+        }
+      },
+      "description": "Generated email avatar for ScamCard legit_kindness_001",
+      "displayName": "PHISH email avatar - legit_kindness_001",
+      "moderationResult": {
+        "moderationState": "Approved"
+      },
+      "path": "assets/126200671321170",
+      "revisionCreateTime": "2026-04-26T13:31:45.942607600Z",
+      "revisionId": "1",
+      "state": "Active"
+    },
+    "sha256": "8de06c85de91f67531ccaa366963062845dfb8912185b682f6c19f8be2830e95",
+    "source_path": "assets/email_avatars/legit_kindness_001__team-captain.png",
+    "status": "uploaded",
+    "uploaded_at": 1777210307
+  },
+  "legit_newsletter_001": {
+    "asset_id": "104118739702423",
+    "operation_id": "operations/b518090d-b3fe-431c-ba5d-587a6fb300b1",
+    "raw": {
+      "assetId": "104118739702423",
+      "assetType": "Decal",
+      "creationContext": {
+        "creator": {
+          "userId": "10388904889"
+        }
+      },
+      "description": "Generated email avatar for ScamCard legit_newsletter_001",
+      "displayName": "PHISH email avatar - legit_newsletter_001",
+      "moderationResult": {
+        "moderationState": "Approved"
+      },
+      "path": "assets/104118739702423",
+      "revisionCreateTime": "2026-04-26T13:31:30.313202Z",
+      "revisionId": "1",
+      "state": "Active"
+    },
+    "sha256": "d3aad32c9ac8db4fe52808eec238188b96d5fecf7cd0389dd9c16665b138fcc1",
+    "source_path": "assets/email_avatars/legit_newsletter_001__atlas-obscura.png",
+    "status": "uploaded",
+    "uploaded_at": 1777210291
+  },
+  "legit_recovery_001": {
+    "asset_id": "100022399094581",
+    "operation_id": "operations/173d39ef-46c7-4f10-a323-0373589530b3",
+    "raw": {
+      "assetId": "100022399094581",
+      "assetType": "Decal",
+      "creationContext": {
+        "creator": {
+          "userId": "10388904889"
+        }
+      },
+      "description": "Generated email avatar for ScamCard legit_recovery_001",
+      "displayName": "PHISH email avatar - legit_recovery_001",
+      "moderationResult": {
+        "moderationState": "Approved"
+      },
+      "path": "assets/100022399094581",
+      "revisionCreateTime": "2026-04-26T13:31:28.746242Z",
+      "revisionId": "1",
+      "state": "Active"
+    },
+    "sha256": "15224cbc0c3cbb3dc0a9a7a2f067de86cbb4d6ea7594f80bd6587da799443077",
+    "source_path": "assets/email_avatars/legit_recovery_001__github.png",
+    "status": "uploaded",
+    "uploaded_at": 1777210290
+  },
+  "legit_safety_report_001": {
+    "asset_id": "108380050709336",
+    "operation_id": "operations/5eb8151b-e27e-4e95-9dc8-3ad3a2bd3549",
+    "raw": {
+      "assetId": "108380050709336",
+      "assetType": "Decal",
+      "creationContext": {
+        "creator": {
+          "userId": "10388904889"
+        }
+      },
+      "description": "Generated email avatar for ScamCard legit_safety_report_001",
+      "displayName": "PHISH email avatar - legit_safety_report_001",
+      "moderationResult": {
+        "moderationState": "Approved"
+      },
+      "path": "assets/108380050709336",
+      "revisionCreateTime": "2026-04-26T13:31:46.314981500Z",
+      "revisionId": "1",
+      "state": "Active"
+    },
+    "sha256": "8fb6f7ff689fcbdd4883a33c67053197a0da939a3ddf4c54ec62862d46d62ae7",
+    "source_path": "assets/email_avatars/legit_safety_report_001__community-safety.png",
+    "status": "uploaded",
+    "uploaded_at": 1777210308
+  },
+  "legit_school_001": {
+    "asset_id": "75669684044237",
+    "operation_id": "operations/0674924c-ffe0-43cf-9e90-ddaea2e5f1b9",
+    "raw": {
+      "assetId": "75669684044237",
+      "assetType": "Decal",
+      "creationContext": {
+        "creator": {
+          "userId": "10388904889"
+        }
+      },
+      "description": "Generated email avatar for ScamCard legit_school_001",
+      "displayName": "PHISH email avatar - legit_school_001",
+      "moderationResult": {
+        "moderationState": "Approved"
+      },
+      "path": "assets/75669684044237",
+      "revisionCreateTime": "2026-04-26T13:31:20.238639800Z",
+      "revisionId": "1",
+      "state": "Active"
+    },
+    "sha256": "f6d7ce418cbca442107269f888a824f61b15f4eeadf8abb1904c8bc3f4209ef2",
+    "source_path": "assets/email_avatars/legit_school_001__roosevelt-middle-school.png",
+    "status": "uploaded",
+    "uploaded_at": 1777210281
+  },
+  "legit_shipping_001": {
+    "asset_id": "74375501978786",
+    "operation_id": "operations/948a2980-2a9a-4eef-b0f0-2be29135504d",
+    "raw": {
+      "assetId": "74375501978786",
+      "assetType": "Decal",
+      "creationContext": {
+        "creator": {
+          "userId": "10388904889"
+        }
+      },
+      "description": "Generated email avatar for ScamCard legit_shipping_001",
+      "displayName": "PHISH email avatar - legit_shipping_001",
+      "moderationResult": {
+        "moderationState": "Approved"
+      },
+      "path": "assets/74375501978786",
+      "revisionCreateTime": "2026-04-26T13:31:20.014016100Z",
+      "revisionId": "1",
+      "state": "Active"
+    },
+    "sha256": "ca65fd46d6641579931ee66ce304a0c2a7185ecabc8bfea3322297130f865559",
+    "source_path": "assets/email_avatars/legit_shipping_001__ups.png",
+    "status": "uploaded",
+    "uploaded_at": 1777210281
+  },
+  "mod_imposter_001": {
+    "asset_id": "97155104323912",
+    "operation_id": "operations/96092fa7-dc6f-43d2-b4f6-5eb556740be5",
+    "raw": {
+      "assetId": "97155104323912",
+      "assetType": "Decal",
+      "creationContext": {
+        "creator": {
+          "userId": "10388904889"
+        }
+      },
+      "description": "Generated email avatar for ScamCard mod_imposter_001",
+      "displayName": "PHISH email avatar - mod_imposter_001",
+      "moderationResult": {
+        "moderationState": "Approved"
+      },
+      "path": "assets/97155104323912",
+      "revisionCreateTime": "2026-04-26T13:31:42.610421800Z",
+      "revisionId": "1",
+      "state": "Active"
+    },
+    "sha256": "33aa38aca350257fbd42fffbe4ac61671fa2cd1e5af8037b9652630e3386b850",
+    "source_path": "assets/email_avatars/mod_imposter_001__game-moderator.png",
+    "status": "uploaded",
+    "uploaded_at": 1777210303
+  },
+  "mod_imposter_002": {
+    "asset_id": "140005444261885",
+    "operation_id": "operations/3a3ecdb6-8fb7-4602-b335-c7e33f93afa9",
+    "raw": {
+      "assetId": "140005444261885",
+      "assetType": "Decal",
+      "creationContext": {
+        "creator": {
+          "userId": "10388904889"
+        }
+      },
+      "description": "Generated email avatar for ScamCard mod_imposter_002",
+      "displayName": "PHISH email avatar - mod_imposter_002",
+      "moderationResult": {
+        "moderationState": "Approved"
+      },
+      "path": "assets/140005444261885",
+      "revisionCreateTime": "2026-04-26T13:31:42.924205600Z",
+      "revisionId": "1",
+      "state": "Active"
+    },
+    "sha256": "1d1272933ed34b6d17500f9250db72580dd1daeb1ac8ae5448d10c0d31c7da70",
+    "source_path": "assets/email_avatars/mod_imposter_002__discord-trust-team.png",
+    "status": "uploaded",
+    "uploaded_at": 1777210306
+  },
+  "phish_authority_001": {
+    "asset_id": "123497204724045",
+    "operation_id": "operations/cf2af3be-246d-4ec8-a892-7ab4c8c5a8ab",
+    "raw": {
+      "assetId": "123497204724045",
+      "assetType": "Decal",
+      "creationContext": {
+        "creator": {
+          "userId": "10388904889"
+        }
+      },
+      "description": "Generated email avatar for ScamCard phish_authority_001",
+      "displayName": "PHISH email avatar - phish_authority_001",
+      "moderationResult": {
+        "moderationState": "Approved"
+      },
+      "path": "assets/123497204724045",
+      "revisionCreateTime": "2026-04-26T13:31:11.896314900Z",
+      "revisionId": "1",
+      "state": "Active"
+    },
+    "sha256": "1148e4d20bfe6ef8dccd19fe0edaf63292b5d70c5b7a0d0a8c54d979540715d9",
+    "source_path": "assets/email_avatars/phish_authority_001__irs-tax-department.png",
+    "status": "uploaded",
+    "uploaded_at": 1777210273
+  },
+  "phish_authority_002": {
+    "asset_id": "94683866232483",
+    "operation_id": "operations/1d5e9d15-4a3f-4efb-9b33-dcdec6a09feb",
+    "raw": {
+      "assetId": "94683866232483",
+      "assetType": "Decal",
+      "creationContext": {
+        "creator": {
+          "userId": "10388904889"
+        }
+      },
+      "description": "Generated email avatar for ScamCard phish_authority_002",
+      "displayName": "PHISH email avatar - phish_authority_002",
+      "moderationResult": {
+        "moderationState": "Approved"
+      },
+      "path": "assets/94683866232483",
+      "revisionCreateTime": "2026-04-26T13:31:24.900203400Z",
+      "revisionId": "1",
+      "state": "Active"
+    },
+    "sha256": "ce4605e1e2a80040bc7cd9c74dcd35a9cffff8532491e12a255edc250d0c9abd",
+    "source_path": "assets/email_avatars/phish_authority_002__fbi-cyber-division.png",
+    "status": "uploaded",
+    "uploaded_at": 1777210287
+  },
+  "phish_authority_003": {
+    "asset_id": "112251390359252",
+    "operation_id": "operations/fc0a2106-be50-40f4-951d-a978ffb4c3ce",
+    "raw": {
+      "assetId": "112251390359252",
+      "assetType": "Decal",
+      "creationContext": {
+        "creator": {
+          "userId": "10388904889"
+        }
+      },
+      "description": "Generated email avatar for ScamCard phish_authority_003",
+      "displayName": "PHISH email avatar - phish_authority_003",
+      "moderationResult": {
+        "moderationState": "Approved"
+      },
+      "path": "assets/112251390359252",
+      "revisionCreateTime": "2026-04-26T13:31:24.722233800Z",
+      "revisionId": "1",
+      "state": "Active"
+    },
+    "sha256": "659fa997d378b0104e45d1000f16806cea44cf202db46523331914fa86ec6968",
+    "source_path": "assets/email_avatars/phish_authority_003__roblox-moderator.png",
+    "status": "uploaded",
+    "uploaded_at": 1777210285
+  },
+  "phish_authority_004": {
+    "asset_id": "122765339922740",
+    "operation_id": "operations/c272f712-00bf-42c2-8f2e-b2c022fcdb94",
+    "raw": {
+      "assetId": "122765339922740",
+      "assetType": "Decal",
+      "creationContext": {
+        "creator": {
+          "userId": "10388904889"
+        }
+      },
+      "description": "Generated email avatar for ScamCard phish_authority_004",
+      "displayName": "PHISH email avatar - phish_authority_004",
+      "moderationResult": {
+        "moderationState": "Approved"
+      },
+      "path": "assets/122765339922740",
+      "revisionCreateTime": "2026-04-26T13:31:34.040630100Z",
+      "revisionId": "1",
+      "state": "Active"
+    },
+    "sha256": "ba894df8d12743ce70bd2f574e582e4e6dfb4ae409581ce1071e8eb6b647ec32",
+    "source_path": "assets/email_avatars/phish_authority_004__school-it-helpdesk.png",
+    "status": "uploaded",
+    "uploaded_at": 1777210294
+  },
+  "phish_crypto_001": {
+    "asset_id": "131641763089978",
+    "operation_id": "operations/616eac4e-536b-4a02-84e5-053ae370ecf6",
+    "raw": {
+      "assetId": "131641763089978",
+      "assetType": "Decal",
+      "creationContext": {
+        "creator": {
+          "userId": "10388904889"
+        }
+      },
+      "description": "Generated email avatar for ScamCard phish_crypto_001",
+      "displayName": "PHISH email avatar - phish_crypto_001",
+      "moderationResult": {
+        "moderationState": "Approved"
+      },
+      "path": "assets/131641763089978",
+      "revisionCreateTime": "2026-04-26T13:31:37.152409600Z",
+      "revisionId": "1",
+      "state": "Active"
+    },
+    "sha256": "079a81a6cb67155290719cb16f641a2e4aaefc0dce1e8ca19b943344c7949839",
+    "source_path": "assets/email_avatars/phish_crypto_001__wallet-support.png",
+    "status": "uploaded",
+    "uploaded_at": 1777210298
+  },
+  "phish_curiosity_001": {
+    "asset_id": "116529994668565",
+    "operation_id": "operations/69cf2508-0a4b-4b02-9907-f66d6a9e1cd7",
+    "raw": {
+      "assetId": "116529994668565",
+      "assetType": "Decal",
+      "creationContext": {
+        "creator": {
+          "userId": "10388904889"
+        }
+      },
+      "description": "Generated email avatar for ScamCard phish_curiosity_001",
+      "displayName": "PHISH email avatar - phish_curiosity_001",
+      "moderationResult": {
+        "moderationState": "Approved"
+      },
+      "path": "assets/116529994668565",
+      "revisionCreateTime": "2026-04-26T13:31:15.999899300Z",
+      "revisionId": "1",
+      "state": "Active"
+    },
+    "sha256": "8268dcbbb5232b96906be29607d066d650b6c6c4a10a8343d43b9f72a93789a6",
+    "source_path": "assets/email_avatars/phish_curiosity_001__notification.png",
+    "status": "uploaded",
+    "uploaded_at": 1777210277
+  },
+  "phish_curiosity_002": {
+    "asset_id": "100297446457233",
+    "operation_id": "operations/37811a11-f770-40c1-9b1d-094fe28acffe",
+    "raw": {
+      "assetId": "100297446457233",
+      "assetType": "Decal",
+      "creationContext": {
+        "creator": {
+          "userId": "10388904889"
+        }
+      },
+      "description": "Generated email avatar for ScamCard phish_curiosity_002",
+      "displayName": "PHISH email avatar - phish_curiosity_002",
+      "moderationResult": {
+        "moderationState": "Approved"
+      },
+      "path": "assets/100297446457233",
+      "revisionCreateTime": "2026-04-26T13:31:25.344756500Z",
+      "revisionId": "1",
+      "state": "Active"
+    },
+    "sha256": "0f2e9b31f10557ec233694a0f3f7c70bd38c88e719570c3f0a1bff75334c2c45",
+    "source_path": "assets/email_avatars/phish_curiosity_002__photo-tag-notice.png",
+    "status": "uploaded",
+    "uploaded_at": 1777210286
+  },
+  "phish_familiarity_001": {
+    "asset_id": "94956415728037",
+    "operation_id": "operations/b46b8b50-9e65-4da1-9f9e-3022ed94ce6a",
+    "raw": {
+      "assetId": "94956415728037",
+      "assetType": "Decal",
+      "creationContext": {
+        "creator": {
+          "userId": "10388904889"
+        }
+      },
+      "description": "Generated email avatar for ScamCard phish_familiarity_001",
+      "displayName": "PHISH email avatar - phish_familiarity_001",
+      "moderationResult": {
+        "moderationState": "Approved"
+      },
+      "path": "assets/94956415728037",
+      "revisionCreateTime": "2026-04-26T13:31:15.575837100Z",
+      "revisionId": "1",
+      "state": "Active"
+    },
+    "sha256": "00a37ada93d232974406a8c1827f159362eb145ad4851d79604bd61c3c4968fe",
+    "source_path": "assets/email_avatars/phish_familiarity_001__mom.png",
+    "status": "uploaded",
+    "uploaded_at": 1777210277
+  },
+  "phish_familiarity_002": {
+    "asset_id": "81859345607247",
+    "operation_id": "operations/a020a0ce-c552-4392-bc90-5073fade898e",
+    "raw": {
+      "assetId": "81859345607247",
+      "assetType": "Decal",
+      "creationContext": {
+        "creator": {
+          "userId": "10388904889"
+        }
+      },
+      "description": "Generated email avatar for ScamCard phish_familiarity_002",
+      "displayName": "PHISH email avatar - phish_familiarity_002",
+      "moderationResult": {
+        "moderationState": "Approved"
+      },
+      "path": "assets/81859345607247",
+      "revisionCreateTime": "2026-04-26T13:31:29.724939800Z",
+      "revisionId": "1",
+      "state": "Active"
+    },
+    "sha256": "66ad7a6521fd2a8f9f7b22b22cfa12e7945409d9cf29ccc42514951c2534bc50",
+    "source_path": "assets/email_avatars/phish_familiarity_002__jordan.png",
+    "status": "uploaded",
+    "uploaded_at": 1777210290
+  },
+  "phish_fear_001": {
+    "asset_id": "113114385103935",
+    "operation_id": "operations/ce68c36d-4b68-4f44-b791-c78bf8e55855",
+    "raw": {
+      "assetId": "113114385103935",
+      "assetType": "Decal",
+      "creationContext": {
+        "creator": {
+          "userId": "10388904889"
+        }
+      },
+      "description": "Generated email avatar for ScamCard phish_fear_001",
+      "displayName": "PHISH email avatar - phish_fear_001",
+      "moderationResult": {
+        "moderationState": "Approved"
+      },
+      "path": "assets/113114385103935",
+      "revisionCreateTime": "2026-04-26T13:31:16.358302200Z",
+      "revisionId": "1",
+      "state": "Active"
+    },
+    "sha256": "18a29fa8f5281da5b2e0227ce44af2e86e0a20bda6d55eb6d1eec78ef01a799d",
+    "source_path": "assets/email_avatars/phish_fear_001__microsoft-account-team.png",
+    "status": "uploaded",
+    "uploaded_at": 1777210277
+  },
+  "phish_fear_002": {
+    "asset_id": "136053993290681",
+    "operation_id": "operations/74bac0fe-0c81-4ec9-bed1-93af53b3d5ff",
+    "raw": {
+      "assetId": "136053993290681",
+      "assetType": "Decal",
+      "creationContext": {
+        "creator": {
+          "userId": "10388904889"
+        }
+      },
+      "description": "Generated email avatar for ScamCard phish_fear_002",
+      "displayName": "PHISH email avatar - phish_fear_002",
+      "moderationResult": {
+        "moderationState": "Approved"
+      },
+      "path": "assets/136053993290681",
+      "revisionCreateTime": "2026-04-26T13:31:29.204566Z",
+      "revisionId": "1",
+      "state": "Active"
+    },
+    "sha256": "d24f99075fb8d38c973004d28a65fb68e6b9d69079c702e37d3353f00916fe0b",
+    "source_path": "assets/email_avatars/phish_fear_002__icloud-security.png",
+    "status": "uploaded",
+    "uploaded_at": 1777210290
+  },
+  "phish_payroll_001": {
+    "asset_id": "90050623557001",
+    "operation_id": "operations/907fecd1-15e2-4641-950c-edeec5a0e917",
+    "raw": {
+      "assetId": "90050623557001",
+      "assetType": "Decal",
+      "creationContext": {
+        "creator": {
+          "userId": "10388904889"
+        }
+      },
+      "description": "Generated email avatar for ScamCard phish_payroll_001",
+      "displayName": "PHISH email avatar - phish_payroll_001",
+      "moderationResult": {
+        "moderationState": "Approved"
+      },
+      "path": "assets/90050623557001",
+      "revisionCreateTime": "2026-04-26T13:31:34.677410500Z",
+      "revisionId": "1",
+      "state": "Active"
+    },
+    "sha256": "72ea009f0be87f82caa660e2bf2b64a711ea5424ff086b735a6f767557390c61",
+    "source_path": "assets/email_avatars/phish_payroll_001__payroll-portal.png",
+    "status": "uploaded",
+    "uploaded_at": 1777210295
+  },
+  "phish_qr_001": {
+    "asset_id": "95255706028774",
+    "operation_id": "operations/7a84d159-88dc-4561-a45b-7875afc01c32",
+    "raw": {
+      "assetId": "95255706028774",
+      "assetType": "Decal",
+      "creationContext": {
+        "creator": {
+          "userId": "10388904889"
+        }
+      },
+      "description": "Generated email avatar for ScamCard phish_qr_001",
+      "displayName": "PHISH email avatar - phish_qr_001",
+      "moderationResult": {
+        "moderationState": "Approved"
+      },
+      "path": "assets/95255706028774",
+      "revisionCreateTime": "2026-04-26T13:31:37.607724300Z",
+      "revisionId": "1",
+      "state": "Active"
+    },
+    "sha256": "73068d91cfc7105cdbbed5f848bf0a950fe41ec34e124516ff43ab350814ba24",
+    "source_path": "assets/email_avatars/phish_qr_001__parking-office.png",
+    "status": "uploaded",
+    "uploaded_at": 1777210298
+  },
+  "phish_reward_001": {
+    "asset_id": "98725954456590",
+    "operation_id": "operations/24f4ce42-fb25-49cd-ae9a-67fb1e98539c",
+    "raw": {
+      "assetId": "98725954456590",
+      "assetType": "Decal",
+      "creationContext": {
+        "creator": {
+          "userId": "10388904889"
+        }
+      },
+      "description": "Generated email avatar for ScamCard phish_reward_001",
+      "displayName": "PHISH email avatar - phish_reward_001",
+      "moderationResult": {
+        "moderationState": "Approved"
+      },
+      "path": "assets/98725954456590",
+      "revisionCreateTime": "2026-04-26T13:31:11.520880300Z",
+      "revisionId": "1",
+      "state": "Active"
+    },
+    "sha256": "0e4245b48556d5fbcfdfe8709dc2ce7a62a6770302fac66061fba6dfd1ccacc1",
+    "source_path": "assets/email_avatars/phish_reward_001__apple-rewards.png",
+    "status": "uploaded",
+    "uploaded_at": 1777210272
+  },
+  "phish_reward_002": {
+    "asset_id": "139001001297953",
+    "operation_id": "operations/01e47b19-ea5a-41cb-a91e-c40157bf1c42",
+    "raw": {
+      "assetId": "139001001297953",
+      "assetType": "Decal",
+      "creationContext": {
+        "creator": {
+          "userId": "10388904889"
+        }
+      },
+      "description": "Generated email avatar for ScamCard phish_reward_002",
+      "displayName": "PHISH email avatar - phish_reward_002",
+      "moderationResult": {
+        "moderationState": "Approved"
+      },
+      "path": "assets/139001001297953",
+      "revisionCreateTime": "2026-04-26T13:31:24.270188200Z",
+      "revisionId": "1",
+      "state": "Active"
+    },
+    "sha256": "8ad3a93c8eb94b45247943682cd76b9eabbf1ac07489c5b260cfb334217b5afd",
+    "source_path": "assets/email_avatars/phish_reward_002__roblox-rewards.png",
+    "status": "uploaded",
+    "uploaded_at": 1777210285
+  },
+  "phish_shared_doc_001": {
+    "asset_id": "114954893894383",
+    "operation_id": "operations/750169a0-f332-4a34-a03d-2bcd31b109d6",
+    "raw": {
+      "assetId": "114954893894383",
+      "assetType": "Decal",
+      "creationContext": {
+        "creator": {
+          "userId": "10388904889"
+        }
+      },
+      "description": "Generated email avatar for ScamCard phish_shared_doc_001",
+      "displayName": "#########################################",
+      "moderationResult": {
+        "moderationState": "Approved"
+      },
+      "path": "assets/114954893894383",
+      "revisionCreateTime": "2026-04-26T13:31:34.143328900Z",
+      "revisionId": "1",
+      "state": "Active"
+    },
+    "sha256": "349142122a76b8bed395b1c3fad4f2b6a1aaa4d2b169ddf28393bd9d2663e75c",
+    "source_path": "assets/email_avatars/phish_shared_doc_001__google-docs.png",
+    "status": "uploaded",
+    "uploaded_at": 1777210295
+  },
+  "phish_spear_001": {
+    "asset_id": "83588614793034",
+    "operation_id": "operations/b4a32c9b-0cb7-43f8-ad09-9afcb4e9d8c8",
+    "raw": {
+      "assetId": "83588614793034",
+      "assetType": "Decal",
+      "creationContext": {
+        "creator": {
+          "userId": "10388904889"
+        }
+      },
+      "description": "Generated email avatar for ScamCard phish_spear_001",
+      "displayName": "PHISH email avatar - phish_spear_001",
+      "moderationResult": {
+        "moderationState": "Approved"
+      },
+      "path": "assets/83588614793034",
+      "revisionCreateTime": "2026-04-26T13:31:33.704683100Z",
+      "revisionId": "1",
+      "state": "Active"
+    },
+    "sha256": "94cf547b55a063d98bbcb37fbeac975c9ac5aa31ad3bfa7775bcb9f1075b8a24",
+    "source_path": "assets/email_avatars/phish_spear_001__maya-from-robotics.png",
+    "status": "uploaded",
+    "uploaded_at": 1777210294
+  },
+  "phish_urgency_001": {
+    "asset_id": "138254460801225",
+    "operation_id": "operations/dc8ccd8f-7781-4c95-8c0e-568616e9924a",
+    "raw": {
+      "assetId": "138254460801225",
+      "assetType": "Decal",
+      "creationContext": {
+        "creator": {
+          "userId": "10388904889"
+        }
+      },
+      "description": "Generated email avatar for ScamCard phish_urgency_001",
+      "displayName": "PHISH email avatar - phish_urgency_001",
+      "moderationResult": {
+        "moderationState": "Approved"
+      },
+      "path": "assets/138254460801225",
+      "revisionCreateTime": "2026-04-26T13:31:12.227554800Z",
+      "revisionId": "1",
+      "state": "Active"
+    },
+    "sha256": "39dd596b7a1246b08e6446a2b04c0a6f3f6143e831964451ae6e830a9b592c78",
+    "source_path": "assets/email_avatars/phish_urgency_001__netflix-billing.png",
+    "status": "uploaded",
+    "uploaded_at": 1777210273
+  },
+  "phish_urgency_002": {
+    "asset_id": "108128936297124",
+    "operation_id": "operations/d068ed64-e64a-40f0-96bd-2f63acc87124",
+    "raw": {
+      "assetId": "108128936297124",
+      "assetType": "Decal",
+      "creationContext": {
+        "creator": {
+          "userId": "10388904889"
+        }
+      },
+      "description": "Generated email avatar for ScamCard phish_urgency_002",
+      "displayName": "PHISH email avatar - phish_urgency_002",
+      "moderationResult": {
+        "moderationState": "Approved"
+      },
+      "path": "assets/108128936297124",
+      "revisionCreateTime": "2026-04-26T13:31:19.413119800Z",
+      "revisionId": "1",
+      "state": "Active"
+    },
+    "sha256": "7d7c6399ad27971f8483412bcca6e8d449a1ebe7666686f491126fcb81be8b95",
+    "source_path": "assets/email_avatars/phish_urgency_002__amazon-support.png",
+    "status": "uploaded",
+    "uploaded_at": 1777210281
+  },
+  "phish_urgency_003": {
+    "asset_id": "96995755203685",
+    "operation_id": "operations/79603be7-be9f-4c05-8f8f-a97127229363",
+    "raw": {
+      "assetId": "96995755203685",
+      "assetType": "Decal",
+      "creationContext": {
+        "creator": {
+          "userId": "10388904889"
+        }
+      },
+      "description": "Generated email avatar for ScamCard phish_urgency_003",
+      "displayName": "PHISH email avatar - phish_urgency_003",
+      "moderationResult": {
+        "moderationState": "Approved"
+      },
+      "path": "assets/96995755203685",
+      "revisionCreateTime": "2026-04-26T13:31:20.599761200Z",
+      "revisionId": "1",
+      "state": "Active"
+    },
+    "sha256": "c98595575d4d085a33754beb2a622cf9441bbbba82dbb1e6420b0fe5aef6f20d",
+    "source_path": "assets/email_avatars/phish_urgency_003__cloudflare-dns.png",
+    "status": "uploaded",
+    "uploaded_at": 1777210281
+  },
+  "rumor_health_001": {
+    "asset_id": "127857796034010",
+    "operation_id": "operations/0d734013-f365-4746-9c9e-f53e98adf339",
+    "raw": {
+      "assetId": "127857796034010",
+      "assetType": "Decal",
+      "creationContext": {
+        "creator": {
+          "userId": "10388904889"
+        }
+      },
+      "description": "Generated email avatar for ScamCard rumor_health_001",
+      "displayName": "PHISH email avatar - rumor_health_001",
+      "moderationResult": {
+        "moderationState": "Approved"
+      },
+      "path": "assets/127857796034010",
+      "revisionCreateTime": "2026-04-26T13:31:39.151815400Z",
+      "revisionId": "1",
+      "state": "Active"
+    },
+    "sha256": "d8543e89b1de453ac49910879ab3b5e69fff501f1a52fb613468ab6b1ec1b60f",
+    "source_path": "assets/email_avatars/rumor_health_001__wellness-alert.png",
+    "status": "uploaded",
+    "uploaded_at": 1777210300
+  },
+  "rumor_school_001": {
+    "asset_id": "118133709568401",
+    "operation_id": "operations/61ff17c9-817a-4fad-a3d0-7452b904899a",
+    "raw": {
+      "assetId": "118133709568401",
+      "assetType": "Decal",
+      "creationContext": {
+        "creator": {
+          "userId": "10388904889"
+        }
+      },
+      "description": "Generated email avatar for ScamCard rumor_school_001",
+      "displayName": "PHISH email avatar - rumor_school_001",
+      "moderationResult": {
+        "moderationState": "Approved"
+      },
+      "path": "assets/118133709568401",
+      "revisionCreateTime": "2026-04-26T13:31:38.660567600Z",
+      "revisionId": "1",
+      "state": "Active"
+    },
+    "sha256": "07aa1277e1f3d02506c58ba85476d4d67f55ffc3211e5218dc7e1b6192f28878",
+    "source_path": "assets/email_avatars/rumor_school_001__group-chat-forward.png",
+    "status": "uploaded",
+    "uploaded_at": 1777210299
+  }
+}

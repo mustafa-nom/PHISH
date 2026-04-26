@@ -3,6 +3,9 @@
 -- + 4 quick stubs to fill the rotation; expand from the markdown to reach 20).
 -- Server-only knowledge of `isLegit` — server is authoritative on the decision.
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local SenderArt = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("SenderArt"))
+
 export type Link = { displayText: string, trueUrl: string }
 export type Sender = { name: string, address: string, avatarColor: Color3, avatarImage: string? }
 export type RedFlag = { element: string, reason: string }
@@ -507,6 +510,15 @@ function ScamCards.GetById(id: string): ScamCard?
 		if c.id == id then return c end
 	end
 	return nil
+end
+
+-- populate sender.avatarImage from uploaded Roblox decals (codegen'd by
+-- tools/upload_email_avatars.py). missing ids fall back to the avatarColor disc.
+for _, card in ipairs(ScamCards.All) do
+	local image = SenderArt.Get(card.id)
+	if image then
+		card.sender.avatarImage = image
+	end
 end
 
 return ScamCards
