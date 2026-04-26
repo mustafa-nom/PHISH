@@ -33,11 +33,13 @@ function ScoringService.AddMistake(round, reason: string?)
 	})
 end
 
-function ScoringService.AddTrustPoints(round, amount: number, reason: string?)
+function ScoringService.AddTrustPoints(round, amount: number, reason: string?, multiplier: number?)
 	if not round or not round.IsActive then
 		return
 	end
-	round.TrustPoints += amount
+	local mult = multiplier or 1.0
+	local scaled = math.floor(amount * mult)
+	round.TrustPoints += scaled
 	round.Streak += 1
 	if round.Streak > 1 then
 		round.TrustPoints += ScoringConfig.TrustStreakBonus
@@ -45,9 +47,24 @@ function ScoringService.AddTrustPoints(round, amount: number, reason: string?)
 	pushScoreUpdate(round)
 	RemoteService.FirePair(round, "ExplorerFeedback", {
 		Kind = "Trust",
-		Amount = amount,
+		Amount = scaled,
+		BaseAmount = amount,
+		Multiplier = mult,
+		Streak = round.Streak,
 		Reason = reason,
 	})
+end
+
+-- Halve (or otherwise reduce) the active combo. Used by Veto so the combo
+-- "costs" something without nuking the run. Streak floor is 0; we don't fire
+-- a mistake event because the player didn't make a mistake — they spent a
+-- tool on purpose.
+function ScoringService.ReduceStreak(round, divisor: number?)
+	if not round or not round.IsActive then return end
+	local d = divisor or 2
+	if d < 1 then d = 1 end
+	round.Streak = math.floor((round.Streak or 0) / d)
+	pushScoreUpdate(round)
 end
 
 function ScoringService.NoteLevelStart(round, levelType: string)
@@ -72,12 +89,11 @@ function ScoringService.NoteLevelComplete(round, levelType: string)
 end
 
 function ScoringService.CalculateFinalScore(round): { [string]: any }
-	local failed = round.LevelState.FailedRun == true
 	local total = round.TrustPoints - (round.Mistakes * ScoringConfig.MistakePenalty)
 	if total < 0 then
 		total = 0
 	end
-	local rank = failed and nil or ScoringConfig.RankFromScore(total)
+	local rank = ScoringConfig.RankFromScore(total)
 	local elapsed = os.clock() - round.StartedAt
 	local perfectLevels = 0
 	local levelBreakdown = {}
@@ -97,7 +113,6 @@ function ScoringService.CalculateFinalScore(round): { [string]: any }
 		RoundId = round.RoundId,
 		TotalScore = total,
 		Rank = rank,
-		Failed = failed,
 		Mistakes = round.Mistakes,
 		Elapsed = elapsed,
 		TrustPoints = round.TrustPoints,

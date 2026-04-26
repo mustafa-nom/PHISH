@@ -31,6 +31,35 @@ ScoringConfig.RankThresholds = {
 
 ScoringConfig.RankOrder = { "Perfect", "Gold", "Silver", "Bronze" }
 
+-- Backpack Checkpoint combo multipliers per BACKPACK_CHECKPOINT_PRD_V1_POLISHED.md.
+-- Streak thresholds (post-increment): 3 → ×1.5, 5 → ×2.0. 10+ marks the run as
+-- a Perfect-Trust-Run candidate but the multiplier ceiling stays at ×2.0.
+-- Multiplier applies ONLY to per-sort base trust points; level-completion and
+-- perfect-level bonuses are not multiplied.
+ScoringConfig.ComboMultipliers = {
+	{ Streak = 5, Multiplier = 2.0 },
+	{ Streak = 3, Multiplier = 1.5 },
+}
+ScoringConfig.PerfectTrustRunStreak = 10
+
+-- Veto cost: combo divisor (Streak = floor(Streak / divisor)). Per addendum
+-- default — change after playtest.
+ScoringConfig.VetoComboDivisor = 2
+
+-- Mini-Boss "wrong call ends the round" threshold. Below this, a wrong inner
+-- sort is a normal mistake; at or above, the round ends with MiniBossFail.
+ScoringConfig.MiniBossFailStreakThreshold = 5
+ScoringConfig.MiniBossSuccessBonus = 400
+
+function ScoringConfig.GetComboMultiplier(streak: number): number
+	for _, tier in ipairs(ScoringConfig.ComboMultipliers) do
+		if streak >= tier.Streak then
+			return tier.Multiplier
+		end
+	end
+	return 1.0
+end
+
 -- Trust Seeds awarded by rank.
 ScoringConfig.TrustSeedsByRank = {
 	Perfect = Constants.SEEDS_BASE_FINISH + Constants.SEEDS_BONUS_PERFECT,
