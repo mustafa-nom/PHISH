@@ -8,8 +8,6 @@
 
 local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local Workspace = game:GetService("Workspace")
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local PhishConstants = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("PhishConstants"))
@@ -115,7 +113,6 @@ local dockSnapshots: { PartSnapshot } = {}
 
 local function snapshotModel(model: Model): ModelSnapshot?
 	if not model.PrimaryPart then
-		-- Try to set one from the boat hull, if tagged.
 		for _, p in ipairs(model:GetDescendants()) do
 			if p:IsA("BasePart") and CollectionService:HasTag(p, BOAT_HULL_TAG) then
 				model.PrimaryPart = p
@@ -162,22 +159,19 @@ end
 local function resetBoat()
 	local snap = boatSnapshot
 	if not snap or not snap.model.Parent then return end
-
-	-- Stop any motion before teleporting; otherwise PivotTo can fight live
-	-- velocity and the boat slides off again next frame.
-	for _, ps in ipairs(snap.parts) do
-		if ps.part.Parent then
-			ps.part.AssemblyLinearVelocity = Vector3.zero
-			ps.part.AssemblyAngularVelocity = Vector3.zero
-		end
-	end
+	-- The boat is kinematic (anchored hull, parts welded). PivotTo is the
+	-- correct primitive — it preserves the welded rig's relative geometry
+	-- and we don't need to mess with per-part CFrames or velocities.
 	snap.model:PivotTo(snap.pivot)
-	-- Re-apply each part's snapshot CFrame in case of accumulated drift on
-	-- unanchored decorations (rails, sterns).
-	for _, ps in ipairs(snap.parts) do
-		if ps.part.Parent then
-			ps.part.CFrame = ps.cframe
-			ps.part.Anchored = ps.anchored
+	-- Tell RowboatService to re-record the locked Y in case spawn pose
+	-- differs from the snapshot moment for any reason.
+	local hull = snap.model.PrimaryPart
+	if hull then
+		local ok, RowboatService = pcall(function()
+			return require(script.Parent:WaitForChild("RowboatService"))
+		end)
+		if ok and RowboatService and RowboatService.RelockY then
+			RowboatService.RelockY(hull)
 		end
 	end
 end
@@ -195,90 +189,6 @@ local function resetMap()
 	resetDock()
 end
 
--- ---------------------------------------------------------------------------
--- 3. Boat hovercraft pin. Water tiles are CanCollide=false (so players can
---    swim through), which means an unanchored boat hull falls straight
---    through them. Force-based buoyancy proved finicky (forces fight the
---    VehicleSeat), so we use the original RowboatService's hovercraft
---    approach: every Heartbeat, snap the hull's Y to the water surface
---    while leaving X / Z free for the VehicleSeat to drive.
---
---    One pin per assembly (deduped by AssemblyRootPart).
--- ---------------------------------------------------------------------------
-
-local HOVER_OFFSET = -0.1             -- hull bottom sits this far below water
-local HOVER_RAYCAST_UP = 16
-local HOVER_RAYCAST_DOWN = 40
-
-local hullParts: { [BasePart]: boolean } = {}
-
-local function bindHull(inst: Instance)
-	if inst:IsA("BasePart") then
-		hullParts[inst] = true
-	end
-end
-
-local function unbindHull(inst: Instance)
-	if inst:IsA("BasePart") then
-		hullParts[inst] = nil
-	end
-end
-
-local function waterSurfaceUnder(part: BasePart): number?
-	local map = Workspace:FindFirstChild("PhishMap")
-	local waterFolder = map and map:FindFirstChild("PhishWater")
-	if not waterFolder then return nil end
-	local params = RaycastParams.new()
-	params.FilterType = Enum.RaycastFilterType.Include
-	params.FilterDescendantsInstances = { waterFolder }
-	params.IgnoreWater = true
-	local origin = part.Position + Vector3.new(0, HOVER_RAYCAST_UP, 0)
-	local direction = Vector3.new(0, -(HOVER_RAYCAST_UP + HOVER_RAYCAST_DOWN), 0)
-	local result = Workspace:Raycast(origin, direction, params)
-	if result and result.Instance and CollectionService:HasTag(result.Instance, WATER_TAG) then
-		return result.Position.Y
-	end
-	return nil
-end
-
-local function pinHovercraft()
-	-- Dedupe by assembly so multi-tagged welded boats only get pinned once.
-	local seenAssemblies: { [BasePart]: boolean } = {}
-	for part in pairs(hullParts) do
-		if not part.Parent then
-			hullParts[part] = nil
-			continue
-		end
-		if part.Anchored then
-			continue
-		end
-		local rootPart = part.AssemblyRootPart or part
-		if seenAssemblies[rootPart] then continue end
-		seenAssemblies[rootPart] = true
-
-		local waterY = waterSurfaceUnder(part)
-		if not waterY then continue end
-		local targetY = waterY + HOVER_OFFSET
-
-		-- Snap Y on the assembly root, preserve X / Z and rotation.
-		local cf = rootPart.CFrame
-		if math.abs(cf.Y - targetY) > 0.005 then
-			rootPart.CFrame = CFrame.new(cf.X, targetY, cf.Z) * (cf - cf.Position)
-		end
-		-- Zero out vertical velocity so accumulated falling speed doesn't
-		-- punch through the pin on the next physics tick. Leave X / Z so
-		-- VehicleSeat / driver input still moves the boat.
-		local v = rootPart.AssemblyLinearVelocity
-		if v.Y ~= 0 then
-			rootPart.AssemblyLinearVelocity = Vector3.new(v.X, 0, v.Z)
-		end
-	end
-end
-
--- ---------------------------------------------------------------------------
--- Init.
--- ---------------------------------------------------------------------------
-
 function MapIntegrityService.Init()
 	makeAllWaterNonCollide()
 	-- Catch any tile added later (e.g. live editing, deferred map gen).
@@ -286,14 +196,6 @@ function MapIntegrityService.Init()
 	ensureEscapeRamps()
 	hideAllVehicleSeatHuds()
 	CollectionService:GetInstanceAddedSignal(BOAT_SEAT_TAG):Connect(hideVehicleSeatHud)
-
-	-- Wire hovercraft pin to existing + future BoatHull-tagged parts.
-	for _, p in ipairs(CollectionService:GetTagged(BOAT_HULL_TAG)) do
-		bindHull(p)
-	end
-	CollectionService:GetInstanceAddedSignal(BOAT_HULL_TAG):Connect(bindHull)
-	CollectionService:GetInstanceRemovedSignal(BOAT_HULL_TAG):Connect(unbindHull)
-	RunService.Heartbeat:Connect(pinHovercraft)
 
 	takeSnapshots()
 
