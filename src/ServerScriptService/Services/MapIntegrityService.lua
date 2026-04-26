@@ -189,6 +189,53 @@ local function resetMap()
 	resetDock()
 end
 
+-- ---------------------------------------------------------------------------
+-- Shop NPC consolidation. The standalone PhishFishermanShop building was
+-- replaced: the shop UI now opens from the TutorialNPC's ProximityPrompt
+-- inside PhishSellShop. Run-time fix-up so we don't have to ship a
+-- regenerated map file just to apply this design change.
+-- ---------------------------------------------------------------------------
+
+local function consolidateShopNpcs()
+	local map = workspace:FindFirstChild("PhishMap")
+	if not map then return end
+
+	-- 1. Delete the legacy fisherman shop building entirely.
+	local legacy = map:FindFirstChild("PhishFishermanShop")
+	if legacy then
+		legacy:Destroy()
+		print("[PHISH] MapIntegrity: removed legacy PhishFishermanShop building.")
+	end
+
+	-- 2. Hook the shop UI to the TutorialNPC's trigger inside PhishSellShop.
+	local sellShop = map:FindFirstChild("PhishSellShop")
+	local tutorialNpc = sellShop and sellShop:FindFirstChild("TutorialNPC")
+	local trigger = tutorialNpc and tutorialNpc:FindFirstChild("Trigger")
+	if not trigger or not trigger:IsA("BasePart") then return end
+
+	-- The ShopController identifies shop triggers by tag + ShopType attribute.
+	if not CollectionService:HasTag(trigger, "PhishShopTrigger") then
+		CollectionService:AddTag(trigger, "PhishShopTrigger")
+	end
+	if trigger:GetAttribute("ShopType") ~= "Powerup" then
+		trigger:SetAttribute("ShopType", "Powerup")
+	end
+
+	-- Idempotent ProximityPrompt with the requested copy.
+	local prompt = trigger:FindFirstChildOfClass("ProximityPrompt")
+	if not prompt then
+		prompt = Instance.new("ProximityPrompt")
+		prompt.Parent = trigger
+	end
+	prompt.ActionText = "E to interact"
+	prompt.ObjectText = ""
+	prompt.HoldDuration = 0
+	prompt.RequiresLineOfSight = false
+	prompt.MaxActivationDistance = 10
+	prompt.KeyboardKeyCode = Enum.KeyCode.E
+	prompt.Enabled = true
+end
+
 function MapIntegrityService.Init()
 	makeAllWaterNonCollide()
 	-- Catch any tile added later (e.g. live editing, deferred map gen).
@@ -196,6 +243,7 @@ function MapIntegrityService.Init()
 	ensureEscapeRamps()
 	hideAllVehicleSeatHuds()
 	CollectionService:GetInstanceAddedSignal(BOAT_SEAT_TAG):Connect(hideVehicleSeatHud)
+	consolidateShopNpcs()
 
 	takeSnapshots()
 
